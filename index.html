@@ -1047,9 +1047,12 @@ async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;try{con
   if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
     if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}}}catch(e){}}
 function needsOnboarding(){return !!(currentUser&&wwIngesteld===false);}
-async function routeAfterAuth(){if(needsOnboarding()){authMode="onboard";go("login");renderLogin();}else{activePage=null;renderDashboard();go("dashboard");}}
+function noClub(){return currentRole!=="beheerder"&&!currentVerenigingId;}
+async function routeAfterAuth(){if(needsOnboarding()){authMode="onboard";go("login");renderLogin();}
+  else if(noClub()){authMode="noclub";go("login");renderLogin();}
+  else{authMode="login";activePage=null;renderDashboard();go("dashboard");}}
 async function afterLogin(){const {data:{user}}=await sb.auth.getUser();currentUser=user;loggedIn=!!user;await loadProfile();await routeAfterAuth();}
-async function doLogout(){try{if(sb)await sb.auth.signOut();}catch(e){}loggedIn=false;currentUser=null;renderLogin();go("site");}
+async function doLogout(){try{if(sb)await sb.auth.signOut();}catch(e){}loggedIn=false;currentUser=null;authMode="login";renderLogin();go("site");}
 const DEFAULTS = {
   theme:{navy:"#0B1E33",lime:"#A6CE4E",ground:"#F3F5F1",ink:"#0B1E33"},
   logo:{line1:"ARBITRAGE",line2:"PARTNERS",img:""},
@@ -1588,7 +1591,11 @@ function renderChooser(){document.getElementById("chooserGrid").innerHTML=S.choo
 
 /* ---- echte login (Supabase) ---- */
 function renderLogin(){const el=document.getElementById("loginForm");if(!el)return;
-  if(authMode==="onboard"){
+  if(authMode==="noclub"){
+    el.innerHTML=`<span class="eyebrow">Geen toegang</span><h2>Je bent niet aan een club verbonden</h2>
+      <p class="desc">Je account is momenteel niet gekoppeld aan een vereniging, dus je kunt het portaal (nog) niet gebruiken. Neem contact op met Arbitrage Partners of je vereniging om weer toegang te krijgen — dat kan met dit e-mailadres.</p>
+      <button class="btn btn-outline" data-logout style="width:100%;justify-content:center">Uitloggen</button>`;
+  } else if(authMode==="onboard"){
     el.innerHTML=`<span class="eyebrow">Welkom</span><h2>Stel je account in</h2>
       <p class="desc">Je bent uitgenodigd voor het portaal. Kies een wachtwoord en (optioneel) een profielfoto. Daarna log je voortaan in met je e-mailadres en dit wachtwoord.</p>
       <div class="field"><label>Wachtwoord</label><input id="onbPass" type="password" placeholder="minimaal 6 tekens"></div>
@@ -1808,7 +1815,7 @@ function go(view){document.querySelectorAll(".view").forEach(v=>v.classList.remo
 document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(!g||editing)return;e.preventDefault();
   if(g.dataset.portal){currentPortal=g.dataset.portal;renderLogin();}
   if(g.dataset.go==="chooser"||g.dataset.go==="site"){isAdmin=false;}
-  if(g.dataset.go==="login"&&authMode!=="reset"&&authMode!=="onboard")authMode="login";
+  if(g.dataset.go==="login"&&authMode!=="reset"&&authMode!=="onboard"&&authMode!=="noclub")authMode="login";
   if(g.dataset.addInterest)addInterest(g.dataset.addInterest);
   if(g.dataset.go==="scan")resetScan();
   if(g.dataset.go==="plan")resetPlan();
@@ -1888,16 +1895,18 @@ document.addEventListener("click",async e=>{
     if(err)err.hidden=true;if(msg)msg.hidden=true;
     if(!sb){if(err){err.textContent="Werkt alleen op de live website.";err.hidden=false;}return;}
     if(!em||!nm){if(err){err.textContent="Vul minimaal een naam en e-mailadres in.";err.hidden=false;}return;}
-    let rol=inviteType==="vereniging"?"vereniging":"official",verId=currentVerenigingId;
+    let rol=inviteType==="vereniging"?"vereniging":"official",verId=currentVerenigingId,skipInvite=false;
     btn.disabled=true;btn.textContent="Versturen…";
     if(inviteType==="vereniging"){
       const club=g("invClub");if(!club){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Vul een verenigingsnaam in.";err.hidden=false;}return;}
       const {data:vrow,error:ve}=await sb.from("verenigingen").insert({naam:club,plaats:g("invPlace")||null,contactpersoon:nm,contact_email:em,telefoon:g("invPhone")||null,abonnement:g("invAbo")||null}).select().single();
       if(ve||!vrow){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Vereniging aanmaken mislukt: "+(ve?ve.message:"onbekend");err.hidden=false;}return;}
       verId=vrow.id;
+      const {data:ex}=await sb.from("profiles").select("id").eq("email",em).maybeSingle();
+      if(ex&&ex.id){await sb.from("profiles").update({vereniging_id:verId,rol:"vereniging"}).eq("id",ex.id);skipInvite=true;}
     } else if(!verId){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Je account is nog niet aan een vereniging gekoppeld.";err.hidden=false;}return;}
-    const {error:e1}=await sb.from("uitnodigingen").insert({email:em,rol,vereniging_id:verId,volledige_naam:nm});
-    if(e1){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Uitnodiging aanmaken mislukt: "+e1.message;err.hidden=false;}return;}
+    if(!skipInvite){const {error:e1}=await sb.from("uitnodigingen").insert({email:em,rol,vereniging_id:verId,volledige_naam:nm});
+      if(e1){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Uitnodiging aanmaken mislukt: "+e1.message;err.hidden=false;}return;}}
     const {error:e2}=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
     btn.disabled=false;btn.textContent="Uitnodiging versturen";
     if(e2){if(err){err.textContent="E-mail versturen mislukt: "+e2.message;err.hidden=false;}return;}
@@ -1915,6 +1924,10 @@ document.addEventListener("change",e=>{const w=e.target.closest("[data-widget]")
 document.addEventListener("click",e=>{const c=e.target.closest("[data-club]");if(!c||editing)return;e.preventDefault();selectedClub=c.dataset.club;renderDashboard();});
 // profiel openen
 document.addEventListener("click",e=>{const pf=e.target.closest("[data-profile]");if(!pf||editing)return;if(e.target.closest("[data-go]")||e.target.closest("[data-logout]"))return;e.preventDefault();activePage="__profile";renderDashboard();});
+// Enter-toets: bevestig het primaire veld op inlog-/uitnodig-schermen
+document.addEventListener("keydown",e=>{if(e.key!=="Enter"||e.shiftKey)return;const t=e.target;if(!t||t.tagName!=="INPUT")return;
+  const lf=t.closest("#loginForm");if(lf){e.preventDefault();const b=lf.querySelector("#loginSubmit,#sendReset,#savePass,#onbSave,#gotoPortaal");if(b)b.click();return;}
+  const im=t.closest("#inviteModal");if(im){e.preventDefault();const b=im.querySelector("#invSend");if(b)b.click();return;}});
 // verenigingen/scheidsrechters verwijderen
 document.addEventListener("click",async e=>{const d=e.target.closest("[data-del]");if(!d||editing)return;e.preventDefault();
   const type=d.dataset.del,id=d.dataset.id;
@@ -2279,7 +2292,7 @@ renderAll();
 if(sb)sb.auth.onAuthStateChange((event)=>{if(event==="PASSWORD_RECOVERY"){authMode="reset";go("login");renderLogin();}});
 // bestaande sessie herstellen (of onboarding tonen na uitnodigingslink)
 if(sb)sb.auth.getSession().then(async ({data})=>{if(data&&data.session&&authMode!=="reset"){currentUser=data.session.user;loggedIn=true;await loadProfile();
-  if(needsOnboarding()){authMode="onboard";go("login");}renderLogin();}});
+  if(needsOnboarding()){authMode="onboard";go("login");}else if(noClub()){authMode="noclub";}renderLogin();}});
 </script>
 
 <script>document.body.classList.add('framed');</script>
