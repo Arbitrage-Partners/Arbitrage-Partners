@@ -1039,11 +1039,11 @@ const SB_URL="https://keyuipkupfxowrwsfmpk.supabase.co";
 const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtleXVpcGt1cGZ4b3dyd3NmbXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDQ1MDEsImV4cCI6MjEwNDg4MDUwMX0.taZt8658Saldr5IOVb4L9qleXyn3ZnPubcrwGtes4b4";
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_ANON):null;
 const ROLE_TO_PORTAL={vereniging:"vereniging",official:"official",begeleider:"begeleider",beheerder:"beheer"};
-let loggedIn=false,currentUser=null,authMode="login",currentRole="vereniging",currentVerenigingId=null,currentVerenigingName=null;
-async function loadProfile(){currentVerenigingName=null;try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url").eq("id",currentUser.id).single();
-  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
+let loggedIn=false,currentUser=null,authMode="login",currentRole="vereniging",currentVerenigingId=null,currentVerenigingName=null,wwIngesteld=true;
+async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url,wachtwoord_ingesteld").eq("id",currentUser.id).single();
+  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
     if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}}}catch(e){}}
-function needsOnboarding(){return !!(currentUser&&(currentRole==="official"||currentRole==="begeleider")&&!(currentUser.user_metadata&&currentUser.user_metadata.onboarded));}
+function needsOnboarding(){return !!(currentUser&&wwIngesteld===false);}
 async function routeAfterAuth(){if(needsOnboarding()){authMode="onboard";go("login");renderLogin();}else{activePage=null;renderDashboard();go("dashboard");}}
 async function afterLogin(){const {data:{user}}=await sb.auth.getUser();currentUser=user;loggedIn=!!user;await loadProfile();await routeAfterAuth();}
 async function doLogout(){try{if(sb)await sb.auth.signOut();}catch(e){}loggedIn=false;currentUser=null;renderLogin();go("site");}
@@ -1874,7 +1874,8 @@ document.addEventListener("click",async e=>{
       if(!ue){avatarUrl=sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;}}}catch(x){}
     const {error}=await sb.auth.updateUser({password:p1,data:{onboarded:true}});
     if(error){btn.disabled=false;btn.textContent="Afronden en naar mijn portaal →";if(err){err.textContent="Opslaan mislukt: "+error.message;err.hidden=false;}return;}
-    if(avatarUrl){try{await sb.from("profiles").update({avatar_url:avatarUrl}).eq("id",currentUser.id);}catch(x){}S.profile.avatar=avatarUrl;}
+    try{await sb.from("profiles").update(avatarUrl?{wachtwoord_ingesteld:true,avatar_url:avatarUrl}:{wachtwoord_ingesteld:true}).eq("id",currentUser.id);}catch(x){}
+    if(avatarUrl)S.profile.avatar=avatarUrl;wwIngesteld=true;
     if(currentUser.user_metadata)currentUser.user_metadata.onboarded=true;else currentUser.user_metadata={onboarded:true};
     authMode="login";activePage=null;renderDashboard();go("dashboard");return;}
   if(e.target.closest("#invSend")){e.preventDefault();
