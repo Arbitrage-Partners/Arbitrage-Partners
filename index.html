@@ -617,6 +617,8 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
 .del-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;flex:none;line-height:1}
 .del-btn:hover{background:#f7e4df;border-color:#e6b9ad;color:#a8402c}
 .chatwrap{display:grid;grid-template-columns:250px 1fr;min-height:440px}
+.chatwrap.solo{grid-template-columns:1fr}
+.chat-thread .plaats{color:var(--muted);font-size:12px}
 .chat-threads{border-right:1px solid var(--line);overflow:auto}
 .chat-thread{padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
 .chat-thread:hover{background:var(--ground)}
@@ -1751,9 +1753,14 @@ function panelHTML(p,b){
     return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3></div><div style="padding:16px 22px 4px"><div class="chips">${chips}</div></div><div class="tbl-scroll"><table class="tbl"><thead><tr><th>Naam</th><th>Type</th><th>Bijgewerkt</th><th>Door</th></tr></thead><tbody>${body}</tbody></table></div></div>`;}
   return "";}
 function chatPanelHTML(p,b){
-  const threads=(p.threads||[]).map((t,i)=>`<div class="chat-thread ${t.active?"active":""}"><div class="nm" data-edit="${b}.threads.${i}.name">${esc(t.name)}</div><div class="pv" data-edit="${b}.threads.${i}.preview">${esc(t.preview)}</div></div>`).join("");
-  const msgs=(p.messages||[]).map((m,i)=>`<div class="msg ${m.me?"me":"them"}"><span data-edit="${b}.messages.${i}.text">${esc(m.text)}</span><span class="tm">${esc(m.time)}</span></div>`).join("");
-  return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title||"Berichten")}</h3></div><div class="chatwrap"><div class="chat-threads">${threads}</div><div style="display:flex;flex-direction:column;min-width:0"><div class="chat-msgs">${msgs}</div><div class="chat-input"><input placeholder="Typ een bericht…"><button class="btn btn-lime">Verstuur</button></div></div></div></div>`;}
+  const isBeheer=currentPortal==="beheer";
+  const threadsCol=isBeheer?`<div class="chat-threads" id="chatThreads"><div style="padding:14px 16px;color:var(--muted);font-size:13px">Laden…</div></div>`:"";
+  return `<div class="panel"><div class="phd"><h3>${isBeheer?"Berichten met verenigingen":"Berichten met Arbitrage Partners"}</h3></div>
+    <div class="chatwrap ${isBeheer?"":"solo"}">${threadsCol}
+      <div style="display:flex;flex-direction:column;min-width:0">
+        <div class="chat-msgs" id="chatMsgs"><div style="margin:auto;color:var(--muted);font-size:13px">Laden…</div></div>
+        <div class="chat-input"><input id="chatInput" placeholder="Typ een bericht…" autocomplete="off"><button class="btn btn-lime" id="chatSend">Verstuur</button></div>
+      </div></div></div>`;}
 
 function adminPanelHTML(){const a=S.admin;
   const head=a.cols.map((c,ci)=>`<th data-edit="admin.cols.${ci}.label">${esc(c.label)}</th>`).join("");
@@ -1786,7 +1793,7 @@ function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return
      <div class="side-scroll">${sideNav}</div>
      ${profileBlock}`;
   document.getElementById("dashMain").innerHTML=dashMainHTML(key,P,b,overview);
-  renderImages();refreshEditState();fillLive();if(key==="beheer")fillStats();window.scrollTo(0,0);}
+  renderImages();refreshEditState();fillLive();if(key==="beheer")fillStats();if(document.getElementById("chatMsgs"))initChat();window.scrollTo(0,0);}
 async function fillStats(){if(!sb)return;
   const set=(k,v)=>document.querySelectorAll('#dashMain [data-livestat="'+k+'"]').forEach(el=>el.textContent=v);
   try{
@@ -1802,6 +1809,40 @@ async function fillStats(){if(!sb)return;
   try{const r1=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","aanvraag").neq("status","afgerond");if(typeof r1.count==="number"){oa=r1.count;set("open_aanvragen",String(r1.count));}
     const r2=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","support").neq("status","afgerond");if(typeof r2.count==="number")set("open_support",String(r2.count));}catch(e){}
   set("aanvragen",oa!=null?String(oa):"—");set("tevredenheid","—");}
+/* ---- berichten / chat ---- */
+let chatVerId=null,chatChannel=null,chatSeen=new Set();
+function chatTime(ts){try{return new Date(ts).toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"});}catch(e){return "";}}
+function chatBubble(m){const me=currentUser&&m.afzender_id===currentUser.id;
+  const naam=(!me&&m.afzender_naam)?`<b style="display:block;font-size:11px;opacity:.75;margin-bottom:2px">${esc(m.afzender_naam)}</b>`:"";
+  return `<div class="msg ${me?"me":"them"}">${naam}${esc(m.tekst)}<span class="tm">${chatTime(m.aangemaakt_op)}</span></div>`;}
+function chatScroll(){const el=document.getElementById("chatMsgs");if(el)el.scrollTop=el.scrollHeight;}
+function chatAppend(m){if(!m||chatSeen.has(m.id))return;chatSeen.add(m.id);const el=document.getElementById("chatMsgs");if(!el)return;
+  const empty=el.querySelector("[data-chatempty]");if(empty)el.innerHTML="";el.insertAdjacentHTML("beforeend",chatBubble(m));chatScroll();}
+async function loadThreads(){const box=document.getElementById("chatThreads");if(!box||!sb)return;
+  const {data,error}=await sb.from("verenigingen").select("id,naam,plaats").order("naam");
+  if(error||!data||!data.length){box.innerHTML=`<div style="padding:14px 16px;color:var(--muted);font-size:13px">Nog geen verenigingen.</div>`;return;}
+  if(!chatVerId||!data.some(v=>v.id===chatVerId))chatVerId=data[0].id;
+  box.innerHTML=data.map(v=>`<div class="chat-thread ${v.id===chatVerId?"active":""}" data-thread="${esc(v.id)}"><div class="nm">${esc(v.naam||"—")}</div><div class="plaats">${esc(v.plaats||"")}</div></div>`).join("");}
+async function loadMessages(){const el=document.getElementById("chatMsgs");if(!el||!sb)return;
+  if(!chatVerId){el.innerHTML=`<div data-chatempty style="margin:auto;color:var(--muted);font-size:13px">Kies een vereniging om het gesprek te openen.</div>`;return;}
+  const {data,error}=await sb.from("berichten").select("*").eq("vereniging_id",chatVerId).order("aangemaakt_op",{ascending:true});
+  chatSeen=new Set();
+  if(error){el.innerHTML=`<div data-chatempty style="margin:auto;color:var(--muted);font-size:13px">Kon berichten niet laden.</div>`;return;}
+  if(!data||!data.length){el.innerHTML=`<div data-chatempty style="margin:auto;color:var(--muted);font-size:13px;text-align:center">Nog geen berichten.<br>Stuur het eerste bericht hieronder.</div>`;return;}
+  data.forEach(m=>chatSeen.add(m.id));el.innerHTML=data.map(chatBubble).join("");chatScroll();}
+function subscribeChat(){if(!sb||!chatVerId)return;
+  if(chatChannel){try{sb.removeChannel(chatChannel);}catch(e){}chatChannel=null;}
+  chatChannel=sb.channel("chat-"+chatVerId).on("postgres_changes",{event:"INSERT",schema:"public",table:"berichten",filter:"vereniging_id=eq."+chatVerId},payload=>{chatAppend(payload.new);}).subscribe();}
+async function sendChat(){const inp=document.getElementById("chatInput");if(!inp)return;const tekst=inp.value.trim();if(!tekst||!sb||!chatVerId||!currentUser)return;
+  inp.value="";const type=currentPortal==="beheer"?"team":"vereniging";
+  const {data,error}=await sb.from("berichten").insert({vereniging_id:chatVerId,afzender_id:currentUser.id,afzender_naam:(S.profile&&S.profile.name)||"",afzender_type:type,tekst:tekst}).select().single();
+  if(error){inp.value=tekst;alert("Versturen mislukt: "+error.message);return;}
+  chatAppend(data);}
+let chatInited=false;
+async function initChat(){const isBeheer=currentPortal==="beheer";
+  if(!isBeheer)chatVerId=currentVerenigingId;
+  if(isBeheer)await loadThreads();
+  await loadMessages();subscribeChat();}
 async function fillLive(){if(!sb)return;
   document.querySelectorAll("#dashMain table[data-live]").forEach(async tbl=>{const kind=tbl.getAttribute("data-live"),tb=tbl.querySelector("tbody");if(!tb)return;
     const delBtn=(type,id)=>`<button class="del-btn" data-del="${type}" data-id="${esc(id)}" title="Verwijderen">✕</button>`;
@@ -2089,6 +2130,14 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#ebPublish")){e.preventDefault();publishContent();return;}
   if(e.target.closest("[data-editdone]")){e.preventDefault();setEditing(false);activePage="Instellingen";renderDashboard();go("dashboard");return;}
 });
+// chat: vereniging-thread kiezen (beheer)
+document.addEventListener("click",e=>{const t=e.target.closest("[data-thread]");if(!t||editing)return;e.preventDefault();
+  chatVerId=t.getAttribute("data-thread");
+  document.querySelectorAll("#chatThreads .chat-thread").forEach(x=>x.classList.toggle("active",x===t));
+  loadMessages();subscribeChat();});
+// chat: verzenden
+document.addEventListener("click",e=>{if(e.target.closest("#chatSend")){e.preventDefault();sendChat();}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&e.target&&e.target.id==="chatInput"){e.preventDefault();sendChat();}});
 // instellingen: tabblad wisselen
 document.addEventListener("click",e=>{const t=e.target.closest("[data-settab]");if(!t||editing)return;e.preventDefault();settingsTab=t.getAttribute("data-settab");renderDashboard();});
 // instellingen opslaan (voegt samen met wat er al bewaard is)
