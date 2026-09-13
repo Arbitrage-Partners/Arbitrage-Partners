@@ -1090,11 +1090,16 @@ const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJl
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_ANON):null;
 const ROLE_TO_PORTAL={vereniging:"vereniging",official:"official",begeleider:"begeleider",beheerder:"beheer"};
 let loggedIn=false,currentUser=null,authMode="login",currentRole="vereniging",currentVerenigingId=null,currentVerenigingName=null,wwIngesteld=true,currentRechten="beheerder";
-const RECHTEN={beheerder:{lab:"Beheerder",st:"ok"},bewerker:{lab:"Bewerker",st:"info"},lezer:{lab:"Alleen-lezen",st:"idle"}};
-function canManageTeam(){return currentRole==="beheerder"&&currentRechten==="beheerder";}
-function canEdit(){return currentRechten!=="lezer";}
+const RECHTEN={beheerder:{lab:"Beheerder",st:"ok"},applicatiebeheerder:{lab:"Applicatiebeheerder",st:"ok"},bewerker:{lab:"Bewerker",st:"info"},support:{lab:"Support",st:"warn"}};
+const RECHTEN_ORDER=["beheerder","applicatiebeheerder","bewerker","support"];
+const SUPPORT_ALLOWED=new Set(["Dashboard","Aanvragen","Support","Berichten"]);
+function fullAccess(){return currentRechten==="beheerder"||currentRechten==="applicatiebeheerder";}
+function isSupport(){return currentRechten==="support";}
+function canManageTeam(){return currentRole==="beheerder"&&fullAccess();}
+function canEdit(){return true;}
+function normRechten(r){if(r==="lezer")return "applicatiebeheerder";return RECHTEN[r]?r:"support";}
 async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;currentRechten="beheerder";try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url,wachtwoord_ingesteld,rechten,functie").eq("id",currentUser.id).single();
-  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;currentRechten=prof.rechten||"beheerder";if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
+  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;currentRechten=normRechten(prof.rechten||"beheerder");if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
     if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}
     if(currentRole==="beheerder"){try{const {data:st}=await sb.from("instellingen").select("data").eq("id",1).maybeSingle();settings=(st&&st.data)||{};}catch(x){settings={};}}}}catch(e){}}
 function needsOnboarding(){return !!(currentUser&&wwIngesteld===false);}
@@ -1745,15 +1750,19 @@ function adminPanelHTML(){const a=S.admin;
 
 function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return;const b=`portals.${key}`;
   const useSec=Array.isArray(P.sections);
-  const allItems=useSec?P.sections.flatMap(s=>s.items):P.nav;
-  const overview=useSec?P.sections[0].items[0]:P.nav[0];
+  const isSup=key==="beheer"&&isSupport();
+  const okItem=n=>!isSup||SUPPORT_ALLOWED.has(n);
+  const allItems=useSec?P.sections.flatMap(s=>s.items).filter(okItem):P.nav;
+  const overview=allItems[0];
   if(activePage!=="__profile"&&!allItems.includes(activePage))activePage=overview;
   const pr=S.profile,avStyle=pr.avatar?`style="background-image:url(${pr.avatar})"`:"",avInit=pr.avatar?"":esc((pr.name||"?").charAt(0).toUpperCase());
   const profileBlock=`<div class="side-profile" data-profile><div class="av" ${avStyle}>${avInit}</div><div class="pi"><div class="nm" data-edit="profile.name">${esc(pr.name)}</div><div class="st">Ingelogd</div></div><button class="lg" data-logout title="Uitloggen">⏻</button></div>`;
   let sideNav;
   if(useSec)sideNav=P.sections.map((sec,si)=>{
+    const its=sec.items.map((n,ii)=>({n,ii})).filter(x=>okItem(x.n));
+    if(!its.length)return "";
     const lbl=sec.label?`<div class="navlabel"><span data-edit="${b}.sections.${si}.label">${esc(sec.label)}</span></div>`:"";
-    return lbl+sec.items.map((n,ii)=>`<a href="#" data-page="${escAttr(n)}" class="${n===activePage?"active":""}"><span class="ic">${SIDE_ICONS[n]||"•"}</span><span data-edit="${b}.sections.${si}.items.${ii}">${esc(n)}</span></a>`).join("");
+    return lbl+its.map(({n,ii})=>`<a href="#" data-page="${escAttr(n)}" class="${n===activePage?"active":""}"><span class="ic">${SIDE_ICONS[n]||"•"}</span><span data-edit="${b}.sections.${si}.items.${ii}">${esc(n)}</span></a>`).join("");
   }).join("");
   else sideNav=P.nav.map((n,i)=>`<a href="#" data-page="${escAttr(n)}" class="${n===activePage?"active":""}"><span class="ic">${SIDE_ICONS[n]||"•"}</span><span data-edit="${b}.nav.${i}">${esc(n)}</span></a>`).join("");
   document.getElementById("dashSide").innerHTML=
@@ -1773,7 +1782,10 @@ async function fillStats(){if(!sb)return;
     const {count:oc,error:oe}=await sb.from("profiles").select("id",{count:"exact",head:true}).eq("rol","official");
     if(!oe&&typeof oc==="number")set("officials_all",String(oc));
   }catch(e){}
-  set("aanvragen","—");set("tevredenheid","—");}
+  let oa=null;
+  try{const r1=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","aanvraag").neq("status","afgerond");if(typeof r1.count==="number"){oa=r1.count;set("open_aanvragen",String(r1.count));}
+    const r2=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","support").neq("status","afgerond");if(typeof r2.count==="number")set("open_support",String(r2.count));}catch(e){}
+  set("aanvragen",oa!=null?String(oa):"—");set("tevredenheid","—");}
 async function fillLive(){if(!sb)return;
   document.querySelectorAll("#dashMain table[data-live]").forEach(async tbl=>{const kind=tbl.getAttribute("data-live"),tb=tbl.querySelector("tbody");if(!tb)return;
     const delBtn=(type,id)=>`<button class="del-btn" data-del="${type}" data-id="${esc(id)}" title="Verwijderen">✕</button>`;
@@ -1792,8 +1804,8 @@ async function fillLive(){if(!sb)return;
       const {data,error}=await sb.from("profiles").select("id,volledige_naam,email,functie,rechten").eq("rol","beheerder").order("volledige_naam");
       if(error){tb.innerHTML=`<tr><td colspan="${cs}" style="color:var(--muted)">Kon het team niet laden.</td></tr>`;return;}
       if(!data||!data.length){tb.innerHTML=`<tr><td colspan="${cs}" style="color:var(--muted)">Nog geen teamleden.</td></tr>`;return;}
-      const rechtenOpts=r=>["beheerder","bewerker","lezer"].map(v=>`<option value="${v}" ${r===v?"selected":""}>${RECHTEN[v].lab}</option>`).join("");
-      tb.innerHTML=data.map(u=>{const self=currentUser&&u.id===currentUser.id;const rc=u.rechten||"beheerder";const rp=RECHTEN[rc]||RECHTEN.beheerder;
+      const rechtenOpts=r=>RECHTEN_ORDER.map(v=>`<option value="${v}" ${r===v?"selected":""}>${RECHTEN[v].lab}</option>`).join("");
+      tb.innerHTML=data.map(u=>{const self=currentUser&&u.id===currentUser.id;const rc=normRechten(u.rechten||"beheerder");const rp=RECHTEN[rc]||RECHTEN.beheerder;
         const naam=esc(u.volledige_naam||u.email||"—")+(self?" (Jij)":"");
         const rechtenCell=(manage&&!self)?`<select data-rechten="${esc(u.id)}" style="padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:13px">${rechtenOpts(rc)}</select>`:`<span class="pill ${rp.st}">${rp.lab}</span>`;
         const del=(manage&&!self)?`<button class="del-btn" data-del="gebruiker" data-id="${esc(u.id)}" title="Verwijderen">✕</button>`:"";
@@ -1814,6 +1826,7 @@ function dashMainHTML(key,P,b,overview){
   const logout=`<button class="btn btn-outline" data-logout>Uitloggen</button>`;
   const clubTag=(currentVerenigingName&&key!=="beheer")?`<span class="club-tag">${esc(currentVerenigingName)}</span>`:"";
   if(activePage==="__profile")return profileHTML(key,logout);
+  if(key==="beheer"&&isSupport()&&activePage===overview)return supportDashHTML(logout);
   if(key==="beheer"&&activePage==="Instellingen")return instellingenHTML(logout);
   if(key==="beheer"&&activePage==="Gebruikers")return gebruikersHTML(logout);
   if(activePage===overview){
@@ -1901,13 +1914,27 @@ function instellingenHTML(logout){const edit=canEdit();
   return `<div class="hd"><div><h1>Instellingen</h1><p>Bedrijfsgegevens, facturatie, prijzen, huisstijl, e-mails en integraties.</p></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">${logout}</div></div>
     ${tabBar}${body}`;}
+function supportDashHTML(logout){const pr=S.profile;
+  const tiles=[{ic:"✉",lab:"Openstaande aanvragen",k:"open_aanvragen"},{ic:"?",lab:"Openstaande supportvragen",k:"open_support"}];
+  return `<div class="hd"><div><h1>Support</h1><p>Welkom${pr&&pr.name?", "+esc(pr.name):""}. Hier handel je aanvragen, supportvragen en berichten af.</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${logout}</div></div>
+    <div class="stat-grid flow">${tiles.map(t=>`<div class="tile"><div class="row1"><span class="ic">${t.ic}</span></div><div class="num" data-livestat="${t.k}">0</div><div class="lab">${t.lab}</div></div>`).join("")}</div>
+    <div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:12px">Snel naar</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn btn-lime" data-page="Aanvragen" href="#">Aanvragen bekijken</a>
+        <a class="btn btn-outline" data-page="Support" href="#">Support bekijken</a>
+        <a class="btn btn-outline" data-page="Berichten" href="#">Berichten</a>
+      </div>
+      <p style="color:var(--muted);font-size:13px;margin-top:14px">Als support-medewerker heb je toegang tot Aanvragen, Support en Berichten.</p>
+    </div></div>`;}
 function gebruikersHTML(logout){
   const manage=canManageTeam();
   const cta=manage?`<a class="btn btn-outline" data-invite-open="gebruiker" href="#">＋ Gebruiker toevoegen</a>`:"";
   const legenda=`<div class="panel"><div style="padding:16px 22px;display:flex;gap:22px;flex-wrap:wrap;font-size:13px;color:var(--muted)">
     <span><span class="pill ok">Beheerder</span> volledige toegang, mag team beheren</span>
+    <span><span class="pill ok">Applicatiebeheerder</span> volledige toegang tot alles</span>
     <span><span class="pill info">Bewerker</span> mag gegevens toevoegen en wijzigen</span>
-    <span><span class="pill idle">Alleen-lezen</span> mag alles bekijken, niets wijzigen</span></div></div>`;
+    <span><span class="pill warn">Support</span> alleen Aanvragen, Support en Berichten</span></div></div>`;
   const cols=`<th>Naam</th><th>Functie</th><th>Rechten</th><th></th>`;
   return `<div class="hd"><div><h1>Gebruikers</h1><p>Beheer je team: nodig collega's uit en bepaal per persoon de rechten.</p></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">${cta}${logout}</div></div>
@@ -2168,10 +2195,10 @@ function renderInviteModal(){const el=document.getElementById("inviteBody");cons
   document.getElementById("inviteTitle").textContent=inviteType==="vereniging"?"Vereniging uitnodigen":(inviteType==="begeleider"?"Begeleider toevoegen":(inviteType==="gebruiker"?"Gebruiker toevoegen":"Scheidsrechter toevoegen"));
   const foot=`<div class="form-status err" id="invErr" hidden></div><div class="form-status" id="invMsg" hidden></div><button class="btn btn-lime" id="invSend" style="width:100%;justify-content:center;margin-top:6px">Uitnodiging versturen</button>`;
   if(inviteType==="gebruiker"){
-    el.innerHTML=`<p class="modal-intro">Nodig een collega uit voor het beheerdersportaal. Die krijgt een e-mail om zelf een wachtwoord in te stellen. Een nieuw teamlid start met <b>Alleen-lezen</b>; zodra hij/zij in de lijst staat, zet je het juiste niveau met één klik. Heeft de collega al een account, dan geldt onderstaande keuze meteen.</p>
+    el.innerHTML=`<p class="modal-intro">Nodig een collega uit voor het beheerdersportaal. Die krijgt een e-mail om zelf een wachtwoord in te stellen. Een nieuw teamlid start met <b>Support</b>-rechten (beperkt); zodra hij/zij in de lijst staat, zet je het juiste niveau met één klik. Heeft de collega al een account, dan geldt onderstaande keuze meteen.</p>
       <div class="field"><label>Naam</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
       <div class="mrow"><div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@arbitragepartners.nl"></div><div class="field"><label>Functie (optioneel)</label><input id="invFunctie" type="text" placeholder="Bijv. Adviseur"></div></div>
-      <div class="field"><label>Rechten</label><select id="invRechten" style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;width:100%"><option value="beheerder">Beheerder — volledige toegang</option><option value="bewerker" selected>Bewerker — toevoegen &amp; wijzigen</option><option value="lezer">Alleen-lezen — alleen bekijken</option></select></div>${foot}`;
+      <div class="field"><label>Rechten</label><select id="invRechten" style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;width:100%"><option value="beheerder">Beheerder — volledige toegang, mag team beheren</option><option value="applicatiebeheerder">Applicatiebeheerder — volledige toegang</option><option value="bewerker" selected>Bewerker — toevoegen &amp; wijzigen</option><option value="support">Support — alleen Aanvragen, Support &amp; Berichten</option></select></div>${foot}`;
   } else if(inviteType==="vereniging"){
     el.innerHTML=`<p class="modal-intro">Vul de gegevens van de vereniging in. Bij versturen wordt de vereniging automatisch aangemaakt en krijgt de contactpersoon een e-mail om een wachtwoord in te stellen en toegang te krijgen tot het verenigingsportaal.</p>
       <div class="field"><label>Verenigingsnaam</label><input id="invClub" type="text" placeholder="Bijv. HV De Valken"></div>
