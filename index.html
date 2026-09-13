@@ -605,7 +605,9 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
 .modal-hd h3{font-size:18px}
 .modal-x{background:none;border:none;font-size:24px;color:var(--muted);line-height:1;cursor:pointer}
 .modal-x:hover{color:var(--ink)}
-.modal-bd{padding:24px}
+.modal-bd{padding:24px;max-height:74vh;overflow-y:auto}
+.modal-intro{color:var(--muted);font-size:13.5px;margin-bottom:16px;line-height:1.5}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 #scrim{position:fixed;inset:0;background:rgba(7,19,31,.5);z-index:300;opacity:0;pointer-events:none;transition:opacity .2s}
 #scrim.on{opacity:1;pointer-events:auto}
 #drawer{position:fixed;top:0;right:0;height:100%;width:min(380px,92vw);background:var(--card);z-index:301;transform:translateX(100%);transition:transform .24s ease;box-shadow:-20px 0 60px rgba(0,0,0,.25);display:flex;flex-direction:column}
@@ -637,7 +639,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
   .lower{display:block}.lower .r{justify-content:flex-start;margin-top:20px}
   .prob-grid{grid-template-columns:repeat(2,1fr)}
   .about,.contact-grid,.plan-grid,.svc-two,.faq-grid{grid-template-columns:1fr}
-  .plan-form .row2{grid-template-columns:1fr}
+  .plan-form .row2,.mrow{grid-template-columns:1fr}
   .grid4,.about-stats.wide,.proc-grid,.ben-grid{grid-template-columns:1fr 1fr}
   .pillars,.svc-grid,.chooser-grid,.subs-grid{grid-template-columns:1fr}
   .stat-grid{grid-template-columns:repeat(2,1fr)}
@@ -995,15 +997,8 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
 <!-- invite-modal -->
 <div id="modalScrim" class="mscrim"></div>
 <div id="inviteModal" class="modal">
-  <div class="modal-hd"><h3>Scheidsrechter toevoegen</h3><button class="modal-x" data-invite-close>×</button></div>
-  <div class="modal-bd">
-    <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">Vul de gegevens in en verstuur. De scheidsrechter krijgt een e-mail om zelf een wachtwoord en profielfoto in te stellen en in het eigen portaal in te loggen.</p>
-    <div class="field"><label>Naam</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
-    <div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@vereniging.nl"></div>
-    <div class="form-status err" id="invErr" hidden></div>
-    <div class="form-status" id="invMsg" hidden></div>
-    <button class="btn btn-lime" id="invSend" style="width:100%;justify-content:center;margin-top:6px">Uitnodiging versturen</button>
-  </div>
+  <div class="modal-hd"><h3 id="inviteTitle">Toevoegen</h3><button class="modal-x" data-invite-close>×</button></div>
+  <div class="modal-bd" id="inviteBody"></div>
 </div>
 
 <!-- drawer -->
@@ -1320,10 +1315,10 @@ const DEFAULTS = {
             {nm:"Vergoedingenoverzicht.xlsx",type:"Spreadsheet",date:"20 aug 2026",who:"Penningmeester"},
             {nm:"Draaiboek open dag.docx",type:"Document",date:"12 aug 2026",who:"Sven Willems"},
             {nm:"Spelregels 26-27.pdf",type:"PDF",date:"1 aug 2026",who:"NHV"}]}]},
-        "Scheidsrechters":{subtitle:"Alle scheidsrechters en officials van de vereniging.",cta:"＋ Scheidsrechter toevoegen",invite:true,
+        "Scheidsrechters":{subtitle:"Alle scheidsrechters en officials van de vereniging.",cta:"＋ Scheidsrechter toevoegen",invite:"official",
           stats:[{ic:"◍",badge:"actief",num:"7",lab:"Actief"},{ic:"＋",badge:"seizoen",num:"2",lab:"Nieuw dit seizoen"},{ic:"◎",badge:"opleiding",num:"2",lab:"In opleiding"},{ic:"✓",badge:"tevredenheid",num:"92%",lab:"Retentie"}],
           panels:[
-            {type:"table",title:"Alle scheidsrechters",link:"Toevoegen",linkInvite:true,cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
+            {type:"table",title:"Alle scheidsrechters",link:"Toevoegen",linkInvite:"official",cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
             {nm:"Daan Hermans",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"20 sep 2026",last:"12 aug 2026",rep:"6"},
             {nm:"Femke de Groot",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"27 sep 2026",last:"—",rep:"1"},
             {nm:"Iris van Beek",sub:"Coördinator",niv:"BeNe League",status:"Actief",statusSt:"ok",next:"18 sep 2026",last:"2 sep 2026",rep:"9"},
@@ -1444,8 +1439,8 @@ const DEFAULTS = {
           {nm:"Peter Smit",sub:"HC Oranje",interest:"Wervingscampagne",date:"5 sep 2026",status:"Afgerond",statusSt:"ok"}]},
         {type:"bars",title:"Abonnementen per pakket",chip:"18 actief",items:[{h:"Start",pct:33},{h:"Grow",pct:50},{h:"Pro",pct:17}]}],
       pages:{
-        "Verenigingen":{subtitle:"Beheer je aangesloten verenigingen: toevoegen, verwijderen en custom links aanmaken.",cta:"Vereniging toevoegen",panels:[
-          {type:"table",title:"Verenigingen",link:"Vereniging toevoegen",cols:[{label:"Vereniging",kind:"name"},{label:"Abonnement",kind:"pill",key:"abo"},{label:"Contactpersoon",kind:"text",key:"contact"},{label:"Laatste scan",kind:"text",key:"scan"},{label:"Status",kind:"pill",key:"status"}],rows:[
+        "Verenigingen":{subtitle:"Beheer je aangesloten verenigingen: toevoegen, verwijderen en custom links aanmaken.",cta:"＋ Vereniging uitnodigen",invite:"vereniging",panels:[
+          {type:"table",title:"Verenigingen",link:"Uitnodigen",linkInvite:"vereniging",cols:[{label:"Vereniging",kind:"name"},{label:"Abonnement",kind:"pill",key:"abo"},{label:"Contactpersoon",kind:"text",key:"contact"},{label:"Laatste scan",kind:"text",key:"scan"},{label:"Status",kind:"pill",key:"status"}],rows:[
             {nm:"HV De Valken",sub:"Zoetermeer",abo:"Grow",aboSt:"info",contact:"Iris van Beek",scan:"2 sep 2026",status:"Actief",statusSt:"ok"},
             {nm:"DSS Handbal",sub:"Den Haag",abo:"Pro",aboSt:"ok",contact:"Rob Meijer",scan:"18 aug 2026",status:"Actief",statusSt:"ok"},
             {nm:"Aristos",sub:"Rotterdam",abo:"Start",aboSt:"idle",contact:"Nadia El Amrani",scan:"—",status:"Onboarding",statusSt:"warn"},
@@ -1535,7 +1530,8 @@ function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.li
   if(s.services&&Array.isArray(s.services.items))s.services.items=DEFAULTS.services.items.map((d,i)=>Object.assign({},d,s.services.items[i]||{}));
   if(s.contact&&/demo/i.test(s.contact.formSuccess||""))s.contact.formSuccess=DEFAULTS.contact.formSuccess;
   if(s.plan&&/demo/i.test(s.plan.successBody||""))s.plan.successBody=DEFAULTS.plan.successBody;
-  try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp){sp.invite=true;sp.cta="＋ Scheidsrechter toevoegen";if(Array.isArray(sp.panels)){sp.panels=sp.panels.filter(p=>p.type!=="invite");const t=sp.panels.find(p=>p.type==="table");if(t)t.linkInvite=true;}}}catch(e){}
+  try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp){sp.invite="official";sp.cta="＋ Scheidsrechter toevoegen";if(Array.isArray(sp.panels)){sp.panels=sp.panels.filter(p=>p.type!=="invite");const t=sp.panels.find(p=>p.type==="table");if(t)t.linkInvite="official";}}}catch(e){}
+  try{const bp=s.portals.beheer.pages["Verenigingen"];if(bp){bp.invite="vereniging";bp.cta="＋ Vereniging uitnodigen";const t=(bp.panels||[]).find(p=>p.type==="table");if(t)t.linkInvite="vereniging";}}catch(e){}
   return s;}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(deepMerge(DEFAULTS,s)):structuredClone(DEFAULTS);}catch(e){return structuredClone(DEFAULTS);}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
@@ -1643,7 +1639,7 @@ function panelHTML(p,b){
         if(c.kind==="pill")return `<td><span class="pill ${r[c.key+"St"]||"idle"}" data-edit="${rb}.${c.key}">${esc(r[c.key])}</span></td>`;
         return `<td data-edit="${rb}.${c.key}">${esc(r[c.key])}</td>`;}).join("");
       return `<tr>${tds}</tr>`;}).join("");
-    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" ${p.linkInvite?'data-invite-open href="#"':''} data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="tbl-scroll"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;}
+    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" ${p.linkInvite?'data-invite-open="'+esc(p.linkInvite)+'" href="#"':''} data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="tbl-scroll"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;}
   if(p.type==="acts"){
     const body=p.items.map((a,j)=>{const ib=`${b}.items.${j}`;
       return `<div class="act"><span class="mk" style="background:${esc(a.mk)}"></span><div class="ai"><div class="t" data-edit="${ib}.t">${esc(a.t)}</div><div class="meta"><span data-edit="${ib}.cat">${esc(a.cat)}</span> · <span data-edit="${ib}.date">${esc(a.date)}</span></div><div class="meta2">◍ <span data-edit="${ib}.loc">${esc(a.loc)}</span> · <span data-edit="${ib}.who">${esc(a.who)}</span></div></div><div class="rt"><span class="pill ${a.st||"idle"}" data-edit="${ib}.stt">${esc(a.stt)}</span><span class="tm" data-edit="${ib}.time">${esc(a.time)}</span></div></div>`;}).join("");
@@ -1710,7 +1706,7 @@ function dashMainHTML(key,P,b,overview){
   }
   const pg=(P.pages||{})[activePage],pb=`${b}.pages.${activePage}`;
   const hd=`<div class="hd"><div><h1>${esc(activePage)}</h1>${pg&&pg.subtitle?`<p data-edit="${pb}.subtitle">${esc(pg.subtitle)}</p>`:""}</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">${pg&&pg.cta?`<a class="btn btn-outline" ${pg.invite?'data-invite-open href="#"':''} data-edit="${pb}.cta">${esc(pg.cta)}</a>`:""}${logout}</div></div>`;
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${pg&&pg.cta?`<a class="btn btn-outline" ${pg.invite?'data-invite-open="'+esc(pg.invite)+'" href="#"':''} data-edit="${pb}.cta">${esc(pg.cta)}</a>`:""}${logout}</div></div>`;
   if(!pg)return hd+`<div class="panel"><div style="padding:26px"><p style="color:var(--muted)">Deze pagina wordt binnenkort ingericht.</p></div></div>`;
   return hd+(pg.stats?statGridHTML(pg.stats,pb):"")+(pg.panels||[]).map((p,pi)=>panelHTML(p,`${pb}.panels.${pi}`)).join("");}
 const ROLE_MAP={vereniging:"Verenigingsbeheerder",official:"Official",begeleider:"Begeleider",beheer:"Eigenaar / Beheerder"};
@@ -1868,19 +1864,26 @@ document.addEventListener("click",async e=>{
     if(currentUser.user_metadata)currentUser.user_metadata.onboarded=true;else currentUser.user_metadata={onboarded:true};
     authMode="login";activePage=null;renderDashboard();go("dashboard");return;}
   if(e.target.closest("#invSend")){e.preventDefault();
-    const nm=(document.getElementById("invName")||{}).value||"",em=(document.getElementById("invEmail")||{}).value||"",err=document.getElementById("invErr"),msg=document.getElementById("invMsg"),btn=e.target.closest("#invSend");
+    const g=id=>((document.getElementById(id)||{}).value||"").trim();
+    const nm=g("invName"),em=g("invEmail"),err=document.getElementById("invErr"),msg=document.getElementById("invMsg"),btn=e.target.closest("#invSend");
     if(err)err.hidden=true;if(msg)msg.hidden=true;
     if(!sb){if(err){err.textContent="Werkt alleen op de live website.";err.hidden=false;}return;}
-    if(!em.trim()||!nm.trim()){if(err){err.textContent="Vul een naam en e-mailadres in.";err.hidden=false;}return;}
-    if(!currentVerenigingId){if(err){err.textContent="Je account is nog niet aan een vereniging gekoppeld.";err.hidden=false;}return;}
+    if(!em||!nm){if(err){err.textContent="Vul minimaal een naam en e-mailadres in.";err.hidden=false;}return;}
+    let rol=inviteType==="vereniging"?"vereniging":"official",verId=currentVerenigingId;
     btn.disabled=true;btn.textContent="Versturen…";
-    const {error:e1}=await sb.from("uitnodigingen").insert({email:em.trim(),rol:"official",vereniging_id:currentVerenigingId,volledige_naam:nm.trim()});
+    if(inviteType==="vereniging"){
+      const club=g("invClub");if(!club){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Vul een verenigingsnaam in.";err.hidden=false;}return;}
+      const {data:vrow,error:ve}=await sb.from("verenigingen").insert({naam:club,plaats:g("invPlace")||null,contactpersoon:nm,contact_email:em,telefoon:g("invPhone")||null,abonnement:g("invAbo")||null}).select().single();
+      if(ve||!vrow){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Vereniging aanmaken mislukt: "+(ve?ve.message:"onbekend");err.hidden=false;}return;}
+      verId=vrow.id;
+    } else if(!verId){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Je account is nog niet aan een vereniging gekoppeld.";err.hidden=false;}return;}
+    const {error:e1}=await sb.from("uitnodigingen").insert({email:em,rol,vereniging_id:verId,volledige_naam:nm});
     if(e1){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Uitnodiging aanmaken mislukt: "+e1.message;err.hidden=false;}return;}
-    const {error:e2}=await sb.auth.signInWithOtp({email:em.trim(),options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
+    const {error:e2}=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
     btn.disabled=false;btn.textContent="Uitnodiging versturen";
     if(e2){if(err){err.textContent="E-mail versturen mislukt: "+e2.message;err.hidden=false;}return;}
-    if(msg){msg.textContent="Uitnodiging verstuurd naar "+em.trim()+". Zodra hij/zij de e-mail bevestigt, kan diegene een wachtwoord instellen en inloggen.";msg.hidden=false;}
-    const ni=document.getElementById("invName"),ei=document.getElementById("invEmail");if(ni)ni.value="";if(ei)ei.value="";
+    if(msg){msg.textContent=(inviteType==="vereniging"?"Vereniging aangemaakt en uitnodiging verstuurd naar ":"Uitnodiging verstuurd naar ")+em+". Zodra de link is bevestigd, kan er een wachtwoord ingesteld worden.";msg.hidden=false;}
+    ["invName","invEmail","invClub","invPlace","invAbo","invPhone"].forEach(id=>{const x=document.getElementById(id);if(x)x.value="";});
     return;}
 });
 // dashboard-paginarouter
@@ -1893,14 +1896,27 @@ document.addEventListener("change",e=>{const w=e.target.closest("[data-widget]")
 document.addEventListener("click",e=>{const c=e.target.closest("[data-club]");if(!c||editing)return;e.preventDefault();selectedClub=c.dataset.club;renderDashboard();});
 // profiel openen
 document.addEventListener("click",e=>{const pf=e.target.closest("[data-profile]");if(!pf||editing)return;if(e.target.closest("[data-go]")||e.target.closest("[data-logout]"))return;e.preventDefault();activePage="__profile";renderDashboard();});
-// scheidsrechter-uitnodigen pop-up
-function openInvite(){const m=document.getElementById("inviteModal"),sc=document.getElementById("modalScrim");
-  ["invErr","invMsg"].forEach(id=>{const x=document.getElementById(id);if(x)x.hidden=true;});
-  ["invName","invEmail"].forEach(id=>{const x=document.getElementById(id);if(x)x.value="";});
-  m.classList.add("on");sc.classList.add("on");const n=document.getElementById("invName");if(n)n.focus();}
+// uitnodigen pop-up (official of vereniging)
+let inviteType="official";
+function renderInviteModal(){const el=document.getElementById("inviteBody");document.getElementById("inviteTitle").textContent=inviteType==="vereniging"?"Vereniging uitnodigen":"Scheidsrechter toevoegen";
+  const foot=`<div class="form-status err" id="invErr" hidden></div><div class="form-status" id="invMsg" hidden></div><button class="btn btn-lime" id="invSend" style="width:100%;justify-content:center;margin-top:6px">Uitnodiging versturen</button>`;
+  if(inviteType==="vereniging"){
+    el.innerHTML=`<p class="modal-intro">Vul de gegevens van de vereniging in. Bij versturen wordt de vereniging automatisch aangemaakt en krijgt de contactpersoon een e-mail om een wachtwoord in te stellen en toegang te krijgen tot het verenigingsportaal.</p>
+      <div class="field"><label>Verenigingsnaam</label><input id="invClub" type="text" placeholder="Bijv. HV De Valken"></div>
+      <div class="mrow"><div class="field"><label>Plaats</label><input id="invPlace" type="text" placeholder="Plaats"></div><div class="field"><label>Abonnement (optioneel)</label><input id="invAbo" type="text" placeholder="Bijv. Grow"></div></div>
+      <div class="field"><label>Contactpersoon</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
+      <div class="mrow"><div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@vereniging.nl"></div><div class="field"><label>Telefoon (optioneel)</label><input id="invPhone" type="tel" placeholder="06 …"></div></div>${foot}`;
+  } else {
+    el.innerHTML=`<p class="modal-intro">Vul de gegevens in en verstuur. De scheidsrechter krijgt een e-mail om zelf een wachtwoord en profielfoto in te stellen en in het eigen portaal in te loggen.</p>
+      <div class="field"><label>Naam</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
+      <div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@vereniging.nl"></div>${foot}`;
+  }}
+function openInvite(type){inviteType=type||"official";renderInviteModal();
+  document.getElementById("inviteModal").classList.add("on");document.getElementById("modalScrim").classList.add("on");
+  const n=document.getElementById(inviteType==="vereniging"?"invClub":"invName");if(n)n.focus();}
 function closeInvite(){document.getElementById("inviteModal").classList.remove("on");document.getElementById("modalScrim").classList.remove("on");}
-document.addEventListener("click",e=>{
-  if(e.target.closest("[data-invite-open]")&&!editing){e.preventDefault();openInvite();return;}
+document.addEventListener("click",e=>{const op=e.target.closest("[data-invite-open]");
+  if(op&&!editing){e.preventDefault();openInvite(op.getAttribute("data-invite-open")||"official");return;}
   if(e.target.closest("[data-invite-close]")||e.target.id==="modalScrim"){closeInvite();}});
 // dienst-detail
 document.addEventListener("click",e=>{const s=e.target.closest("[data-service]");if(!s||editing)return;e.preventDefault();selectedService=+s.dataset.service;go("service");});
