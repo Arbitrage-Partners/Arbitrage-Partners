@@ -533,6 +533,7 @@ body.framed .auth,body.framed .dash,body.framed .scan{min-height:100vh}
 .main .hd h1{font-size:30px;display:flex;align-items:center;flex-wrap:wrap;gap:12px}
 .main .hd p{color:var(--muted);margin-top:6px;font-size:14.5px}
 .admin-badge{display:inline-flex;align-items:center;gap:6px;background:var(--ok-bg);color:var(--ok);font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;font-family:var(--sans);letter-spacing:0}
+.club-tag{display:inline-block;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);font-family:var(--sans);font-size:14px;font-weight:700;letter-spacing:0;padding:4px 13px;border-radius:999px;margin-left:12px;vertical-align:middle}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
 .stat-grid.flow{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 .stat-col{display:flex;flex-direction:column;gap:16px}
@@ -1038,9 +1039,10 @@ const SB_URL="https://keyuipkupfxowrwsfmpk.supabase.co";
 const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtleXVpcGt1cGZ4b3dyd3NmbXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDQ1MDEsImV4cCI6MjEwNDg4MDUwMX0.taZt8658Saldr5IOVb4L9qleXyn3ZnPubcrwGtes4b4";
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_ANON):null;
 const ROLE_TO_PORTAL={vereniging:"vereniging",official:"official",begeleider:"begeleider",beheerder:"beheer"};
-let loggedIn=false,currentUser=null,authMode="login",currentRole="vereniging",currentVerenigingId=null;
-async function loadProfile(){try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url").eq("id",currentUser.id).single();
-  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;}}catch(e){}}
+let loggedIn=false,currentUser=null,authMode="login",currentRole="vereniging",currentVerenigingId=null,currentVerenigingName=null;
+async function loadProfile(){currentVerenigingName=null;try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url").eq("id",currentUser.id).single();
+  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
+    if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}}}catch(e){}}
 function needsOnboarding(){return !!(currentUser&&(currentRole==="official"||currentRole==="begeleider")&&!(currentUser.user_metadata&&currentUser.user_metadata.onboarded));}
 async function routeAfterAuth(){if(needsOnboarding()){authMode="onboard";go("login");renderLogin();}else{activePage=null;renderDashboard();go("dashboard");}}
 async function afterLogin(){const {data:{user}}=await sb.auth.getUser();currentUser=user;loggedIn=!!user;await loadProfile();await routeAfterAuth();}
@@ -1318,7 +1320,7 @@ const DEFAULTS = {
         "Scheidsrechters":{subtitle:"Alle scheidsrechters en officials van de vereniging.",cta:"＋ Scheidsrechter toevoegen",invite:"official",
           stats:[{ic:"◍",badge:"actief",num:"7",lab:"Actief"},{ic:"＋",badge:"seizoen",num:"2",lab:"Nieuw dit seizoen"},{ic:"◎",badge:"opleiding",num:"2",lab:"In opleiding"},{ic:"✓",badge:"tevredenheid",num:"92%",lab:"Retentie"}],
           panels:[
-            {type:"table",title:"Alle scheidsrechters",link:"Toevoegen",linkInvite:"official",cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
+            {type:"table",title:"Alle scheidsrechters",link:"Toevoegen",linkInvite:"official",live:"officials",cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
             {nm:"Daan Hermans",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"20 sep 2026",last:"12 aug 2026",rep:"6"},
             {nm:"Femke de Groot",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"27 sep 2026",last:"—",rep:"1"},
             {nm:"Iris van Beek",sub:"Coördinator",niv:"BeNe League",status:"Actief",statusSt:"ok",next:"18 sep 2026",last:"2 sep 2026",rep:"9"},
@@ -1440,7 +1442,7 @@ const DEFAULTS = {
         {type:"bars",title:"Abonnementen per pakket",chip:"18 actief",items:[{h:"Start",pct:33},{h:"Grow",pct:50},{h:"Pro",pct:17}]}],
       pages:{
         "Verenigingen":{subtitle:"Beheer je aangesloten verenigingen: toevoegen, verwijderen en custom links aanmaken.",cta:"＋ Vereniging uitnodigen",invite:"vereniging",panels:[
-          {type:"table",title:"Verenigingen",link:"Uitnodigen",linkInvite:"vereniging",cols:[{label:"Vereniging",kind:"name"},{label:"Abonnement",kind:"pill",key:"abo"},{label:"Contactpersoon",kind:"text",key:"contact"},{label:"Laatste scan",kind:"text",key:"scan"},{label:"Status",kind:"pill",key:"status"}],rows:[
+          {type:"table",title:"Verenigingen",link:"Uitnodigen",linkInvite:"vereniging",live:"verenigingen",cols:[{label:"Vereniging",kind:"name"},{label:"Abonnement",kind:"pill",key:"abo"},{label:"Contactpersoon",kind:"text",key:"contact"},{label:"Laatste scan",kind:"text",key:"scan"},{label:"Status",kind:"pill",key:"status"}],rows:[
             {nm:"HV De Valken",sub:"Zoetermeer",abo:"Grow",aboSt:"info",contact:"Iris van Beek",scan:"2 sep 2026",status:"Actief",statusSt:"ok"},
             {nm:"DSS Handbal",sub:"Den Haag",abo:"Pro",aboSt:"ok",contact:"Rob Meijer",scan:"18 aug 2026",status:"Actief",statusSt:"ok"},
             {nm:"Aristos",sub:"Rotterdam",abo:"Start",aboSt:"idle",contact:"Nadia El Amrani",scan:"—",status:"Onboarding",statusSt:"warn"},
@@ -1531,7 +1533,8 @@ function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.li
   if(s.contact&&/demo/i.test(s.contact.formSuccess||""))s.contact.formSuccess=DEFAULTS.contact.formSuccess;
   if(s.plan&&/demo/i.test(s.plan.successBody||""))s.plan.successBody=DEFAULTS.plan.successBody;
   try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp){sp.invite="official";sp.cta="＋ Scheidsrechter toevoegen";if(Array.isArray(sp.panels)){sp.panels=sp.panels.filter(p=>p.type!=="invite");const t=sp.panels.find(p=>p.type==="table");if(t)t.linkInvite="official";}}}catch(e){}
-  try{const bp=s.portals.beheer.pages["Verenigingen"];if(bp){bp.invite="vereniging";bp.cta="＋ Vereniging uitnodigen";const t=(bp.panels||[]).find(p=>p.type==="table");if(t)t.linkInvite="vereniging";}}catch(e){}
+  try{const bp=s.portals.beheer.pages["Verenigingen"];if(bp){bp.invite="vereniging";bp.cta="＋ Vereniging uitnodigen";const t=(bp.panels||[]).find(p=>p.type==="table");if(t){t.linkInvite="vereniging";t.live="verenigingen";}}}catch(e){}
+  try{const t=s.portals.vereniging.pages["Scheidsrechters"].panels.find(p=>p.type==="table");if(t)t.live="officials";}catch(e){}
   return s;}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(deepMerge(DEFAULTS,s)):structuredClone(DEFAULTS);}catch(e){return structuredClone(DEFAULTS);}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
@@ -1639,7 +1642,7 @@ function panelHTML(p,b){
         if(c.kind==="pill")return `<td><span class="pill ${r[c.key+"St"]||"idle"}" data-edit="${rb}.${c.key}">${esc(r[c.key])}</span></td>`;
         return `<td data-edit="${rb}.${c.key}">${esc(r[c.key])}</td>`;}).join("");
       return `<tr>${tds}</tr>`;}).join("");
-    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" ${p.linkInvite?'data-invite-open="'+esc(p.linkInvite)+'" href="#"':''} data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="tbl-scroll"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;}
+    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" ${p.linkInvite?'data-invite-open="'+esc(p.linkInvite)+'" href="#"':''} data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="tbl-scroll"><table class="tbl" ${p.live?'data-live="'+esc(p.live)+'"':''}><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;}
   if(p.type==="acts"){
     const body=p.items.map((a,j)=>{const ib=`${b}.items.${j}`;
       return `<div class="act"><span class="mk" style="background:${esc(a.mk)}"></span><div class="ai"><div class="t" data-edit="${ib}.t">${esc(a.t)}</div><div class="meta"><span data-edit="${ib}.cat">${esc(a.cat)}</span> · <span data-edit="${ib}.date">${esc(a.date)}</span></div><div class="meta2">◍ <span data-edit="${ib}.loc">${esc(a.loc)}</span> · <span data-edit="${ib}.who">${esc(a.who)}</span></div></div><div class="rt"><span class="pill ${a.st||"idle"}" data-edit="${ib}.stt">${esc(a.stt)}</span><span class="tm" data-edit="${ib}.time">${esc(a.time)}</span></div></div>`;}).join("");
@@ -1694,18 +1697,29 @@ function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return
      <div class="side-scroll">${sideNav}</div>
      ${profileBlock}`;
   document.getElementById("dashMain").innerHTML=dashMainHTML(key,P,b,overview);
-  renderImages();refreshEditState();window.scrollTo(0,0);}
+  renderImages();refreshEditState();fillLive();window.scrollTo(0,0);}
+async function fillLive(){if(!sb)return;
+  document.querySelectorAll("#dashMain table[data-live]").forEach(async tbl=>{const kind=tbl.getAttribute("data-live"),tb=tbl.querySelector("tbody");if(!tb)return;
+    if(kind==="verenigingen"){const {data,error}=await sb.from("verenigingen").select("naam,plaats,abonnement,contactpersoon").order("aangemaakt_op",{ascending:false});
+      if(error)return;if(!data||!data.length){tb.innerHTML=`<tr><td colspan="5" style="color:var(--muted)">Nog geen verenigingen. Nodig er een uit via de knop hierboven.</td></tr>`;return;}
+      tb.innerHTML=data.map(v=>`<tr><td><div class="nm">${esc(v.naam||"")}</div><div class="sub">${esc(v.plaats||"")}</div></td><td><span class="pill ${v.abonnement?"info":"idle"}">${esc(v.abonnement||"—")}</span></td><td>${esc(v.contactpersoon||"—")}</td><td>—</td><td><span class="pill ok">Actief</span></td></tr>`).join("");}
+    if(kind==="officials"){if(!currentVerenigingId){tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">Nog geen scheidsrechters.</td></tr>`;return;}
+      const {data,error}=await sb.from("profiles").select("volledige_naam,email").eq("vereniging_id",currentVerenigingId).eq("rol","official");
+      if(error)return;if(!data||!data.length){tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">Nog geen scheidsrechters. Voeg er een toe via de knop hierboven.</td></tr>`;return;}
+      tb.innerHTML=data.map(o=>`<tr><td><div class="nm">${esc(o.volledige_naam||o.email)}</div><div class="sub">${esc(o.email||"")}</div></td><td>—</td><td><span class="pill ok">Actief</span></td><td>—</td><td>—</td><td>0</td></tr>`).join("");}
+  });}
 function dashMainHTML(key,P,b,overview){
   const logout=`<button class="btn btn-outline" data-logout>Uitloggen</button>`;
+  const clubTag=(currentVerenigingName&&key!=="beheer")?`<span class="club-tag">${esc(currentVerenigingName)}</span>`:"";
   if(activePage==="__profile")return profileHTML(key,logout);
   if(activePage===overview){
     if(key==="beheer")return beheerOverviewHTML(P,b,logout);
-    return `<div class="hd"><div><h1 data-edit="${b}.title">${esc(P.title)}</h1><p data-edit="${b}.subtitle">${esc(P.subtitle)}</p></div>
+    return `<div class="hd"><div><h1><span data-edit="${b}.title">${esc(P.title)}</span>${clubTag}</h1><p data-edit="${b}.subtitle">${esc(P.subtitle)}</p></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-outline" data-edit="${b}.cta">${esc(P.cta)}</a>${logout}</div></div>`+
       statGridHTML(P.stats,b)+P.panels.map((p,pi)=>panelHTML(p,`${b}.panels.${pi}`)).join("");
   }
   const pg=(P.pages||{})[activePage],pb=`${b}.pages.${activePage}`;
-  const hd=`<div class="hd"><div><h1>${esc(activePage)}</h1>${pg&&pg.subtitle?`<p data-edit="${pb}.subtitle">${esc(pg.subtitle)}</p>`:""}</div>
+  const hd=`<div class="hd"><div><h1>${esc(activePage)}${clubTag}</h1>${pg&&pg.subtitle?`<p data-edit="${pb}.subtitle">${esc(pg.subtitle)}</p>`:""}</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">${pg&&pg.cta?`<a class="btn btn-outline" ${pg.invite?'data-invite-open="'+esc(pg.invite)+'" href="#"':''} data-edit="${pb}.cta">${esc(pg.cta)}</a>`:""}${logout}</div></div>`;
   if(!pg)return hd+`<div class="panel"><div style="padding:26px"><p style="color:var(--muted)">Deze pagina wordt binnenkort ingericht.</p></div></div>`;
   return hd+(pg.stats?statGridHTML(pg.stats,pb):"")+(pg.panels||[]).map((p,pi)=>panelHTML(p,`${pb}.panels.${pi}`)).join("");}
