@@ -1015,6 +1015,10 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
   <div class="modal-hd"><h3 id="inviteTitle">Toevoegen</h3><button class="modal-x" data-invite-close>×</button></div>
   <div class="modal-bd" id="inviteBody"></div>
 </div>
+<div id="detailModal" class="modal">
+  <div class="modal-hd"><h3 id="detailTitle">Aanvraag</h3><button class="modal-x" data-detail-close>×</button></div>
+  <div class="modal-bd" id="detailBody"></div>
+</div>
 
 <!-- drawer -->
 <div id="scrim"></div>
@@ -1064,6 +1068,15 @@ const ADMIN_CODE="AP-BEHEER";
 const FORM_ENDPOINT="https://formspree.io/f/mrpgwqvy";
 function submitForm(formEl,extra,done){const fd=formEl?new FormData(formEl):new FormData();if(extra)for(const k in extra)fd.append(k,extra[k]);
   fetch(FORM_ENDPOINT,{method:"POST",body:fd,headers:{Accept:"application/json"}}).then(r=>done(r.ok)).catch(()=>done(false));}
+// Aanvraag/support opslaan in het portaal + korte tip-mail versturen
+async function sendAanvraag(o,done){done=done||function(){};
+  if(o.hp){done(true);return;} // honeypot: stil negeren, doe alsof het lukte
+  let dbOk=false;
+  if(sb){try{const {error}=await sb.from("aanvragen").insert({categorie:o.categorie,type:o.type||null,naam:o.naam||null,email:o.email||null,telefoon:o.telefoon||null,onderwerp:o.onderwerp||null,bericht:o.bericht||null,details:o.details||null,status:"nieuw"});dbOk=!error;}catch(e){}}
+  const waar=o.categorie==="support"?"Support":"Aanvragen";
+  const wat=o.notify||(o.categorie==="support"?"een contactformulier":"een aanvraag");
+  const kort="Hey, "+(o.naam||"iemand")+" heeft "+wat+" ingediend. Bekijk het in het beheerdersportaal onder “"+waar+"”. Contact: "+(o.email||"—")+(o.telefoon?(" · "+o.telefoon):"")+".";
+  submitForm(null,{_subject:"Nieuwe "+(o.categorie==="support"?"supportvraag":"aanvraag")+" van "+(o.naam||"onbekend"),melding:kort,type:o.type||""},mailOk=>{done(dbOk||mailOk);});}
 /* ---- Supabase (echte login + rollen) ---- */
 const SB_URL="https://keyuipkupfxowrwsfmpk.supabase.co";
 const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtleXVpcGt1cGZ4b3dyd3NmbXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDQ1MDEsImV4cCI6MjEwNDg4MDUwMX0.taZt8658Saldr5IOVb4L9qleXyn3ZnPubcrwGtes4b4";
@@ -1487,14 +1500,14 @@ const DEFAULTS = {
             {nm:"Jij (Eigenaar)",sub:"eigenaar@arbitragepartners.nl",rol:"Eigenaar",rights:"Beheerder",rightsSt:"ok",last:"Nu"},
             {nm:"Tom Verhoef",sub:"tom@arbitragepartners.nl",rol:"Adviseur",rights:"Bewerker",rightsSt:"info",last:"Vandaag"},
             {nm:"Sanne de Wit",sub:"sanne@arbitragepartners.nl",rol:"Trainer",rights:"Alleen-lezen",rightsSt:"idle",last:"Gisteren"}]}]},
-        "Aanvragen":{subtitle:"Alle binnengekomen aanvragen voor een kennismaking of dienst.",panels:[
-          {type:"table",title:"Aanvragen",cols:[{label:"Naam",kind:"name"},{label:"Interesse",kind:"text",key:"interest"},{label:"Datum",kind:"text",key:"date"},{label:"Status",kind:"pill",key:"status"}],rows:[
+        "Aanvragen":{subtitle:"Alle binnengekomen aanvragen voor een kennismaking, scan of dienst. Klik op een regel voor de details.",panels:[
+          {type:"table",title:"Aanvragen",live:"aanvragen",cols:[{label:"Naam",kind:"name"},{label:"Onderwerp",kind:"text",key:"interest"},{label:"Datum",kind:"text",key:"date"},{label:"Status",kind:"pill",key:"status"}],rows:[
             {nm:"Mark Jansen",sub:"HV Athletica",interest:"Arbitrage Scan",date:"10 sep 2026",status:"Nieuw",statusSt:"warn"},
             {nm:"Lisa Bakker",sub:"SV Nova",interest:"Abonnement Grow",date:"8 sep 2026",status:"In gesprek",statusSt:"info"},
             {nm:"Peter Smit",sub:"HC Oranje",interest:"Wervingscampagne",date:"5 sep 2026",status:"Afgerond",statusSt:"ok"},
             {nm:"Emma de Boer",sub:"HV Spirit",interest:"Official Clinic",date:"3 sep 2026",status:"Nieuw",statusSt:"warn"}]}]},
-        "Support":{subtitle:"Alle supportvragen en berichten uit het contactformulier.",panels:[
-          {type:"table",title:"Berichten",cols:[{label:"Van",kind:"name"},{label:"Onderwerp",kind:"text",key:"subj"},{label:"Datum",kind:"text",key:"date"},{label:"Status",kind:"pill",key:"status"}],rows:[
+        "Support":{subtitle:"Alle supportvragen en berichten uit het contactformulier. Klik op een regel voor de details.",panels:[
+          {type:"table",title:"Berichten",live:"support",cols:[{label:"Van",kind:"name"},{label:"Onderwerp",kind:"text",key:"subj"},{label:"Datum",kind:"text",key:"date"},{label:"Status",kind:"pill",key:"status"}],rows:[
             {nm:"Iris van Beek",sub:"HV De Valken",subj:"Vraag over rapportages",date:"11 sep 2026",status:"Open",statusSt:"warn"},
             {nm:"Rob Meijer",sub:"DSS Handbal",subj:"Inloggen lukt niet",date:"9 sep 2026",status:"In behandeling",statusSt:"info"},
             {nm:"Contactformulier",sub:"info@sportclub.nl",subj:"Interesse in samenwerking",date:"7 sep 2026",status:"Beantwoord",statusSt:"ok"},
@@ -1568,6 +1581,8 @@ function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.li
   if(s.plan&&/demo/i.test(s.plan.successBody||""))s.plan.successBody=DEFAULTS.plan.successBody;
   try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp){sp.invite="official";sp.cta="＋ Scheidsrechter toevoegen";if(Array.isArray(sp.panels)){sp.panels=sp.panels.filter(p=>p.type!=="invite");const t=sp.panels.find(p=>p.type==="table");if(t)t.linkInvite="official";}}}catch(e){}
   try{const bp=s.portals.beheer.pages["Verenigingen"];if(bp){bp.invite="vereniging";bp.cta="＋ Vereniging uitnodigen";const t=(bp.panels||[]).find(p=>p.type==="table");if(t){t.linkInvite="vereniging";t.live="verenigingen";}}}catch(e){}
+  try{const ap=s.portals.beheer.pages["Aanvragen"];if(ap){const t=(ap.panels||[]).find(p=>p.type==="table");if(t)t.live="aanvragen";}}catch(e){}
+  try{const up=s.portals.beheer.pages["Support"];if(up){const t=(up.panels||[]).find(p=>p.type==="table");if(t)t.live="support";}}catch(e){}
   try{const t=s.portals.vereniging.pages["Scheidsrechters"].panels.find(p=>p.type==="table");if(t)t.live="officials";}catch(e){}
   try{const bp=s.portals.vereniging.pages["Begeleiders"];if(bp){bp.invite="begeleider";bp.cta="＋ Begeleider toevoegen";const t=(bp.panels||[]).find(p=>p.type==="table");if(t){t.linkInvite="begeleider";t.live="begeleiders";}}}catch(e){}
   return s;}
@@ -1763,7 +1778,18 @@ async function fillLive(){if(!sb)return;
       const {data,error}=await sb.from("profiles").select("id,volledige_naam,email").eq("vereniging_id",currentVerenigingId).eq("rol","begeleider");
       if(error)return;if(!data||!data.length){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">Nog geen begeleiders. Voeg er een toe via de knop hierboven.</td></tr>`;return;}
       tb.innerHTML=data.map(o=>`<tr><td><div class="nm">${esc(o.volledige_naam||o.email)}</div><div class="sub">${esc(o.email||"")}</div></td><td>—</td><td>—</td><td><div class="cell-end"><span class="pill ok">Actief</span>${delBtn("begeleider",o.id)}</div></td></tr>`).join("");}
+    if(kind==="aanvragen"||kind==="support"){const cat=kind==="support"?"support":"aanvraag";
+      const {data,error}=await sb.from("aanvragen").select("*").eq("categorie",cat).order("aangemaakt_op",{ascending:false});
+      if(error){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">Kon aanvragen niet laden.</td></tr>`;return;}
+      if(!data||!data.length){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">Nog geen ${cat==="support"?"berichten":"aanvragen"} binnengekomen.</td></tr>`;return;}
+      data.forEach(r=>{aanvraagCache[r.id]=r;});
+      tb.innerHTML=data.map(r=>{const s=aanvraagStatus(r.status),onderw=r.onderwerp||aanvraagTypeLabel(r.type)||"—";
+        return `<tr data-aanvraag="${esc(r.id)}" style="cursor:pointer"><td><div class="nm">${esc(r.naam||"Onbekend")}</div><div class="sub">${esc(r.email||"")}</div></td><td>${esc(onderw)}</td><td>${esc(aanvraagDatum(r.aangemaakt_op))}</td><td><div class="cell-end"><span class="pill ${s.st}">${s.lab}</span></div></td></tr>`;}).join("");}
   });}
+let aanvraagCache={};
+function aanvraagStatus(st){return ({nieuw:{lab:"Nieuw",st:"warn"},in_behandeling:{lab:"In behandeling",st:"info"},afgerond:{lab:"Afgerond",st:"ok"}})[st]||{lab:"Nieuw",st:"warn"};}
+function aanvraagTypeLabel(t){return ({contact:"Contactbericht",scan:"Arbitrage Scan",kennismaking:"Kennismaking"})[t]||t||"";}
+function aanvraagDatum(ts){if(!ts)return "—";try{return new Date(ts).toLocaleDateString("nl-NL",{day:"numeric",month:"short",year:"numeric"});}catch(e){return "—";}}
 function dashMainHTML(key,P,b,overview){
   const logout=`<button class="btn btn-outline" data-logout>Uitloggen</button>`;
   const clubTag=(currentVerenigingName&&key!=="beheer")?`<span class="club-tag">${esc(currentVerenigingName)}</span>`:"";
@@ -1930,11 +1956,13 @@ document.addEventListener("click",e=>{const lg=e.target.closest(".logo");if(!lg|
 document.addEventListener("click",e=>{const a=e.target.closest("[data-anchor]");if(!a||editing)return;e.preventDefault();
   const scroll=()=>{const t=document.getElementById(a.dataset.anchor);if(t)t.scrollIntoView({behavior:"smooth",block:"start"});};
   if(!document.getElementById("view-site").classList.contains("on")){go("site");setTimeout(scroll,60);}else scroll();});
-// contact form (demo)
+// contact form → Support in het portaal
 document.getElementById("contactForm").addEventListener("submit",e=>{e.preventDefault();if(editing)return;
   const form=e.target,s=document.getElementById("contactStatus"),btn=form.querySelector("button[type=submit]");
+  const gv=n=>{const el=form.elements[n];return el?(el.value||"").trim():"";};
   btn.disabled=true;btn.style.opacity=".6";
-  submitForm(form,null,ok=>{btn.disabled=false;btn.style.opacity="";s.hidden=false;
+  sendAanvraag({categorie:"support",type:"contact",naam:gv("naam"),email:gv("email"),bericht:gv("bericht"),hp:gv("_gotcha"),notify:"een contactformulier"},ok=>{
+    btn.disabled=false;btn.style.opacity="";s.hidden=false;
     if(ok){s.classList.remove("err");s.textContent=S.contact.formSuccess;form.reset();}
     else{s.classList.add("err");s.textContent="Er ging iets mis met versturen. Probeer het later opnieuw of mail rechtstreeks naar info@arbitragepartners.nl.";}});});
 
@@ -2057,7 +2085,37 @@ function openInvite(type){inviteType=type||"official";renderInviteModal();
 function closeInvite(){document.getElementById("inviteModal").classList.remove("on");document.getElementById("modalScrim").classList.remove("on");}
 document.addEventListener("click",e=>{const op=e.target.closest("[data-invite-open]");
   if(op&&!editing){e.preventDefault();openInvite(op.getAttribute("data-invite-open")||"official");return;}
-  if(e.target.closest("[data-invite-close]")||e.target.id==="modalScrim"){closeInvite();}});
+  if(e.target.closest("[data-invite-close]")||e.target.id==="modalScrim"){closeInvite();closeDetail();}});
+
+/* ---- aanvraag/support detail ---- */
+function closeDetail(){document.getElementById("detailModal").classList.remove("on");if(!document.getElementById("inviteModal").classList.contains("on"))document.getElementById("modalScrim").classList.remove("on");}
+function renderDetail(r){
+  document.getElementById("detailTitle").textContent=(r.categorie==="support"?"Supportbericht":"Aanvraag")+" · "+aanvraagTypeLabel(r.type);
+  const s=aanvraagStatus(r.status);
+  const rij=(l,v)=>v?`<tr><td style="color:var(--muted);width:150px;vertical-align:top">${esc(l)}</td><td>${esc(v)}</td></tr>`:"";
+  let detR="";if(r.details&&typeof r.details==="object"){for(const k in r.details){const v=r.details[k];if(v&&v!=="—")detR+=rij(k,String(v));}}
+  const stBtn=(val,lab)=>`<button class="btn ${r.status===val?"btn-lime":"btn-outline"} btn-sm" data-setstatus="${val}" data-aid="${esc(r.id)}">${lab}</button>`;
+  document.getElementById("detailBody").innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span class="pill ${s.st}">${s.lab}</span><span style="color:var(--muted);font-size:13px">${esc(aanvraagDatum(r.aangemaakt_op))}</span></div>
+    <div class="tbl-scroll"><table class="tbl"><tbody>
+      ${rij("Naam",r.naam)}${rij("E-mail",r.email)}${rij("Telefoon",r.telefoon)}${rij("Onderwerp",r.onderwerp)}${r.bericht?`<tr><td style="color:var(--muted);vertical-align:top">Bericht</td><td style="white-space:pre-wrap">${esc(r.bericht)}</td></tr>`:""}${detR}
+    </tbody></table></div>
+    <div style="margin-top:18px"><div style="font-weight:700;font-size:13px;margin-bottom:8px">Status</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${stBtn("nieuw","Nieuw")}${stBtn("in_behandeling","In behandeling")}${stBtn("afgerond","Afgerond")}</div></div>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+      ${r.email?`<a class="btn btn-lime btn-sm" href="mailto:${esc(r.email)}">✉ Beantwoorden</a>`:"<span></span>"}
+      <button class="btn btn-outline btn-sm" data-delaanvraag="${esc(r.id)}" style="color:var(--warn)">Verwijderen</button>
+    </div>`;}
+function openDetail(id){const r=aanvraagCache[id];if(!r)return;renderDetail(r);
+  document.getElementById("detailModal").classList.add("on");document.getElementById("modalScrim").classList.add("on");}
+document.addEventListener("click",async e=>{
+  const row=e.target.closest("[data-aanvraag]");if(row&&!editing){e.preventDefault();openDetail(row.getAttribute("data-aanvraag"));return;}
+  if(e.target.closest("[data-detail-close]")){closeDetail();return;}
+  const ss=e.target.closest("[data-setstatus]");if(ss){const id=ss.getAttribute("data-aid"),val=ss.getAttribute("data-setstatus");
+    if(sb){const {error}=await sb.from("aanvragen").update({status:val}).eq("id",id);if(!error&&aanvraagCache[id]){aanvraagCache[id].status=val;renderDetail(aanvraagCache[id]);fillLive();}}return;}
+  const da=e.target.closest("[data-delaanvraag]");if(da){const id=da.getAttribute("data-delaanvraag");
+    if(!confirm("Deze aanvraag definitief verwijderen?"))return;
+    if(sb){const {error}=await sb.from("aanvragen").delete().eq("id",id);if(!error){delete aanvraagCache[id];closeDetail();fillLive();}else alert("Verwijderen mislukt: "+error.message);}return;}});
 // dienst-detail
 document.addEventListener("click",e=>{const s=e.target.closest("[data-service]");if(!s||editing)return;e.preventDefault();selectedService=+s.dataset.service;go("service");});
 function renderService(){const items=S.services.items;if(selectedService<0||selectedService>=items.length)selectedService=0;
@@ -2116,8 +2174,9 @@ function scanBuildData(){const SC=S.scan,ans=scanState.answers,c=scanState.conta
   const data={_subject:"Nieuwe Arbitrage Scan ingevuld",formulier:"Arbitrage Scan",naam:c.name||"",functie:c.role||"",email:c.email||"",telefoon:c.phone||""};
   SC.questions.forEach(q=>{let v=ans[q.code];if(Array.isArray(v))v=v.join(", ");if(v===undefined||v===null||v==="")v="—";data[q.section+q.code+". "+q.text]=v;});
   return data;}
-function sendScan(){if(scanState.sent)return;scanState.sent=true;
-  submitForm(null,scanBuildData(),ok=>{scanState.sentOk=ok;const el=document.getElementById("scanSentNote");if(el){el.textContent=ok?"✓ Je antwoorden zijn verstuurd naar Arbitrage Partners.":"Let op: versturen is mislukt. Neem contact op via info@arbitragepartners.nl.";el.style.color=ok?"var(--ok)":"var(--warn)";}});}
+function scanAnswerMap(){const SC=S.scan,ans=scanState.answers,out={};SC.questions.forEach(q=>{let v=ans[q.code];if(Array.isArray(v))v=v.join(", ");if(v===undefined||v===null||v==="")v="—";out[q.section+q.code+". "+q.text]=v;});return out;}
+function sendScan(){if(scanState.sent)return;scanState.sent=true;const c=scanState.contact;
+  sendAanvraag({categorie:"aanvraag",type:"scan",naam:c.name||"",email:c.email||"",telefoon:c.phone||"",onderwerp:"Arbitrage Scan",bericht:c.role?("Functie: "+c.role):"",details:scanAnswerMap(),notify:"de Arbitrage Scan"},ok=>{scanState.sentOk=ok;const el=document.getElementById("scanSentNote");if(el){el.textContent=ok?"✓ Je antwoorden zijn verstuurd naar Arbitrage Partners.":"Let op: versturen is mislukt. Neem contact op via info@arbitragepartners.nl.";el.style.color=ok?"var(--ok)":"var(--warn)";}});}
 resetScan();
 function escAttr(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
 const SC_ISANS=v=>Array.isArray(v)?v.length>0:(v!==undefined&&v!==null&&v!=="");
@@ -2253,8 +2312,10 @@ function renderPlan(){const P=S.plan,root=document.getElementById("planBody");le
     planState[c.dataset.planchip]=+c.dataset.i;renderPlan();});
   root.addEventListener("submit",e=>{e.preventDefault();if(editing)return;const form=e.target,btn=form.querySelector("button[type=submit]");
     if(btn){btn.disabled=true;btn.style.opacity=".6";}
-    const extra={voorkeursmoment:S.plan.slots[planState.slot]||"—",contactwijze:S.plan.ways[planState.way]||"—",interesses:interests.length?interests.join(", "):"—"};
-    submitForm(form,extra,ok=>{if(ok){planState.submitted=true;interests=[];renderPlan();}
+    const gv=n=>{const el=form.elements[n];return el?(el.value||"").trim():"";};
+    const details={vereniging:gv("vereniging")||"—",functie:gv("functie")||"—",voorkeursdatum:gv("voorkeursdatum")||"—",voorkeursmoment:S.plan.slots[planState.slot]||"—",contactwijze:S.plan.ways[planState.way]||"—",interesses:interests.length?interests.join(", "):"—"};
+    sendAanvraag({categorie:"aanvraag",type:"kennismaking",naam:gv("naam"),email:gv("email"),telefoon:gv("telefoon"),onderwerp:"Kennismaking"+(interests.length?(" · "+interests.join(", ")):""),bericht:gv("bericht"),details:details,hp:gv("_gotcha"),notify:"een kennismakingsaanvraag"},ok=>{
+      if(ok){planState.submitted=true;interests=[];renderPlan();}
       else{if(btn){btn.disabled=false;btn.style.opacity="";}alert("Er ging iets mis met versturen. Probeer het later opnieuw of mail naar info@arbitragepartners.nl.");}});});
 })();
 
@@ -2380,7 +2441,7 @@ function renderApp(){document.getElementById("appScreen").innerHTML=appHTML();}
     const d=e.target.closest("[data-adash]");if(d){appDashPage=d.dataset.adash;appMoreOpen=false;renderApp();return;}
     const sb=e.target.closest("[data-asend]");if(sb){sb.disabled=true;sb.style.opacity=".6";
       const g=id=>{const el=root.querySelector("#"+id);return el?el.value:"";};
-      submitForm(null,{_subject:"Nieuw bericht via de app",formulier:"App-contact",_gotcha:g("appcHp"),naam:g("appcName"),email:g("appcEmail"),bericht:g("appcMsg")},ok=>{const s=root.querySelector("#appSent");if(s){s.textContent=ok?S.plan.successBody:"Er ging iets mis. Mail anders naar info@arbitragepartners.nl.";s.style.display="block";}sb.disabled=false;sb.style.opacity="";});return;}
+      sendAanvraag({categorie:"support",type:"contact",naam:g("appcName"),email:g("appcEmail"),bericht:g("appcMsg"),hp:g("appcHp"),notify:"een contactformulier (via de app)"},ok=>{const s=root.querySelector("#appSent");if(s){s.textContent=ok?S.plan.successBody:"Er ging iets mis. Mail anders naar info@arbitragepartners.nl.";s.style.display="block";}sb.disabled=false;sb.style.opacity="";});return;}
   });
 })();
 
