@@ -1360,8 +1360,8 @@ const DEFAULTS = {
             {nm:"Sven Willems",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"21 sep 2026",last:"5 sep 2026",rep:"4"},
             {nm:"Noa Jansen",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"—",last:"—",rep:"0"},
             {nm:"Tim Bakker",sub:"Scheidsrechter",niv:"Regionaal",status:"Actief",statusSt:"ok",next:"22 sep 2026",last:"7 sep 2026",rep:"3"}]}]},
-        "Begeleiders":{subtitle:"Wie begeleidt welke scheidsrechters.",cta:"Toevoegen",panels:[
-          {type:"table",title:"Begeleiders",cols:[{label:"Naam",kind:"name"},{label:"Officials",kind:"text",key:"count"},{label:"Laatste rapportage",kind:"text",key:"last"},{label:"Status",kind:"pill",key:"status"}],rows:[
+        "Begeleiders":{subtitle:"Wie begeleidt welke scheidsrechters.",cta:"＋ Begeleider toevoegen",invite:"begeleider",panels:[
+          {type:"table",title:"Begeleiders",link:"Toevoegen",linkInvite:"begeleider",live:"begeleiders",cols:[{label:"Naam",kind:"name"},{label:"Officials",kind:"text",key:"count"},{label:"Laatste rapportage",kind:"text",key:"last"},{label:"Status",kind:"pill",key:"status"}],rows:[
             {nm:"Iris van Beek",sub:"Coördinator",count:"4 officials",last:"5 sep 2026",status:"Actief",statusSt:"ok"},
             {nm:"Sven Willems",sub:"Begeleider",count:"3 officials",last:"1 sep 2026",status:"Actief",statusSt:"ok"},
             {nm:"Mark de Vries",sub:"Begeleider i.o.",count:"1 official",last:"—",status:"In opleiding",statusSt:"warn"}]}]},
@@ -1455,12 +1455,12 @@ const DEFAULTS = {
       demoBadge:"Beheerdersportaal — intern overzicht voor de eigenaar van Arbitrage Partners.",
       title:"Beheeroverzicht",subtitle:"Alles rond je verenigingen, abonnementen en aanvragen.",cta:"Vereniging toevoegen",
       stats:[
-        {ic:"◍",badge:"actief",num:"24",lab:"Aangesloten verenigingen"},
-        {ic:"★",badge:"lopend",num:"18",lab:"Actieve abonnementen"},
-        {ic:"▤",badge:"per maand",num:"€7.410",lab:"Maandelijkse omzet (MRR)"},
-        {ic:"✉",badge:"open",num:"5",lab:"Openstaande aanvragen"},
-        {ic:"◈",badge:"totaal",num:"1.240",lab:"Officials in beeld"},
-        {ic:"✓",badge:"gemiddeld",num:"8.6",lab:"Tevredenheid verenigingen"}],
+        {ic:"◍",badge:"actief",num:"0",lab:"Aangesloten verenigingen",live:"verenigingen"},
+        {ic:"★",badge:"lopend",num:"0",lab:"Actieve abonnementen",live:"abonnementen"},
+        {ic:"▤",badge:"per maand",num:"€0",lab:"Maandelijkse omzet (MRR)",live:"mrr"},
+        {ic:"✉",badge:"open",num:"—",lab:"Openstaande aanvragen",live:"aanvragen"},
+        {ic:"◈",badge:"totaal",num:"0",lab:"Officials in beeld",live:"officials_all"},
+        {ic:"✓",badge:"gemiddeld",num:"—",lab:"Tevredenheid verenigingen",live:"tevredenheid"}],
       panels:[
         {type:"table",title:"Verenigingen",link:"Alle verenigingen →",cols:[{label:"Vereniging",kind:"name"},{label:"Abonnement",kind:"pill",key:"abo"},{label:"Laatste scan",kind:"text",key:"scan"},{label:"Status",kind:"pill",key:"status"}],rows:[
           {nm:"HV De Valken",sub:"Zoetermeer",abo:"Grow",aboSt:"info",scan:"2 sep 2026",status:"Actief",statusSt:"ok"},
@@ -1562,12 +1562,14 @@ function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.li
     return l;}).filter(l=>l.anchor!=="abonnementen");
   if(s.chooser&&Array.isArray(s.chooser.cards))s.chooser.cards=s.chooser.cards.filter(c=>c.portal!=="beheer").map(c=>{const d=DEFAULTS.chooser.cards.find(x=>x.portal===c.portal);return d?Object.assign({},c,{btn:d.btn}):c;});
   if(s.portals&&s.portals.beheer)s.portals.beheer.sections=structuredClone(DEFAULTS.portals.beheer.sections);
+  try{const st=s.portals.beheer.stats;if(Array.isArray(st)){const L=["verenigingen","abonnementen","mrr","aanvragen","officials_all","tevredenheid"];st.forEach((x,i)=>{if(L[i])x.live=L[i];});}}catch(e){}
   if(s.services&&Array.isArray(s.services.items))s.services.items=DEFAULTS.services.items.map((d,i)=>Object.assign({},d,s.services.items[i]||{}));
   if(s.contact&&/demo/i.test(s.contact.formSuccess||""))s.contact.formSuccess=DEFAULTS.contact.formSuccess;
   if(s.plan&&/demo/i.test(s.plan.successBody||""))s.plan.successBody=DEFAULTS.plan.successBody;
   try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp){sp.invite="official";sp.cta="＋ Scheidsrechter toevoegen";if(Array.isArray(sp.panels)){sp.panels=sp.panels.filter(p=>p.type!=="invite");const t=sp.panels.find(p=>p.type==="table");if(t)t.linkInvite="official";}}}catch(e){}
   try{const bp=s.portals.beheer.pages["Verenigingen"];if(bp){bp.invite="vereniging";bp.cta="＋ Vereniging uitnodigen";const t=(bp.panels||[]).find(p=>p.type==="table");if(t){t.linkInvite="vereniging";t.live="verenigingen";}}}catch(e){}
   try{const t=s.portals.vereniging.pages["Scheidsrechters"].panels.find(p=>p.type==="table");if(t)t.live="officials";}catch(e){}
+  try{const bp=s.portals.vereniging.pages["Begeleiders"];if(bp){bp.invite="begeleider";bp.cta="＋ Begeleider toevoegen";const t=(bp.panels||[]).find(p=>p.type==="table");if(t){t.linkInvite="begeleider";t.live="begeleiders";}}}catch(e){}
   return s;}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(deepMerge(DEFAULTS,s)):structuredClone(DEFAULTS);}catch(e){return structuredClone(DEFAULTS);}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
@@ -1734,7 +1736,19 @@ function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return
      <div class="side-scroll">${sideNav}</div>
      ${profileBlock}`;
   document.getElementById("dashMain").innerHTML=dashMainHTML(key,P,b,overview);
-  renderImages();refreshEditState();fillLive();window.scrollTo(0,0);}
+  renderImages();refreshEditState();fillLive();if(key==="beheer")fillStats();window.scrollTo(0,0);}
+async function fillStats(){if(!sb)return;
+  const set=(k,v)=>document.querySelectorAll('#dashMain [data-livestat="'+k+'"]').forEach(el=>el.textContent=v);
+  try{
+    const {data:vs,error}=await sb.from("verenigingen").select("abonnement");
+    if(!error&&vs){set("verenigingen",String(vs.length));
+      const prices={Start:195,Grow:395,Pro:695};let abo=0,mrr=0;
+      vs.forEach(v=>{const a=(v.abonnement||"").trim();if(prices[a]!=null){abo++;mrr+=prices[a];}});
+      set("abonnementen",String(abo));set("mrr","€"+mrr.toLocaleString("nl-NL"));}
+    const {count:oc,error:oe}=await sb.from("profiles").select("id",{count:"exact",head:true}).eq("rol","official");
+    if(!oe&&typeof oc==="number")set("officials_all",String(oc));
+  }catch(e){}
+  set("aanvragen","—");set("tevredenheid","—");}
 async function fillLive(){if(!sb)return;
   document.querySelectorAll("#dashMain table[data-live]").forEach(async tbl=>{const kind=tbl.getAttribute("data-live"),tb=tbl.querySelector("tbody");if(!tb)return;
     const delBtn=(type,id)=>`<button class="del-btn" data-del="${type}" data-id="${esc(id)}" title="Verwijderen">✕</button>`;
@@ -1745,6 +1759,10 @@ async function fillLive(){if(!sb)return;
       const {data,error}=await sb.from("profiles").select("id,volledige_naam,email").eq("vereniging_id",currentVerenigingId).eq("rol","official");
       if(error)return;if(!data||!data.length){tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">Nog geen scheidsrechters. Voeg er een toe via de knop hierboven.</td></tr>`;return;}
       tb.innerHTML=data.map(o=>`<tr><td><div class="nm">${esc(o.volledige_naam||o.email)}</div><div class="sub">${esc(o.email||"")}</div></td><td>—</td><td><span class="pill ok">Actief</span></td><td>—</td><td>—</td><td><div class="cell-end"><span>0</span>${delBtn("official",o.id)}</div></td></tr>`).join("");}
+    if(kind==="begeleiders"){if(!currentVerenigingId){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">Nog geen begeleiders.</td></tr>`;return;}
+      const {data,error}=await sb.from("profiles").select("id,volledige_naam,email").eq("vereniging_id",currentVerenigingId).eq("rol","begeleider");
+      if(error)return;if(!data||!data.length){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">Nog geen begeleiders. Voeg er een toe via de knop hierboven.</td></tr>`;return;}
+      tb.innerHTML=data.map(o=>`<tr><td><div class="nm">${esc(o.volledige_naam||o.email)}</div><div class="sub">${esc(o.email||"")}</div></td><td>—</td><td>—</td><td><div class="cell-end"><span class="pill ok">Actief</span>${delBtn("begeleider",o.id)}</div></td></tr>`).join("");}
   });}
 function dashMainHTML(key,P,b,overview){
   const logout=`<button class="btn btn-outline" data-logout>Uitloggen</button>`;
@@ -1820,7 +1838,7 @@ function beheerOverviewHTML(P,b,logout){
   return html;}
 
 function statGridHTML(stats,b){
-  const tile=(s,i)=>`<div class="tile"><div class="row1"><span class="ic">${esc(s.ic)}</span><span class="badge" data-edit="${b}.stats.${i}.badge">${esc(s.badge)}</span></div><div class="num" data-edit="${b}.stats.${i}.num">${esc(s.num)}</div><div class="lab" data-edit="${b}.stats.${i}.lab">${esc(s.lab)}</div></div>`;
+  const tile=(s,i)=>`<div class="tile"><div class="row1"><span class="ic">${esc(s.ic)}</span><span class="badge" data-edit="${b}.stats.${i}.badge">${esc(s.badge)}</span></div><div class="num" data-edit="${b}.stats.${i}.num"${s.live?' data-livestat="'+esc(s.live)+'"':''}>${esc(s.num)}</div><div class="lab" data-edit="${b}.stats.${i}.lab">${esc(s.lab)}</div></div>`;
   if(stats.length===8){let cols="";for(let c=0;c<4;c++)cols+=`<div class="stat-col">${tile(stats[c*2],c*2)}${tile(stats[c*2+1],c*2+1)}</div>`;return `<div class="stat-grid">${cols}</div>`;}
   return `<div class="stat-grid flow">${stats.map((s,i)=>tile(s,i)).join("")}</div>`;}
 
@@ -1976,7 +1994,7 @@ document.addEventListener("click",async e=>{
     if(err)err.hidden=true;if(msg)msg.hidden=true;
     if(!sb){if(err){err.textContent="Werkt alleen op de live website.";err.hidden=false;}return;}
     if(!em||!nm){if(err){err.textContent="Vul minimaal een naam en e-mailadres in.";err.hidden=false;}return;}
-    let rol=inviteType==="vereniging"?"vereniging":"official",verId=currentVerenigingId,skipInvite=false;
+    let rol=inviteType==="vereniging"?"vereniging":inviteType,verId=currentVerenigingId,skipInvite=false;
     btn.disabled=true;btn.textContent="Versturen…";
     if(inviteType==="vereniging"){
       const club=g("invClub");if(!club){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Vul een verenigingsnaam in.";err.hidden=false;}return;}
@@ -2019,7 +2037,8 @@ document.addEventListener("click",async e=>{const d=e.target.closest("[data-del]
   renderDashboard();});
 // uitnodigen pop-up (official of vereniging)
 let inviteType="official";
-function renderInviteModal(){const el=document.getElementById("inviteBody");document.getElementById("inviteTitle").textContent=inviteType==="vereniging"?"Vereniging uitnodigen":"Scheidsrechter toevoegen";
+function renderInviteModal(){const el=document.getElementById("inviteBody");const rolWoord=inviteType==="begeleider"?"begeleider":"scheidsrechter";
+  document.getElementById("inviteTitle").textContent=inviteType==="vereniging"?"Vereniging uitnodigen":(inviteType==="begeleider"?"Begeleider toevoegen":"Scheidsrechter toevoegen");
   const foot=`<div class="form-status err" id="invErr" hidden></div><div class="form-status" id="invMsg" hidden></div><button class="btn btn-lime" id="invSend" style="width:100%;justify-content:center;margin-top:6px">Uitnodiging versturen</button>`;
   if(inviteType==="vereniging"){
     el.innerHTML=`<p class="modal-intro">Vul de gegevens van de vereniging in. Bij versturen wordt de vereniging automatisch aangemaakt en krijgt de contactpersoon een e-mail om een wachtwoord in te stellen en toegang te krijgen tot het verenigingsportaal.</p>
@@ -2028,7 +2047,7 @@ function renderInviteModal(){const el=document.getElementById("inviteBody");docu
       <div class="field"><label>Contactpersoon</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
       <div class="mrow"><div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@vereniging.nl"></div><div class="field"><label>Telefoon (optioneel)</label><input id="invPhone" type="tel" placeholder="06 …"></div></div>${foot}`;
   } else {
-    el.innerHTML=`<p class="modal-intro">Vul de gegevens in en verstuur. De scheidsrechter krijgt een e-mail om zelf een wachtwoord en profielfoto in te stellen en in het eigen portaal in te loggen.</p>
+    el.innerHTML=`<p class="modal-intro">Vul de gegevens in en verstuur. De ${rolWoord} krijgt een e-mail om zelf een wachtwoord en profielfoto in te stellen en in het eigen portaal in te loggen.</p>
       <div class="field"><label>Naam</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
       <div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@vereniging.nl"></div>${foot}`;
   }}
