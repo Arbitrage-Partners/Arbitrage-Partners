@@ -74,6 +74,18 @@ body.editing #editbar{display:flex;animation:ebin .22s ease forwards}
 .set-tab:hover{border-color:color-mix(in srgb,var(--navy),transparent 60%)}
 .set-tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .set-tab.on .ic{opacity:1}
+/* onderhoud */
+#maintBar{position:fixed;top:0;left:0;right:0;z-index:260;background:linear-gradient(90deg,var(--warn,#A9700C),#c0862f);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+#maintBar .mb-in{display:flex;align-items:center;gap:12px;max-width:1180px;margin:0 auto;padding:10px 18px;font-size:14px}
+#maintBar .mb-ic{font-size:16px;flex:none}
+#maintBar .mb-tx{flex:1;line-height:1.45}
+#maintBar #maintBarClose{background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:7px;font-size:13px;cursor:pointer;flex:none}
+#maintBlock{position:fixed;inset:0;z-index:500;background:linear-gradient(160deg,#0B1E33,#123)}
+#maintBlock .mbk-card{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(560px,90vw);text-align:center;color:#eaf1ea;padding:20px}
+#maintBlock .mbk-ic{font-size:52px;margin-bottom:16px}
+#maintBlock h1{font-family:var(--disp,inherit);font-size:30px;margin-bottom:14px;color:#fff}
+#maintBlock p{font-size:16px;line-height:1.6;color:#c9d6cd;white-space:pre-wrap;margin-bottom:24px}
+#maintBlock .mbk-link{color:var(--lime);font-weight:600;text-decoration:none;font-size:14px}
 
 .view{display:none}.view.on{display:block}
 header.site{background:transparent;position:relative;z-index:5}
@@ -1070,6 +1082,10 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
   <button class="eb-btn done" data-editdone>Klaar</button>
 </div>
 
+<!-- onderhoud: meldingsbalk + volledige blokkade -->
+<div id="maintBar" hidden><div class="mb-in"><span class="mb-ic">⚠</span><div class="mb-tx"><b id="maintBarKop"></b> <span id="maintBarMsg"></span></div><button id="maintBarClose" title="Sluiten">✕</button></div></div>
+<div id="maintBlock" hidden><div class="mbk-card"><div class="mbk-ic">🛠</div><h1 id="maintBlockKop"></h1><p id="maintBlockMsg"></p><a href="#" id="maintBlockLogin" class="mbk-link">Beheerder? Log in →</a></div></div>
+
 <script>
 const ADMIN_CODE="AP-BEHEER";
 const FORM_ENDPOINT="https://formspree.io/f/mrpgwqvy";
@@ -1885,7 +1901,7 @@ let settingsTab="bedrijf";
 function instellingenHTML(logout){const edit=canEdit();
   const saveBar=edit?`<div style="display:flex;align-items:center;gap:12px;margin-top:18px"><button class="btn btn-lime" data-savesettings>Opslaan</button><span id="setStatus" style="font-size:13px;color:var(--ok)"></span></div>`:`<p style="color:var(--muted);font-size:13px;margin-top:14px">Je hebt alleen-lezen rechten en kunt niets wijzigen.</p>`;
   const sec=(title,desc,inner)=>`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:4px">${title}</h3>${desc?`<p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">${desc}</p>`:`<div style="height:8px"></div>`}${inner}${saveBar}</div></div>`;
-  const tabs=[["bedrijf","◍","Bedrijf"],["facturatie","▤","Facturatie"],["prijzen","★","Prijzen"],["emails","✉","E-mails"],["huisstijl","✎","Huisstijl & website"],["integraties","◑","Integraties"]];
+  const tabs=[["bedrijf","◍","Bedrijf"],["facturatie","▤","Facturatie"],["prijzen","★","Prijzen"],["emails","✉","E-mails"],["huisstijl","✎","Huisstijl & website"],["onderhoud","⚠","Onderhoud"],["integraties","◑","Integraties"]];
   const tabBar=`<div class="set-tabs">`+tabs.map(t=>`<button class="set-tab ${settingsTab===t[0]?"on":""}" data-settab="${t[0]}"><span class="ic">${t[1]}</span> ${esc(t[2])}</button>`).join("")+`</div>`;
   let body="";
   if(settingsTab==="bedrijf") body=sec("Bedrijfsgegevens","De gegevens van Arbitrage Partners.",grid(
@@ -1904,6 +1920,7 @@ function instellingenHTML(logout){const edit=canEdit();
     fld("Afzendernaam","mail.afzender","Arbitrage Partners")+fld("Antwoordadres","mail.antwoord","info@arbitragepartners.nl","","email")+
     fld("Handtekening / ondertekening","mail.handtekening","Met sportieve groet, team Arbitrage Partners",true)));
   else if(settingsTab==="huisstijl") body=huisstijlBlock();
+  else if(settingsTab==="onderhoud") body=onderhoudSectionHTML();
   else if(settingsTab==="integraties") body=`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:12px">Integraties</h3>
     <div class="tbl-scroll"><table class="tbl"><tbody>
       <tr><td>Database &amp; accounts (Supabase)</td><td style="text-align:right"><span class="pill ok">Verbonden</span></td></tr>
@@ -1914,6 +1931,57 @@ function instellingenHTML(logout){const edit=canEdit();
   return `<div class="hd"><div><h1>Instellingen</h1><p>Bedrijfsgegevens, facturatie, prijzen, huisstijl, e-mails en integraties.</p></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">${logout}</div></div>
     ${tabBar}${body}`;}
+function onderhoudSectionHTML(){const o=onderhoud||{};const dis=canEdit()?"":"disabled";const modus=o.modus||"melding";
+  const inp=(label,id,type,val,ph)=>`<div><label style="display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px">${label}</label><input type="${type}" id="${id}" value="${escAttr(val||"")}" placeholder="${esc(ph||"")}" ${dis} style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;box-sizing:border-box"></div>`;
+  return `<div class="panel"><div style="padding:22px 24px">
+    <h3 style="margin-bottom:4px">Onderhoudsmodus</h3>
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">Toon een melding, of blokkeer de website tijdelijk. Jij als beheerder blijft er altijd bij kunnen.</p>
+    <label style="display:flex;align-items:center;gap:10px;font-weight:600;margin-bottom:18px;cursor:pointer"><input type="checkbox" id="ondActief" ${o.actief?"checked":""} ${dis}> Onderhoud inschakelen</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div><label style="display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px">Stand</label>
+        <select id="ondModus" ${dis} style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit"><option value="melding" ${modus==="melding"?"selected":""}>Melding — site blijft werken</option><option value="blokkade" ${modus==="blokkade"?"selected":""}>Volledige blokkade — site dicht</option></select></div>
+      ${inp("Kop","ondKop","text",o.kop,"Onderhoud in uitvoering")}
+    </div>
+    <div style="margin-bottom:14px"><label style="display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px">Bericht</label>
+      <textarea id="ondBericht" ${dis} rows="3" placeholder="Bijv. We werken aan een verbetering. Binnenkort is alles weer beschikbaar." style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;box-sizing:border-box">${esc(o.bericht||"")}</textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      ${inp("Vanaf (optioneel)","ondVanaf","datetime-local",o.vanaf,"")}
+      ${inp("Tot (optioneel)","ondTot","datetime-local",o.tot,"")}
+    </div>
+    <p style="color:var(--muted);font-size:12px;margin-top:8px">Laat Vanaf/Tot leeg om het onderhoud meteen te laten ingaan tot je het weer uitzet.</p>
+    ${canEdit()?`<div style="display:flex;align-items:center;gap:12px;margin-top:18px"><button class="btn btn-lime" data-saveonderhoud>Opslaan</button><span id="ondStatus" style="font-size:13px;color:var(--ok)"></span></div>`:`<p style="color:var(--muted);font-size:13px;margin-top:12px">Je hebt geen rechten om dit te wijzigen.</p>`}
+  </div></div>`;}
+/* ---- onderhoudsmodus ---- */
+let onderhoud=null,maintDismissed=false;
+const SITE_VIEWS=["view-site","view-about","view-diensten","view-plan","view-scan","view-service"];
+function onderhoudActief(){if(!onderhoud||!onderhoud.actief)return false;const now=Date.now();
+  if(onderhoud.vanaf){const t=Date.parse(onderhoud.vanaf);if(!isNaN(t)&&now<t)return false;}
+  if(onderhoud.tot){const t=Date.parse(onderhoud.tot);if(!isNaN(t)&&now>t)return false;}
+  return true;}
+function applyOnderhoud(){const bar=document.getElementById("maintBar"),block=document.getElementById("maintBlock");if(!bar||!block)return;
+  const v=document.querySelector(".view.on"),onSite=!!(v&&SITE_VIEWS.includes(v.id));
+  const active=onderhoudActief(),isBeheer=loggedIn&&currentRole==="beheerder",modus=(onderhoud&&onderhoud.modus)||"melding";
+  const showBar=active&&modus==="melding"&&onSite&&!maintDismissed;
+  const showBlock=active&&modus==="blokkade"&&onSite&&!isBeheer;
+  if(showBar){document.getElementById("maintBarKop").textContent=onderhoud.kop||"Onderhoud";document.getElementById("maintBarMsg").textContent=onderhoud.bericht||"";}
+  bar.hidden=!showBar;document.body.style.paddingTop=showBar?"46px":"";
+  if(showBlock){document.getElementById("maintBlockKop").textContent=onderhoud.kop||"Even in onderhoud";document.getElementById("maintBlockMsg").textContent=onderhoud.bericht||"We zijn zo weer terug.";}
+  block.hidden=!showBlock;}
+async function loadOnderhoud(){if(!sb)return;try{const {data}=await sb.from("onderhoud").select("data").eq("id",1).maybeSingle();onderhoud=(data&&data.data)||null;}catch(e){onderhoud=null;}applyOnderhoud();}
+document.addEventListener("click",e=>{
+  if(e.target.closest("#maintBarClose")){maintDismissed=true;applyOnderhoud();return;}
+  if(e.target.closest("#maintBlockLogin")){e.preventDefault();go("login");return;}
+  const so=e.target.closest("[data-saveonderhoud]");if(so){e.preventDefault();if(!canEdit())return;
+    const g=id=>{const el=document.getElementById(id);return el?el.value:"";};
+    const obj={actief:document.getElementById("ondActief").checked,modus:g("ondModus")||"melding",kop:g("ondKop"),bericht:g("ondBericht"),vanaf:g("ondVanaf")||null,tot:g("ondTot")||null};
+    const st=document.getElementById("ondStatus");
+    (async()=>{if(!sb){if(st){st.textContent="Werkt alleen op de live site.";st.style.color="var(--warn)";}return;}
+      so.disabled=true;so.textContent="Opslaan…";
+      const {error}=await sb.from("onderhoud").upsert({id:1,data:obj,bijgewerkt_op:new Date().toISOString()});
+      so.disabled=false;so.textContent="Opslaan";
+      if(error){if(st){st.textContent="Mislukt: "+error.message;st.style.color="var(--warn)";}return;}
+      onderhoud=obj;applyOnderhoud();if(st){st.textContent="✓ Opgeslagen";st.style.color="var(--ok)";setTimeout(()=>{if(st)st.textContent="";},4000);}})();
+    return;}});
 function supportDashHTML(logout){const pr=S.profile;
   const tiles=[{ic:"✉",lab:"Openstaande aanvragen",k:"open_aanvragen"},{ic:"?",lab:"Openstaande supportvragen",k:"open_support"}];
   return `<div class="hd"><div><h1>Support</h1><p>Welkom${pr&&pr.name?", "+esc(pr.name):""}. Hier handel je aanvragen, supportvragen en berichten af.</p></div>
@@ -2046,6 +2114,7 @@ function go(view){document.querySelectorAll(".view").forEach(v=>v.classList.remo
   if(view==="diensten")renderDiensten();
   if(view==="login")renderLogin();
   if(view==="app")renderApp();
+  applyOnderhoud();
   window.scrollTo(0,0);}
 document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(!g||editing)return;e.preventDefault();
   if(g.dataset.portal){currentPortal=g.dataset.portal;renderLogin();}
@@ -2583,10 +2652,11 @@ renderAll();
 // wachtwoord-herstel: als de gebruiker via de resetlink terugkomt
 // gepubliceerde content ophalen (voor alle bezoekers)
 if(sb)loadRemoteContent();
+if(sb)loadOnderhoud();
 if(sb)sb.auth.onAuthStateChange((event)=>{if(event==="PASSWORD_RECOVERY"){authMode="reset";go("login");renderLogin();}});
 // bestaande sessie herstellen (of onboarding tonen na uitnodigingslink)
 if(sb)sb.auth.getSession().then(async ({data})=>{if(data&&data.session&&authMode!=="reset"){currentUser=data.session.user;loggedIn=true;await loadProfile();
-  if(needsOnboarding()){authMode="onboard";go("login");}else if(noClub()){authMode="noclub";}renderLogin();}});
+  if(needsOnboarding()){authMode="onboard";go("login");}else if(noClub()){authMode="noclub";}renderLogin();applyOnderhoud();}});
 </script>
 
 <script>document.body.classList.add('framed');</script>
