@@ -1073,7 +1073,7 @@ const DEFAULTS = {
     body:"Benieuwd wat Arbitrage Partners voor jouw vereniging kan betekenen? Plan een vrijblijvende kennismaking of stuur ons een bericht — we reageren doorgaans binnen één werkdag.",
     items:[{ic:"✉",k:"E-mail",v:"info@arbitragepartners.nl"},{ic:"☎",k:"Telefoon",v:"+31 6 12 34 56 78"},{ic:"◍",k:"Werkgebied",v:"Heel Nederland"}],
     fName:"Naam",fEmail:"E-mailadres",fMsg:"Bericht",fBtn:"Verstuur bericht",
-    formSuccess:"Bedankt! Je bericht is ontvangen — dit is een demo, er wordt niets echt verstuurd."},
+    formSuccess:"Bedankt! Je bericht is verzonden. We nemen zo snel mogelijk contact met je op."},
   scan:{eyebrow:"Arbitrage Scan",introTitle:"Arbitrage Scan",
     introBody:"Beantwoord 37 vragen over hoe scheidsrechters en officials bij jullie vereniging nu geregeld zijn. Op basis daarvan bereiden we een advies op maat voor, dat we samen bespreken in een gesprek.",
     introMeta:"37 vragen · ongeveer 10–15 minuten",
@@ -1148,7 +1148,7 @@ const DEFAULTS = {
     fWay:"Hoe nemen we contact op?",ways:["Telefonisch","Op locatie","Videobellen"],
     fMsg:"Waar wil je het vooral over hebben? (optioneel)",submit:"Verstuur aanvraag",
     successTitle:"Aanvraag verstuurd",
-    successBody:"Bedankt! We nemen binnen 2 werkdagen contact met je op om de kennismaking in te plannen. Dit is een demo — er wordt niets echt verstuurd.",
+    successBody:"Bedankt! We hebben je aanvraag ontvangen en nemen binnen 2 werkdagen contact met je op om de kennismaking in te plannen.",
     successBtn:"← Terug naar de website"},
   hero:{title:"Sterke officials.",titleAccent:"Sterke verenigingen.",sub:"Bouw aan een organisatie die werkt — vandaag én morgen.",
     body:"Arbitrage Partners helpt jouw vereniging met het werven, ontwikkelen, begeleiden en behouden van officials.",
@@ -1508,6 +1508,8 @@ function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.li
   if(s.chooser&&Array.isArray(s.chooser.cards))s.chooser.cards=s.chooser.cards.filter(c=>c.portal!=="beheer").map(c=>{const d=DEFAULTS.chooser.cards.find(x=>x.portal===c.portal);return d?Object.assign({},c,{btn:d.btn}):c;});
   if(s.portals&&s.portals.beheer)s.portals.beheer.sections=structuredClone(DEFAULTS.portals.beheer.sections);
   if(s.services&&Array.isArray(s.services.items))s.services.items=DEFAULTS.services.items.map((d,i)=>Object.assign({},d,s.services.items[i]||{}));
+  if(s.contact&&/demo/i.test(s.contact.formSuccess||""))s.contact.formSuccess=DEFAULTS.contact.formSuccess;
+  if(s.plan&&/demo/i.test(s.plan.successBody||""))s.plan.successBody=DEFAULTS.plan.successBody;
   return s;}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(deepMerge(DEFAULTS,s)):structuredClone(DEFAULTS);}catch(e){return structuredClone(DEFAULTS);}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
