@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --navy:#0B1E33; --lime:#A6CE4E; --ground:#F3F5F1; --ink:#0B1E33;
@@ -652,7 +653,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
   <div class="brandmini"><span class="dot"></span> Demo-omgeving</div>
   <div class="seg" id="viewSeg">
     <button data-go="site" class="on">Website</button>
-    <button data-go="chooser">Portaal</button>
+    <button data-go="login">Portaal</button>
     <button data-go="app">App</button>
   </div>
   <div class="spacer"></div>
@@ -670,7 +671,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
           <span class="lt" data-edit="logo.line1">ARBITRAGE<small data-edit="logo.line2">PARTNERS</small></span></div>
         <div class="navgroup">
           <nav class="links js-links" id="siteLinks"></nav>
-          <button class="login" data-go="chooser" data-edit="nav.login">Inloggen</button>
+          <button class="login" data-go="login" data-edit="nav.login">Inloggen</button>
           <a class="btn btn-lime btn-sm" data-go="plan" data-edit="nav.cta">Plan een kennismaking</a>
         </div>
       </div>
@@ -769,7 +770,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
           <span class="lt" data-edit="logo.line1" data-noedit>ARBITRAGE<small data-edit="logo.line2" data-noedit>PARTNERS</small></span></div>
         <div class="navgroup">
           <nav class="links js-links"></nav>
-          <button class="login" data-go="chooser">Inloggen</button>
+          <button class="login" data-go="login">Inloggen</button>
           <a class="btn btn-lime btn-sm" data-go="plan">Plan een kennismaking</a>
         </div>
       </div>
@@ -855,7 +856,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
           <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
         <div class="navgroup">
           <nav class="links js-links"></nav>
-          <button class="login" data-go="chooser">Inloggen</button>
+          <button class="login" data-go="login">Inloggen</button>
           <a class="btn btn-lime btn-sm" data-go="plan">Plan een kennismaking</a>
         </div>
       </div>
@@ -885,7 +886,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
           <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
         <div class="navgroup">
           <nav class="links js-links"></nav>
-          <button class="login" data-go="chooser">Inloggen</button>
+          <button class="login" data-go="login">Inloggen</button>
           <a class="btn btn-lime btn-sm" data-go="plan">Plan een kennismaking</a>
         </div>
       </div>
@@ -920,7 +921,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
           <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
         <div class="navgroup">
           <nav class="links js-links"></nav>
-          <button class="login" data-go="chooser">Inloggen</button>
+          <button class="login" data-go="login">Inloggen</button>
           <a class="btn btn-lime btn-sm" data-go="plan">Plan een kennismaking</a>
         </div>
       </div>
@@ -965,25 +966,11 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
   <div class="auth">
     <div class="login-card">
       <div class="login-side">
-        <div class="logo"><span class="ring" data-img="logo.img"></span>
-          <span class="lt" data-edit="logo.line1c">ARBITRAGE<small data-edit="logo.line2c">PARTNERS</small></span></div>
-        <h2 id="loginSideTitle"></h2>
-        <p id="loginSideBody"></p>
-        <div class="stats" id="loginStats"></div>
+        <div class="logo"><span class="lt" data-edit="logo.line1c">ARBITRAGE<small data-edit="logo.line2c">PARTNERS</small></span></div>
+        <h2>Welkom terug.</h2>
+        <p>Log in op het portaal. Je komt automatisch in de omgeving die bij jouw rol hoort.</p>
       </div>
-      <div class="login-form">
-        <span class="eyebrow" id="loginEyebrow"></span>
-        <h2 data-edit="login.formTitle">Inloggen</h2>
-        <p class="desc" data-edit="login.formDesc">Dit is een demo-omgeving. Iedere combinatie van gegevens geeft toegang tot dezelfde voorbeelddata.</p>
-        <div class="field"><label data-edit="login.l1">Naam / vereniging</label><input value="HV De Valken"></div>
-        <div class="field"><label data-edit="login.l2">E-mailadres</label><input value="demo@hvdevalken.nl"></div>
-        <div class="field"><label data-edit="login.l3">Wachtwoord</label><input type="password" value="demodemo"></div>
-        <div class="admin-box" id="adminBox" hidden></div>
-        <div class="demo-note" data-edit="login.note">Geen account nodig — vul demo-inloggegevens in en klik op inloggen.</div>
-        <button class="btn btn-lime" id="loginSubmit" data-edit="login.btn">Inloggen bij het portaal</button>
-        <button class="backlink" data-go="chooser" data-edit="login.back">← Andere rol kiezen</button>
-        <button class="backlink beheer-link" id="beheerBtn">Naar beheerderspagina →</button>
-      </div>
+      <div class="login-form" id="loginForm"></div>
     </div>
   </div>
 </section>
@@ -1028,6 +1015,16 @@ const ADMIN_CODE="AP-BEHEER";
 const FORM_ENDPOINT="https://formspree.io/f/mrpgwqvy";
 function submitForm(formEl,extra,done){const fd=formEl?new FormData(formEl):new FormData();if(extra)for(const k in extra)fd.append(k,extra[k]);
   fetch(FORM_ENDPOINT,{method:"POST",body:fd,headers:{Accept:"application/json"}}).then(r=>done(r.ok)).catch(()=>done(false));}
+/* ---- Supabase (echte login + rollen) ---- */
+const SB_URL="https://keyuipkupfxowrwsfmpk.supabase.co";
+const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtleXVpcGt1cGZ4b3dyd3NmbXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDQ1MDEsImV4cCI6MjEwNDg4MDUwMX0.taZt8658Saldr5IOVb4L9qleXyn3ZnPubcrwGtes4b4";
+const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_ANON):null;
+const ROLE_TO_PORTAL={vereniging:"vereniging",official:"official",begeleider:"begeleider",beheerder:"beheer"};
+let loggedIn=false,currentUser=null;
+async function loadProfile(){try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam").eq("id",currentUser.id).single();
+  if(prof){currentPortal=ROLE_TO_PORTAL[prof.rol]||"vereniging";if(prof.volledige_naam)S.profile.name=prof.volledige_naam;}}catch(e){}}
+async function afterLogin(){const {data:{user}}=await sb.auth.getUser();currentUser=user;loggedIn=!!user;await loadProfile();activePage=null;renderDashboard();go("dashboard");}
+async function doLogout(){try{if(sb)await sb.auth.signOut();}catch(e){}loggedIn=false;currentUser=null;renderLogin();go("site");}
 const DEFAULTS = {
   theme:{navy:"#0B1E33",lime:"#A6CE4E",ground:"#F3F5F1",ink:"#0B1E33"},
   logo:{line1:"ARBITRAGE",line2:"PARTNERS",img:""},
@@ -1560,15 +1557,22 @@ function renderAbout(){document.getElementById("aboutStats").innerHTML=S.about.s
 function renderContact(){document.getElementById("contactList").innerHTML=S.contact.items.map((c,i)=>`<li><span class="ic">${esc(c.ic)}</span><span><span class="k" data-edit="contact.items.${i}.k">${esc(c.k)}</span><br><span class="v" data-edit="contact.items.${i}.v">${esc(c.v)}</span></span></li>`).join("");}
 function renderChooser(){document.getElementById("chooserGrid").innerHTML=S.chooser.cards.map((c,i)=>`<div class="pcard"><div class="ic">${esc(c.ic)}</div><div class="eyebrow" data-edit="chooser.cards.${i}.tag">${esc(c.tag)}</div><h3 data-edit="chooser.cards.${i}.h">${esc(c.h)}</h3><p data-edit="chooser.cards.${i}.p">${esc(c.p)}</p><a class="btn btn-lime" data-go="login" data-portal="${c.portal}" data-edit="chooser.cards.${i}.btn">${esc(c.btn)}</a></div>`).join("");}
 
-/* ---- login (portal-specific) ---- */
-function renderLogin(){const b=`portals.${currentPortal}.login`,L=S.portals[currentPortal].login;
-  document.getElementById("loginEyebrow").outerHTML=`<span class="eyebrow" id="loginEyebrow" data-edit="${b}.eyebrow">${esc(L.eyebrow)}</span>`;
-  document.getElementById("loginSideTitle").outerHTML=`<h2 id="loginSideTitle" data-edit="${b}.sideTitle">${esc(L.sideTitle)}</h2>`;
-  document.getElementById("loginSideBody").outerHTML=`<p id="loginSideBody" data-edit="${b}.sideBody">${esc(L.sideBody)}</p>`;
-  const ls=document.getElementById("loginStats");ls.innerHTML="";ls.hidden=true;
-  const box=document.getElementById("adminBox");
-  if(currentPortal==="beheer"){box.hidden=false;box.innerHTML=`<label class="admin-lbl">Beheerderscode</label><input id="adminCode" placeholder="Voer de beheerderscode in" autocomplete="off"><div class="hintc">Demo-code: <b>AP-BEHEER</b></div>`;}
-  else{box.hidden=true;box.innerHTML="";}
+/* ---- echte login (Supabase) ---- */
+function renderLogin(){const el=document.getElementById("loginForm");if(!el)return;
+  if(loggedIn&&currentUser){
+    el.innerHTML=`<span class="eyebrow">Portaal</span><h2>Je bent ingelogd</h2>
+      <p class="desc">Ingelogd als <b>${esc(currentUser.email||"")}</b>.</p>
+      <button class="btn btn-lime" id="gotoPortaal" style="width:100%;justify-content:center;margin-bottom:12px">Naar je portaal →</button>
+      <button class="backlink" data-logout>Uitloggen</button>`;
+  } else {
+    el.innerHTML=`<span class="eyebrow">Inloggen</span><h2>Inloggen op het portaal</h2>
+      <p class="desc">Log in met je e-mailadres en wachtwoord. Nog geen account? Neem contact op met Arbitrage Partners.</p>
+      <div class="field"><label>E-mailadres</label><input id="loginEmail" type="email" autocomplete="username" placeholder="naam@vereniging.nl"></div>
+      <div class="field"><label>Wachtwoord</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+      <div class="form-status err" id="loginErr" hidden></div>
+      <button class="btn btn-lime" id="loginSubmit" style="width:100%;justify-content:center;margin:6px 0 14px">Inloggen</button>
+      <button class="backlink" data-go="site">← Terug naar de website</button>`;
+  }
   refreshEditState();}
 
 /* ---- dashboard (generic) ---- */
@@ -1619,7 +1623,7 @@ function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return
   const overview=useSec?P.sections[0].items[0]:P.nav[0];
   if(activePage!=="__profile"&&!allItems.includes(activePage))activePage=overview;
   const pr=S.profile,avStyle=pr.avatar?`style="background-image:url(${pr.avatar})"`:"",avInit=pr.avatar?"":esc((pr.name||"?").charAt(0).toUpperCase());
-  const profileBlock=`<div class="side-profile" data-profile><div class="av" ${avStyle}>${avInit}</div><div class="pi"><div class="nm" data-edit="profile.name">${esc(pr.name)}</div><div class="st">Ingelogd</div></div><button class="lg" data-go="site" title="Uitloggen">⏻</button></div>`;
+  const profileBlock=`<div class="side-profile" data-profile><div class="av" ${avStyle}>${avInit}</div><div class="pi"><div class="nm" data-edit="profile.name">${esc(pr.name)}</div><div class="st">Ingelogd</div></div><button class="lg" data-logout title="Uitloggen">⏻</button></div>`;
   let sideNav;
   if(useSec)sideNav=P.sections.map((sec,si)=>{
     const lbl=sec.label?`<div class="navlabel"><span data-edit="${b}.sections.${si}.label">${esc(sec.label)}</span></div>`:"";
@@ -1633,7 +1637,7 @@ function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return
   document.getElementById("dashMain").innerHTML=dashMainHTML(key,P,b,overview);
   renderImages();refreshEditState();window.scrollTo(0,0);}
 function dashMainHTML(key,P,b,overview){
-  const logout=`<button class="btn btn-outline" data-go="site">Uitloggen</button>`;
+  const logout=`<button class="btn btn-outline" data-logout>Uitloggen</button>`;
   if(activePage==="__profile")return profileHTML(key,logout);
   if(activePage===overview){
     if(key==="beheer")return beheerOverviewHTML(P,b,logout);
@@ -1721,6 +1725,7 @@ function go(view){document.querySelectorAll(".view").forEach(v=>v.classList.remo
   if(view==="plan")renderPlan();
   if(view==="service")renderService();
   if(view==="diensten")renderDiensten();
+  if(view==="login")renderLogin();
   if(view==="app")renderApp();
   window.scrollTo(0,0);}
 document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(!g||editing)return;e.preventDefault();
@@ -1749,10 +1754,20 @@ document.getElementById("contactForm").addEventListener("submit",e=>{e.preventDe
     if(ok){s.classList.remove("err");s.textContent=S.contact.formSuccess;form.reset();}
     else{s.classList.add("err");s.textContent="Er ging iets mis met versturen. Probeer het later opnieuw of mail rechtstreeks naar info@arbitragepartners.nl.";}});});
 
-/* login submit */
-document.getElementById("loginSubmit").addEventListener("click",()=>{if(editing)return;
-  activePage=null;renderDashboard();go("dashboard");});
-document.getElementById("beheerBtn").addEventListener("click",()=>{if(editing)return;currentPortal="beheer";activePage=null;renderDashboard();go("dashboard");});
+/* login / logout (Supabase) */
+document.addEventListener("click",async e=>{
+  if(e.target.closest("#loginSubmit")){e.preventDefault();
+    const em=(document.getElementById("loginEmail")||{}).value||"",pw=(document.getElementById("loginPass")||{}).value||"";
+    const err=document.getElementById("loginErr"),btn=document.getElementById("loginSubmit");
+    if(!sb){if(err){err.textContent="Inloggen werkt alleen op de live website.";err.hidden=false;}return;}
+    if(!em.trim()||!pw){if(err){err.textContent="Vul je e-mailadres en wachtwoord in.";err.hidden=false;}return;}
+    if(err)err.hidden=true;if(btn){btn.disabled=true;btn.textContent="Bezig met inloggen…";}
+    const {error}=await sb.auth.signInWithPassword({email:em.trim(),password:pw});
+    if(error){if(btn){btn.disabled=false;btn.textContent="Inloggen";}if(err){err.textContent="Inloggen mislukt. Controleer je e-mailadres en wachtwoord.";err.hidden=false;}return;}
+    await afterLogin();return;}
+  if(e.target.closest("#gotoPortaal")){e.preventDefault();activePage=null;renderDashboard();go("dashboard");return;}
+  if(e.target.closest("[data-logout]")){e.preventDefault();doLogout();return;}
+});
 // dashboard-paginarouter
 document.addEventListener("click",e=>{const p=e.target.closest("[data-page]");if(!p||editing)return;e.preventDefault();activePage=p.dataset.page;renderDashboard();});
 // beheer-dashboard aanpassen
@@ -1762,7 +1777,7 @@ document.addEventListener("change",e=>{const w=e.target.closest("[data-widget]")
 // documenten: vereniging selecteren
 document.addEventListener("click",e=>{const c=e.target.closest("[data-club]");if(!c||editing)return;e.preventDefault();selectedClub=c.dataset.club;renderDashboard();});
 // profiel openen
-document.addEventListener("click",e=>{const pf=e.target.closest("[data-profile]");if(!pf||editing)return;if(e.target.closest("[data-go]"))return;e.preventDefault();activePage="__profile";renderDashboard();});
+document.addEventListener("click",e=>{const pf=e.target.closest("[data-profile]");if(!pf||editing)return;if(e.target.closest("[data-go]")||e.target.closest("[data-logout]"))return;e.preventDefault();activePage="__profile";renderDashboard();});
 // dienst-detail
 document.addEventListener("click",e=>{const s=e.target.closest("[data-service]");if(!s||editing)return;e.preventDefault();selectedService=+s.dataset.service;go("service");});
 function renderService(){const items=S.services.items;if(selectedService<0||selectedService>=items.length)selectedService=0;
@@ -2093,6 +2108,8 @@ function renderApp(){document.getElementById("appScreen").innerHTML=appHTML();}
 if(new URLSearchParams(location.search).get("frame")==="1"){const tb=document.getElementById("toolbar");if(tb)tb.hidden=true;document.body.classList.add("framed");}
 
 renderAll();
+// bestaande sessie herstellen (blijf ingelogd na herladen)
+if(sb)sb.auth.getSession().then(async ({data})=>{if(data&&data.session){currentUser=data.session.user;loggedIn=true;await loadProfile();renderLogin();}});
 </script>
 
 <script>document.body.classList.add('framed');</script>
