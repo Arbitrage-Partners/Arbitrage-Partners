@@ -597,6 +597,15 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
 @media(max-width:920px){.chatwrap{grid-template-columns:1fr}.chat-threads{display:none}}
 
 /* drawer */
+.mscrim{position:fixed;inset:0;background:rgba(7,19,31,.5);z-index:400;opacity:0;pointer-events:none;transition:opacity .2s}
+.mscrim.on{opacity:1;pointer-events:auto}
+.modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-46%);width:min(520px,92vw);background:var(--card);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.35);z-index:401;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+.modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line)}
+.modal-hd h3{font-size:18px}
+.modal-x{background:none;border:none;font-size:24px;color:var(--muted);line-height:1;cursor:pointer}
+.modal-x:hover{color:var(--ink)}
+.modal-bd{padding:24px}
 #scrim{position:fixed;inset:0;background:rgba(7,19,31,.5);z-index:300;opacity:0;pointer-events:none;transition:opacity .2s}
 #scrim.on{opacity:1;pointer-events:auto}
 #drawer{position:fixed;top:0;right:0;height:100%;width:min(380px,92vw);background:var(--card);z-index:301;transform:translateX(100%);transition:transform .24s ease;box-shadow:-20px 0 60px rgba(0,0,0,.25);display:flex;flex-direction:column}
@@ -983,6 +992,20 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
   </div>
 </section>
 
+<!-- invite-modal -->
+<div id="modalScrim" class="mscrim"></div>
+<div id="inviteModal" class="modal">
+  <div class="modal-hd"><h3>Scheidsrechter toevoegen</h3><button class="modal-x" data-invite-close>×</button></div>
+  <div class="modal-bd">
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">Vul de gegevens in en verstuur. De scheidsrechter krijgt een e-mail om zelf een wachtwoord en profielfoto in te stellen en in het eigen portaal in te loggen.</p>
+    <div class="field"><label>Naam</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
+    <div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@vereniging.nl"></div>
+    <div class="form-status err" id="invErr" hidden></div>
+    <div class="form-status" id="invMsg" hidden></div>
+    <button class="btn btn-lime" id="invSend" style="width:100%;justify-content:center;margin-top:6px">Uitnodiging versturen</button>
+  </div>
+</div>
+
 <!-- drawer -->
 <div id="scrim"></div>
 <div id="drawer">
@@ -1297,10 +1320,10 @@ const DEFAULTS = {
             {nm:"Vergoedingenoverzicht.xlsx",type:"Spreadsheet",date:"20 aug 2026",who:"Penningmeester"},
             {nm:"Draaiboek open dag.docx",type:"Document",date:"12 aug 2026",who:"Sven Willems"},
             {nm:"Spelregels 26-27.pdf",type:"PDF",date:"1 aug 2026",who:"NHV"}]}]},
-        "Scheidsrechters":{subtitle:"Alle scheidsrechters en officials van de vereniging.",cta:"Toevoegen",
+        "Scheidsrechters":{subtitle:"Alle scheidsrechters en officials van de vereniging.",cta:"＋ Scheidsrechter toevoegen",invite:true,
           stats:[{ic:"◍",badge:"actief",num:"7",lab:"Actief"},{ic:"＋",badge:"seizoen",num:"2",lab:"Nieuw dit seizoen"},{ic:"◎",badge:"opleiding",num:"2",lab:"In opleiding"},{ic:"✓",badge:"tevredenheid",num:"92%",lab:"Retentie"}],
-          panels:[{type:"invite",title:"Scheidsrechter toevoegen"},
-            {type:"table",title:"Alle scheidsrechters",link:"Toevoegen",cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
+          panels:[
+            {type:"table",title:"Alle scheidsrechters",link:"Toevoegen",linkInvite:true,cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
             {nm:"Daan Hermans",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"20 sep 2026",last:"12 aug 2026",rep:"6"},
             {nm:"Femke de Groot",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"27 sep 2026",last:"—",rep:"1"},
             {nm:"Iris van Beek",sub:"Coördinator",niv:"BeNe League",status:"Actief",statusSt:"ok",next:"18 sep 2026",last:"2 sep 2026",rep:"9"},
@@ -1512,7 +1535,7 @@ function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.li
   if(s.services&&Array.isArray(s.services.items))s.services.items=DEFAULTS.services.items.map((d,i)=>Object.assign({},d,s.services.items[i]||{}));
   if(s.contact&&/demo/i.test(s.contact.formSuccess||""))s.contact.formSuccess=DEFAULTS.contact.formSuccess;
   if(s.plan&&/demo/i.test(s.plan.successBody||""))s.plan.successBody=DEFAULTS.plan.successBody;
-  try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp&&Array.isArray(sp.panels)&&!sp.panels.some(p=>p.type==="invite"))sp.panels.unshift({type:"invite",title:"Scheidsrechter toevoegen"});}catch(e){}
+  try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp){sp.invite=true;sp.cta="＋ Scheidsrechter toevoegen";if(Array.isArray(sp.panels)){sp.panels=sp.panels.filter(p=>p.type!=="invite");const t=sp.panels.find(p=>p.type==="table");if(t)t.linkInvite=true;}}}catch(e){}
   return s;}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(deepMerge(DEFAULTS,s)):structuredClone(DEFAULTS);}catch(e){return structuredClone(DEFAULTS);}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
@@ -1620,7 +1643,7 @@ function panelHTML(p,b){
         if(c.kind==="pill")return `<td><span class="pill ${r[c.key+"St"]||"idle"}" data-edit="${rb}.${c.key}">${esc(r[c.key])}</span></td>`;
         return `<td data-edit="${rb}.${c.key}">${esc(r[c.key])}</td>`;}).join("");
       return `<tr>${tds}</tr>`;}).join("");
-    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="tbl-scroll"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;}
+    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" ${p.linkInvite?'data-invite-open href="#"':''} data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="tbl-scroll"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;}
   if(p.type==="acts"){
     const body=p.items.map((a,j)=>{const ib=`${b}.items.${j}`;
       return `<div class="act"><span class="mk" style="background:${esc(a.mk)}"></span><div class="ai"><div class="t" data-edit="${ib}.t">${esc(a.t)}</div><div class="meta"><span data-edit="${ib}.cat">${esc(a.cat)}</span> · <span data-edit="${ib}.date">${esc(a.date)}</span></div><div class="meta2">◍ <span data-edit="${ib}.loc">${esc(a.loc)}</span> · <span data-edit="${ib}.who">${esc(a.who)}</span></div></div><div class="rt"><span class="pill ${a.st||"idle"}" data-edit="${ib}.stt">${esc(a.stt)}</span><span class="tm" data-edit="${ib}.time">${esc(a.time)}</span></div></div>`;}).join("");
@@ -1687,7 +1710,7 @@ function dashMainHTML(key,P,b,overview){
   }
   const pg=(P.pages||{})[activePage],pb=`${b}.pages.${activePage}`;
   const hd=`<div class="hd"><div><h1>${esc(activePage)}</h1>${pg&&pg.subtitle?`<p data-edit="${pb}.subtitle">${esc(pg.subtitle)}</p>`:""}</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">${pg&&pg.cta?`<a class="btn btn-outline" data-edit="${pb}.cta">${esc(pg.cta)}</a>`:""}${logout}</div></div>`;
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${pg&&pg.cta?`<a class="btn btn-outline" ${pg.invite?'data-invite-open href="#"':''} data-edit="${pb}.cta">${esc(pg.cta)}</a>`:""}${logout}</div></div>`;
   if(!pg)return hd+`<div class="panel"><div style="padding:26px"><p style="color:var(--muted)">Deze pagina wordt binnenkort ingericht.</p></div></div>`;
   return hd+(pg.stats?statGridHTML(pg.stats,pb):"")+(pg.panels||[]).map((p,pi)=>panelHTML(p,`${pb}.panels.${pi}`)).join("");}
 const ROLE_MAP={vereniging:"Verenigingsbeheerder",official:"Official",begeleider:"Begeleider",beheer:"Eigenaar / Beheerder"};
@@ -1870,6 +1893,15 @@ document.addEventListener("change",e=>{const w=e.target.closest("[data-widget]")
 document.addEventListener("click",e=>{const c=e.target.closest("[data-club]");if(!c||editing)return;e.preventDefault();selectedClub=c.dataset.club;renderDashboard();});
 // profiel openen
 document.addEventListener("click",e=>{const pf=e.target.closest("[data-profile]");if(!pf||editing)return;if(e.target.closest("[data-go]")||e.target.closest("[data-logout]"))return;e.preventDefault();activePage="__profile";renderDashboard();});
+// scheidsrechter-uitnodigen pop-up
+function openInvite(){const m=document.getElementById("inviteModal"),sc=document.getElementById("modalScrim");
+  ["invErr","invMsg"].forEach(id=>{const x=document.getElementById(id);if(x)x.hidden=true;});
+  ["invName","invEmail"].forEach(id=>{const x=document.getElementById(id);if(x)x.value="";});
+  m.classList.add("on");sc.classList.add("on");const n=document.getElementById("invName");if(n)n.focus();}
+function closeInvite(){document.getElementById("inviteModal").classList.remove("on");document.getElementById("modalScrim").classList.remove("on");}
+document.addEventListener("click",e=>{
+  if(e.target.closest("[data-invite-open]")&&!editing){e.preventDefault();openInvite();return;}
+  if(e.target.closest("[data-invite-close]")||e.target.id==="modalScrim"){closeInvite();}});
 // dienst-detail
 document.addEventListener("click",e=>{const s=e.target.closest("[data-service]");if(!s||editing)return;e.preventDefault();selectedService=+s.dataset.service;go("service");});
 function renderService(){const items=S.services.items;if(selectedService<0||selectedService>=items.length)selectedService=0;
