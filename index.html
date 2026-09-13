@@ -1814,7 +1814,13 @@ document.getElementById("resetBtn").onclick=()=>{if(confirm("Alles terugzetten n
 
 /* ---------- arbitrage scan ---------- */
 let scanState;
-function resetScan(){scanState={step:0,contact:{name:"",role:"",email:"",phone:""},answers:{},meeting:false};}
+function resetScan(){scanState={step:0,contact:{name:"",role:"",email:"",phone:""},answers:{},meeting:false,sent:false};}
+function scanBuildData(){const SC=S.scan,ans=scanState.answers,c=scanState.contact;
+  const data={_subject:"Nieuwe Arbitrage Scan ingevuld",formulier:"Arbitrage Scan",naam:c.name||"",functie:c.role||"",email:c.email||"",telefoon:c.phone||""};
+  SC.questions.forEach(q=>{let v=ans[q.code];if(Array.isArray(v))v=v.join(", ");if(v===undefined||v===null||v==="")v="—";data[q.section+q.code+". "+q.text]=v;});
+  return data;}
+function sendScan(){if(scanState.sent)return;scanState.sent=true;
+  submitForm(null,scanBuildData(),ok=>{scanState.sentOk=ok;const el=document.getElementById("scanSentNote");if(el){el.textContent=ok?"✓ Je antwoorden zijn verstuurd naar Arbitrage Partners.":"Let op: versturen is mislukt. Neem contact op via info@arbitragepartners.nl.";el.style.color=ok?"var(--ok)":"var(--warn)";}});}
 resetScan();
 function escAttr(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
 const SC_ISANS=v=>Array.isArray(v)?v.length>0:(v!==undefined&&v!==null&&v!=="");
@@ -1879,13 +1885,14 @@ function renderScan(){const SC=S.scan,qs=SC.questions,N=qs.length,step=scanState
       `<div class="final"><div class="chk">✓</div>
         <h2 data-edit="scan.finalTitle">${esc(SC.finalTitle)}</h2>
         <div class="fbody">${esc(fbody)}</div>
+        <div id="scanSentNote" style="font-size:12.5px;margin:-14px 0 24px;color:${scanState.sentOk===true?"var(--ok)":scanState.sentOk===false?"var(--warn)":"var(--muted)"}">${scanState.sentOk===true?"✓ Je antwoorden zijn verstuurd naar Arbitrage Partners.":scanState.sentOk===false?"Let op: versturen is mislukt. Neem contact op via info@arbitragepartners.nl.":"Je antwoorden worden verstuurd…"}</div>
         <div class="nextbox"><h3 data-edit="scan.finalNextTitle">${esc(SC.finalNextTitle)}</h3><p data-edit="scan.finalNextBody">${esc(SC.finalNextBody)}</p>
           ${scanState.meeting?`<div class="done"><span class="dot-done">✓</span><span data-edit="scan.finalConfirm">${esc(SC.finalConfirm)}</span></div>`:`<button class="btn btn-lime plan" data-scan="meeting"><span data-edit="scan.finalBtn">${esc(SC.finalBtn)}</span></button>`}
         </div>
         <button class="exit" data-scan="close" data-edit="scan.finalBack">${esc(SC.finalBack)}</button></div>`;
   }
   root.innerHTML=html;renderImages();refreshEditState();}
-function goNextScan(){scanState.step=Math.min(scanState.step+1,S.scan.questions.length+3);renderScan();}
+function goNextScan(){const N=S.scan.questions.length;scanState.step=Math.min(scanState.step+1,N+3);if(scanState.step===N+3)sendScan();renderScan();}
 function goBackScan(){scanState.step=Math.max(scanState.step-1,0);renderScan();}
 (function(){const root=document.getElementById("scanRoot");
   root.addEventListener("click",e=>{if(editing)return;const act=e.target.closest("[data-scan]");
