@@ -1088,7 +1088,8 @@ function canManageTeam(){return currentRole==="beheerder"&&currentRechten==="beh
 function canEdit(){return currentRechten!=="lezer";}
 async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;currentRechten="beheerder";try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url,wachtwoord_ingesteld,rechten,functie").eq("id",currentUser.id).single();
   if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;currentRechten=prof.rechten||"beheerder";if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
-    if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}}}catch(e){}}
+    if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}
+    if(currentRole==="beheerder"){try{const {data:st}=await sb.from("instellingen").select("data").eq("id",1).maybeSingle();settings=(st&&st.data)||{};}catch(x){settings={};}}}}catch(e){}}
 function needsOnboarding(){return !!(currentUser&&wwIngesteld===false);}
 function noClub(){return currentRole!=="beheerder"&&!currentVerenigingId;}
 async function routeAfterAuth(){if(needsOnboarding()){authMode="onboard";go("login");renderLogin();}
@@ -1466,7 +1467,7 @@ const DEFAULTS = {
         {items:["Dashboard"]},
         {label:"Beheer",items:["Verenigingen","Gebruikers","Aanvragen","Support","Berichten","Documenten"]},
         {label:"Administratie",items:["Abonnementen","Betalingen"]},
-        {label:"Systeem",items:["Instellingen","Website aanpassen"]}],
+        {label:"Systeem",items:["Instellingen"]}],
       dashHidden:[],
       demoBadge:"Beheerdersportaal — intern overzicht voor de eigenaar van Arbitrage Partners.",
       title:"Beheeroverzicht",subtitle:"Alles rond je verenigingen, abonnementen en aanvragen.",cta:"Vereniging toevoegen",
@@ -1496,8 +1497,7 @@ const DEFAULTS = {
             {nm:"DSS Handbal",sub:"Den Haag",abo:"Pro",aboSt:"ok",contact:"Rob Meijer",scan:"18 aug 2026",status:"Actief",statusSt:"ok"},
             {nm:"Aristos",sub:"Rotterdam",abo:"Start",aboSt:"idle",contact:"Nadia El Amrani",scan:"—",status:"Onboarding",statusSt:"warn"},
             {nm:"Quintus",sub:"Kwintsheul",abo:"Grow",aboSt:"info",contact:"Jeroen Prins",scan:"1 sep 2026",status:"Actief",statusSt:"ok"},
-            {nm:"Hellas",sub:"Den Haag",abo:"—",aboSt:"idle",contact:"Sanne Vos",scan:"—",status:"Prospect",statusSt:"warn"}]},
-          {type:"note",title:"Custom links",body:"Maak per vereniging een eigen inloglink aan zodat zij direct in hun portaal terechtkomen. In deze demo nog niet actief."}]},
+            {nm:"Hellas",sub:"Den Haag",abo:"—",aboSt:"idle",contact:"Sanne Vos",scan:"—",status:"Prospect",statusSt:"warn"}]}]},
         "Gebruikers":{subtitle:"Beheer gebruikers: toevoegen, verwijderen en rollen of functies toekennen.",cta:"Gebruiker toevoegen",panels:[
           {type:"table",title:"Team",link:"Gebruiker toevoegen",cols:[{label:"Naam",kind:"name"},{label:"Rol",kind:"text",key:"rol"},{label:"Rechten",kind:"pill",key:"rights"},{label:"Laatst actief",kind:"text",key:"last"}],rows:[
             {nm:"Jij (Eigenaar)",sub:"eigenaar@arbitragepartners.nl",rol:"Eigenaar",rights:"Beheerder",rightsSt:"ok",last:"Nu"},
@@ -1583,7 +1583,7 @@ function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.li
   if(s.contact&&/demo/i.test(s.contact.formSuccess||""))s.contact.formSuccess=DEFAULTS.contact.formSuccess;
   if(s.plan&&/demo/i.test(s.plan.successBody||""))s.plan.successBody=DEFAULTS.plan.successBody;
   try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp){sp.invite="official";sp.cta="＋ Scheidsrechter toevoegen";if(Array.isArray(sp.panels)){sp.panels=sp.panels.filter(p=>p.type!=="invite");const t=sp.panels.find(p=>p.type==="table");if(t)t.linkInvite="official";}}}catch(e){}
-  try{const bp=s.portals.beheer.pages["Verenigingen"];if(bp){bp.invite="vereniging";bp.cta="＋ Vereniging uitnodigen";const t=(bp.panels||[]).find(p=>p.type==="table");if(t){t.linkInvite="vereniging";t.live="verenigingen";}}}catch(e){}
+  try{const bp=s.portals.beheer.pages["Verenigingen"];if(bp){bp.invite="vereniging";bp.cta="＋ Vereniging uitnodigen";if(Array.isArray(bp.panels))bp.panels=bp.panels.filter(p=>!(p.type==="note"&&/custom links/i.test(p.title||"")));const t=(bp.panels||[]).find(p=>p.type==="table");if(t){t.linkInvite="vereniging";t.live="verenigingen";}}}catch(e){}
   try{const ap=s.portals.beheer.pages["Aanvragen"];if(ap){const t=(ap.panels||[]).find(p=>p.type==="table");if(t)t.live="aanvragen";}}catch(e){}
   try{const up=s.portals.beheer.pages["Support"];if(up){const t=(up.panels||[]).find(p=>p.type==="table");if(t)t.live="support";}}catch(e){}
   try{const t=s.portals.vereniging.pages["Scheidsrechters"].panels.find(p=>p.type==="table");if(t)t.live="officials";}catch(e){}
@@ -1807,7 +1807,7 @@ function dashMainHTML(key,P,b,overview){
   const logout=`<button class="btn btn-outline" data-logout>Uitloggen</button>`;
   const clubTag=(currentVerenigingName&&key!=="beheer")?`<span class="club-tag">${esc(currentVerenigingName)}</span>`:"";
   if(activePage==="__profile")return profileHTML(key,logout);
-  if(key==="beheer"&&activePage==="Website aanpassen")return contentEditorHTML(logout);
+  if(key==="beheer"&&activePage==="Instellingen")return instellingenHTML(logout);
   if(key==="beheer"&&activePage==="Gebruikers")return gebruikersHTML(logout);
   if(activePage===overview){
     if(key==="beheer")return beheerOverviewHTML(P,b,logout);
@@ -1840,27 +1840,54 @@ function profileHTML(key,logout){const pr=S.profile,role=ROLE_MAP[key]||"Gebruik
     <div class="panel"><div style="padding:24px"><h3 style="margin-bottom:8px">Rol &amp; rechten</h3><p style="color:var(--muted);font-size:14.5px;line-height:1.6">${esc(ROLE_DESC[key]||"")}</p></div></div>`;}
 let lastPublished=null;
 function fmtPub(){if(!lastPublished)return "Nog niet gepubliceerd";try{return "Laatst gepubliceerd: "+new Date(lastPublished).toLocaleString("nl-NL",{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"});}catch(e){return "";}}
-function contentEditorHTML(logout){
-  const on=editing;
-  return `<div class="hd"><div><h1>Website aanpassen</h1><p>Wijzig teksten, afbeeldingen, logo en kleuren van de website — en publiceer het voor iedereen.</p></div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">${logout}</div></div>
-    <div class="panel"><div style="padding:24px 26px">
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+function huisstijlBlock(){const on=editing,edit=canEdit();
+  return `<div class="panel"><div style="padding:22px 24px">
+      <h3 style="margin-bottom:4px">Huisstijl &amp; website</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:14px">Pas teksten, afbeeldingen, logo en kleuren van de website aan en publiceer het voor iedereen.</p>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px">
         <span class="pill ${on?"ok":"idle"}">${on?"Bewerken staat AAN":"Bewerken staat uit"}</span>
-        <span style="color:var(--muted);font-size:13.5px" id="pubStatus">${esc(fmtPub())}</span>
+        <span style="color:var(--muted);font-size:13px" id="pubStatus">${esc(fmtPub())}</span>
       </div>
-      <p style="color:var(--muted);font-size:14.5px;line-height:1.65;margin:10px 0 18px;max-width:640px">
-        Zet <b>Bewerken</b> aan. Klik daarna direct op een tekst op de pagina om die te wijzigen, of klik op een afbeelding om die te vervangen. Met <b>Stijl &amp; logo</b> pas je kleuren en het logo aan. Onderin verschijnt een balk om tussen pagina's te wisselen en te <b>publiceren</b>.
-      </p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${edit?`<div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-lime" data-editstart>${on?"✓ Bewerken staat aan":"✎ Bewerken starten"}</button>
         <button class="btn btn-outline" data-opendrawer>⚙ Stijl &amp; logo</button>
       </div>
-    </div></div>
-    <div class="panel"><div style="padding:20px 26px">
-      <h3 style="margin-bottom:6px">Zo werkt publiceren</h3>
-      <p style="color:var(--muted);font-size:14px;line-height:1.6;max-width:640px">Wijzigingen die je maakt zie je meteen. Ze worden pas voor <b>alle bezoekers</b> zichtbaar nadat je op <b>Publiceren</b> klikt (in de balk onderin). Tot die tijd blijven ze alleen op dit apparaat staan.</p>
+      <p style="color:var(--muted);font-size:12.5px;line-height:1.6;margin-top:12px;max-width:640px">Klik op een tekst of afbeelding om die te wijzigen. Onderin verschijnt een balk om tussen pagina's te wisselen en te <b>publiceren</b> — pas dan zien alle bezoekers je wijzigingen.</p>`
+      :`<p style="color:var(--muted);font-size:13px">Je hebt alleen-lezen rechten en kunt de website niet aanpassen.</p>`}
     </div></div>`;}
+let settings={};
+function getSet(p){return p.split(".").reduce((o,k)=>(o&&o[k]!=null)?o[k]:"",settings);}
+function fld(label,path,ph,full,type){const dis=canEdit()?"":"disabled";const w=full?"grid-column:1/-1;":"";
+  return `<div style="${w}"><label style="display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px">${esc(label)}</label>
+    <input type="${type||"text"}" data-set="${path}" value="${escAttr(getSet(path))}" placeholder="${esc(ph||"")}" ${dis} style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;box-sizing:border-box"></div>`;}
+function grid(inner){return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">${inner}</div>`;}
+function instellingenHTML(logout){const edit=canEdit();
+  const saveBar=edit?`<div style="display:flex;align-items:center;gap:12px;margin-top:16px"><button class="btn btn-lime" data-savesettings>Wijzigingen opslaan</button><span id="setStatus" style="font-size:13px;color:var(--ok)"></span></div>`:"";
+  const sec=(title,desc,inner)=>`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:4px">${title}</h3>${desc?`<p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">${desc}</p>`:""}${inner}</div></div>`;
+  const bedrijf=sec("Bedrijfsgegevens","De gegevens van Arbitrage Partners.",grid(
+    fld("Bedrijfsnaam","bedrijf.naam","Arbitrage Partners")+fld("Contact-e-mail","bedrijf.email","info@arbitragepartners.nl","",("email"))+
+    fld("KvK-nummer","bedrijf.kvk","")+fld("BTW-nummer","bedrijf.btw","")+
+    fld("Telefoon","bedrijf.telefoon","")+fld("Website","bedrijf.website","www.arbitragepartners.nl")+
+    fld("Adres","bedrijf.adres","Straat en huisnummer",true)+fld("Postcode & plaats","bedrijf.plaats","",true)));
+  const fact=sec("Facturatie","Gegevens voor facturen en betalingen.",grid(
+    fld("IBAN","fact.iban","")+fld("Tenaamstelling","fact.tenaam","")+
+    fld("BTW-tarief (%)","fact.btwtarief","21")+fld("Betaaltermijn (dagen)","fact.termijn","14")+
+    fld("Standaard opmerking op factuur","fact.opmerking","",true)));
+  const mail=sec("E-mails","Hoe uitgaande e-mails naar klanten worden ondertekend.",grid(
+    fld("Afzendernaam","mail.afzender","Arbitrage Partners")+fld("Antwoordadres","mail.antwoord","info@arbitragepartners.nl","",("email"))+
+    fld("Handtekening / ondertekening","mail.handtekening","Met sportieve groet, team Arbitrage Partners",true)));
+  const integ=`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:12px">Integraties</h3>
+    <div class="tbl-scroll"><table class="tbl"><tbody>
+      <tr><td>Database &amp; accounts (Supabase)</td><td style="text-align:right"><span class="pill ok">Verbonden</span></td></tr>
+      <tr><td>Formulieren &amp; e-mailmeldingen</td><td style="text-align:right"><span class="pill ok">Actief</span></td></tr>
+      <tr><td>Betalingen (Mollie/Stripe)</td><td style="text-align:right"><span class="pill idle">Nog niet gekoppeld</span></td></tr>
+      <tr><td>Eigen domein</td><td style="text-align:right"><span class="pill idle">Nog niet gekoppeld</span></td></tr>
+    </tbody></table></div></div></div>`;
+  return `<div class="hd"><div><h1>Instellingen</h1><p>Bedrijfsgegevens, facturatie, huisstijl, e-mails en integraties.</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${logout}</div></div>
+    ${huisstijlBlock()}
+    ${bedrijf}${fact}${mail}${saveBar?`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:14px">Opslaan</h3><p style="color:var(--muted);font-size:13.5px;margin-bottom:2px">Sla je bedrijfsgegevens, facturatie en e-mailinstellingen op.</p>${saveBar}</div></div>`:""}
+    ${integ}`;}
 function gebruikersHTML(logout){
   const manage=canManageTeam();
   const cta=manage?`<a class="btn btn-outline" data-invite-open="gebruiker" href="#">＋ Gebruiker toevoegen</a>`:"";
@@ -1952,8 +1979,18 @@ document.addEventListener("click",e=>{
   if(e.target.closest("[data-opendrawer]")){e.preventDefault();drawer.classList.add("on");scrim.classList.add("on");return;}
   const eg=e.target.closest("[data-editgo]");if(eg){e.preventDefault();editGo(eg.dataset.editgo);return;}
   if(e.target.closest("#ebPublish")){e.preventDefault();publishContent();return;}
-  if(e.target.closest("[data-editdone]")){e.preventDefault();setEditing(false);activePage="Website aanpassen";renderDashboard();go("dashboard");return;}
+  if(e.target.closest("[data-editdone]")){e.preventDefault();setEditing(false);activePage="Instellingen";renderDashboard();go("dashboard");return;}
 });
+// instellingen opslaan
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-savesettings]");if(!b)return;e.preventDefault();
+  if(!canEdit()){alert("Je hebt alleen-lezen rechten.");return;}
+  const obj={};document.querySelectorAll("#dashMain [data-set]").forEach(inp=>{const path=inp.getAttribute("data-set").split(".");let o=obj;for(let i=0;i<path.length-1;i++){o[path[i]]=o[path[i]]||{};o=o[path[i]];}o[path[path.length-1]]=inp.value;});
+  settings=obj;const st=document.getElementById("setStatus");
+  if(!sb){if(st){st.textContent="Werkt alleen op de live site.";st.style.color="var(--warn)";}return;}
+  b.disabled=true;b.textContent="Opslaan…";
+  const {error}=await sb.from("instellingen").upsert({id:1,data:obj,bijgewerkt_op:new Date().toISOString()});
+  b.disabled=false;b.textContent="Wijzigingen opslaan";
+  if(st){st.textContent=error?("Mislukt: "+error.message):"✓ Opgeslagen";st.style.color=error?"var(--warn)":"var(--ok)";setTimeout(()=>{if(st)st.textContent="";},4000);}});
 
 /* ---- navigation ---- */
 function go(view){document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
