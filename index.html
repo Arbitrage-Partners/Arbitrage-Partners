@@ -1020,10 +1020,12 @@ const SB_URL="https://keyuipkupfxowrwsfmpk.supabase.co";
 const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtleXVpcGt1cGZ4b3dyd3NmbXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDQ1MDEsImV4cCI6MjEwNDg4MDUwMX0.taZt8658Saldr5IOVb4L9qleXyn3ZnPubcrwGtes4b4";
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_ANON):null;
 const ROLE_TO_PORTAL={vereniging:"vereniging",official:"official",begeleider:"begeleider",beheerder:"beheer"};
-let loggedIn=false,currentUser=null;
-async function loadProfile(){try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam").eq("id",currentUser.id).single();
-  if(prof){currentPortal=ROLE_TO_PORTAL[prof.rol]||"vereniging";if(prof.volledige_naam)S.profile.name=prof.volledige_naam;}}catch(e){}}
-async function afterLogin(){const {data:{user}}=await sb.auth.getUser();currentUser=user;loggedIn=!!user;await loadProfile();activePage=null;renderDashboard();go("dashboard");}
+let loggedIn=false,currentUser=null,authMode="login",currentRole="vereniging",currentVerenigingId=null;
+async function loadProfile(){try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url").eq("id",currentUser.id).single();
+  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;}}catch(e){}}
+function needsOnboarding(){return !!(currentUser&&(currentRole==="official"||currentRole==="begeleider")&&!(currentUser.user_metadata&&currentUser.user_metadata.onboarded));}
+async function routeAfterAuth(){if(needsOnboarding()){authMode="onboard";go("login");renderLogin();}else{activePage=null;renderDashboard();go("dashboard");}}
+async function afterLogin(){const {data:{user}}=await sb.auth.getUser();currentUser=user;loggedIn=!!user;await loadProfile();await routeAfterAuth();}
 async function doLogout(){try{if(sb)await sb.auth.signOut();}catch(e){}loggedIn=false;currentUser=null;renderLogin();go("site");}
 const DEFAULTS = {
   theme:{navy:"#0B1E33",lime:"#A6CE4E",ground:"#F3F5F1",ink:"#0B1E33"},
@@ -1297,7 +1299,8 @@ const DEFAULTS = {
             {nm:"Spelregels 26-27.pdf",type:"PDF",date:"1 aug 2026",who:"NHV"}]}]},
         "Scheidsrechters":{subtitle:"Alle scheidsrechters en officials van de vereniging.",cta:"Toevoegen",
           stats:[{ic:"◍",badge:"actief",num:"7",lab:"Actief"},{ic:"＋",badge:"seizoen",num:"2",lab:"Nieuw dit seizoen"},{ic:"◎",badge:"opleiding",num:"2",lab:"In opleiding"},{ic:"✓",badge:"tevredenheid",num:"92%",lab:"Retentie"}],
-          panels:[{type:"table",title:"Alle scheidsrechters",link:"Toevoegen",cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
+          panels:[{type:"invite",title:"Scheidsrechter toevoegen"},
+            {type:"table",title:"Alle scheidsrechters",link:"Toevoegen",cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
             {nm:"Daan Hermans",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"20 sep 2026",last:"12 aug 2026",rep:"6"},
             {nm:"Femke de Groot",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"27 sep 2026",last:"—",rep:"1"},
             {nm:"Iris van Beek",sub:"Coördinator",niv:"BeNe League",status:"Actief",statusSt:"ok",next:"18 sep 2026",last:"2 sep 2026",rep:"9"},
@@ -1509,6 +1512,7 @@ function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.li
   if(s.services&&Array.isArray(s.services.items))s.services.items=DEFAULTS.services.items.map((d,i)=>Object.assign({},d,s.services.items[i]||{}));
   if(s.contact&&/demo/i.test(s.contact.formSuccess||""))s.contact.formSuccess=DEFAULTS.contact.formSuccess;
   if(s.plan&&/demo/i.test(s.plan.successBody||""))s.plan.successBody=DEFAULTS.plan.successBody;
+  try{const sp=s.portals.vereniging.pages["Scheidsrechters"];if(sp&&Array.isArray(sp.panels)&&!sp.panels.some(p=>p.type==="invite"))sp.panels.unshift({type:"invite",title:"Scheidsrechter toevoegen"});}catch(e){}
   return s;}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(deepMerge(DEFAULTS,s)):structuredClone(DEFAULTS);}catch(e){return structuredClone(DEFAULTS);}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
@@ -1559,7 +1563,31 @@ function renderChooser(){document.getElementById("chooserGrid").innerHTML=S.choo
 
 /* ---- echte login (Supabase) ---- */
 function renderLogin(){const el=document.getElementById("loginForm");if(!el)return;
-  if(loggedIn&&currentUser){
+  if(authMode==="onboard"){
+    el.innerHTML=`<span class="eyebrow">Welkom</span><h2>Stel je account in</h2>
+      <p class="desc">Je bent uitgenodigd voor het portaal. Kies een wachtwoord en (optioneel) een profielfoto. Daarna log je voortaan in met je e-mailadres en dit wachtwoord.</p>
+      <div class="field"><label>Wachtwoord</label><input id="onbPass" type="password" placeholder="minimaal 6 tekens"></div>
+      <div class="field"><label>Herhaal wachtwoord</label><input id="onbPass2" type="password" placeholder="••••••••"></div>
+      <div class="field"><label>Profielfoto (optioneel)</label><input id="onbPhoto" type="file" accept="image/*"></div>
+      <div class="form-status err" id="loginErr" hidden></div>
+      <button class="btn btn-lime" id="onbSave" style="width:100%;justify-content:center;margin:6px 0 14px">Afronden en naar mijn portaal →</button>`;
+  } else if(authMode==="reset"){
+    el.innerHTML=`<span class="eyebrow">Nieuw wachtwoord</span><h2>Kies een nieuw wachtwoord</h2>
+      <p class="desc">Stel hieronder je nieuwe wachtwoord in.</p>
+      <div class="field"><label>Nieuw wachtwoord</label><input id="newPass" type="password" placeholder="••••••••"></div>
+      <div class="field"><label>Herhaal wachtwoord</label><input id="newPass2" type="password" placeholder="••••••••"></div>
+      <div class="form-status err" id="loginErr" hidden></div>
+      <div class="form-status" id="loginMsg" hidden></div>
+      <button class="btn btn-lime" id="savePass" style="width:100%;justify-content:center;margin:6px 0 14px">Wachtwoord opslaan</button>`;
+  } else if(authMode==="forgot"){
+    el.innerHTML=`<span class="eyebrow">Wachtwoord vergeten</span><h2>Wachtwoord resetten</h2>
+      <p class="desc">Vul je e-mailadres in. We sturen je een link om een nieuw wachtwoord in te stellen.</p>
+      <div class="field"><label>E-mailadres</label><input id="resetEmail" type="email" autocomplete="username" placeholder="naam@vereniging.nl"></div>
+      <div class="form-status err" id="loginErr" hidden></div>
+      <div class="form-status" id="loginMsg" hidden></div>
+      <button class="btn btn-lime" id="sendReset" style="width:100%;justify-content:center;margin:6px 0 14px">Stuur resetlink</button>
+      <button class="backlink" id="backToLogin">← Terug naar inloggen</button>`;
+  } else if(loggedIn&&currentUser){
     el.innerHTML=`<span class="eyebrow">Portaal</span><h2>Je bent ingelogd</h2>
       <p class="desc">Ingelogd als <b>${esc(currentUser.email||"")}</b>.</p>
       <button class="btn btn-lime" id="gotoPortaal" style="width:100%;justify-content:center;margin-bottom:12px">Naar je portaal →</button>
@@ -1570,7 +1598,9 @@ function renderLogin(){const el=document.getElementById("loginForm");if(!el)retu
       <div class="field"><label>E-mailadres</label><input id="loginEmail" type="email" autocomplete="username" placeholder="naam@vereniging.nl"></div>
       <div class="field"><label>Wachtwoord</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
       <div class="form-status err" id="loginErr" hidden></div>
-      <button class="btn btn-lime" id="loginSubmit" style="width:100%;justify-content:center;margin:6px 0 14px">Inloggen</button>
+      <div class="form-status" id="loginMsg" hidden></div>
+      <button class="btn btn-lime" id="loginSubmit" style="width:100%;justify-content:center;margin:6px 0 10px">Inloggen</button>
+      <button class="backlink" id="forgotLink" style="margin-bottom:6px">Wachtwoord vergeten?</button>
       <button class="backlink" data-go="site">← Terug naar de website</button>`;
   }
   refreshEditState();}
@@ -1596,6 +1626,16 @@ function panelHTML(p,b){
       return `<div class="act"><span class="mk" style="background:${esc(a.mk)}"></span><div class="ai"><div class="t" data-edit="${ib}.t">${esc(a.t)}</div><div class="meta"><span data-edit="${ib}.cat">${esc(a.cat)}</span> · <span data-edit="${ib}.date">${esc(a.date)}</span></div><div class="meta2">◍ <span data-edit="${ib}.loc">${esc(a.loc)}</span> · <span data-edit="${ib}.who">${esc(a.who)}</span></div></div><div class="rt"><span class="pill ${a.st||"idle"}" data-edit="${ib}.stt">${esc(a.stt)}</span><span class="tm" data-edit="${ib}.time">${esc(a.time)}</span></div></div>`;}).join("");
     return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="acts">${body}</div></div>`;}
   if(p.type==="note")return `<div class="panel"><div style="padding:24px">${p.title?`<h3 style="margin-bottom:8px" data-edit="${b}.title">${esc(p.title)}</h3>`:""}<p style="color:var(--muted);font-size:14.5px;line-height:1.6" data-edit="${b}.body">${esc(p.body)}</p></div></div>`;
+  if(p.type==="invite")return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title||"Scheidsrechter toevoegen")}</h3></div><div style="padding:22px">
+    <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">Vul de gegevens in en verstuur. De scheidsrechter krijgt een e-mail om zelf een wachtwoord en profielfoto in te stellen en in het eigen portaal in te loggen.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="field"><label>Naam</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
+      <div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@vereniging.nl"></div>
+    </div>
+    <div class="form-status err" id="invErr" hidden></div>
+    <div class="form-status" id="invMsg" hidden></div>
+    <button class="btn btn-lime" id="invSend" style="margin-top:4px">Uitnodiging versturen</button>
+  </div></div>`;
   if(p.type==="chat")return chatPanelHTML(p,b);
   if(p.type==="clubdocs"){const clubs=p.clubs||[],sel=(selectedClub&&clubs.includes(selectedClub))?selectedClub:clubs[0];
     const rows=(p.docs&&p.docs[sel])||[];
@@ -1731,6 +1771,7 @@ function go(view){document.querySelectorAll(".view").forEach(v=>v.classList.remo
 document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(!g||editing)return;e.preventDefault();
   if(g.dataset.portal){currentPortal=g.dataset.portal;renderLogin();}
   if(g.dataset.go==="chooser"||g.dataset.go==="site"){isAdmin=false;}
+  if(g.dataset.go==="login"&&authMode!=="reset"&&authMode!=="onboard")authMode="login";
   if(g.dataset.addInterest)addInterest(g.dataset.addInterest);
   if(g.dataset.go==="scan")resetScan();
   if(g.dataset.go==="plan")resetPlan();
@@ -1767,6 +1808,57 @@ document.addEventListener("click",async e=>{
     await afterLogin();return;}
   if(e.target.closest("#gotoPortaal")){e.preventDefault();activePage=null;renderDashboard();go("dashboard");return;}
   if(e.target.closest("[data-logout]")){e.preventDefault();doLogout();return;}
+  if(e.target.closest("#forgotLink")){e.preventDefault();authMode="forgot";renderLogin();return;}
+  if(e.target.closest("#backToLogin")){e.preventDefault();authMode="login";renderLogin();return;}
+  if(e.target.closest("#sendReset")){e.preventDefault();
+    const em=(document.getElementById("resetEmail")||{}).value||"",msg=document.getElementById("loginMsg"),err=document.getElementById("loginErr"),btn=e.target.closest("#sendReset");
+    if(!sb){if(err){err.textContent="Werkt alleen op de live website.";err.hidden=false;}return;}
+    if(!em.trim()){if(err){err.textContent="Vul je e-mailadres in.";err.hidden=false;}return;}
+    if(err)err.hidden=true;if(btn){btn.disabled=true;btn.textContent="Versturen…";}
+    try{await sb.auth.resetPasswordForEmail(em.trim(),{redirectTo:location.origin+location.pathname});}catch(x){}
+    if(btn){btn.disabled=false;btn.textContent="Stuur resetlink";}
+    if(msg){msg.textContent="Als dit e-mailadres bij ons bekend is, ontvang je een e-mail met een resetlink.";msg.hidden=false;}
+    return;}
+  if(e.target.closest("#savePass")){e.preventDefault();
+    const p1=(document.getElementById("newPass")||{}).value||"",p2=(document.getElementById("newPass2")||{}).value||"",err=document.getElementById("loginErr"),msg=document.getElementById("loginMsg");
+    if(err)err.hidden=true;if(msg)msg.hidden=true;
+    if(p1.length<6){if(err){err.textContent="Kies een wachtwoord van minimaal 6 tekens.";err.hidden=false;}return;}
+    if(p1!==p2){if(err){err.textContent="De wachtwoorden komen niet overeen.";err.hidden=false;}return;}
+    if(!sb)return;
+    const {error}=await sb.auth.updateUser({password:p1});
+    if(error){if(err){err.textContent="Opslaan mislukt. Vraag eventueel een nieuwe resetlink aan.";err.hidden=false;}return;}
+    authMode="login";renderLogin();const m2=document.getElementById("loginMsg");if(m2){m2.textContent="Je wachtwoord is aangepast. Log in met je nieuwe wachtwoord.";m2.hidden=false;}
+    return;}
+  if(e.target.closest("#onbSave")){e.preventDefault();
+    const p1=(document.getElementById("onbPass")||{}).value||"",p2=(document.getElementById("onbPass2")||{}).value||"",err=document.getElementById("loginErr"),btn=e.target.closest("#onbSave"),ph=document.getElementById("onbPhoto");
+    if(err)err.hidden=true;
+    if(p1.length<6){if(err){err.textContent="Kies een wachtwoord van minimaal 6 tekens.";err.hidden=false;}return;}
+    if(p1!==p2){if(err){err.textContent="De wachtwoorden komen niet overeen.";err.hidden=false;}return;}
+    if(!sb)return;btn.disabled=true;btn.textContent="Bezig…";
+    let avatarUrl=null;
+    try{if(ph&&ph.files&&ph.files[0]){const f=ph.files[0],ext=(f.name.split(".").pop()||"jpg").toLowerCase(),path=currentUser.id+"/avatar."+ext;
+      const {error:ue}=await sb.storage.from("avatars").upload(path,f,{upsert:true});
+      if(!ue){avatarUrl=sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;}}}catch(x){}
+    const {error}=await sb.auth.updateUser({password:p1,data:{onboarded:true}});
+    if(error){btn.disabled=false;btn.textContent="Afronden en naar mijn portaal →";if(err){err.textContent="Opslaan mislukt: "+error.message;err.hidden=false;}return;}
+    if(avatarUrl){try{await sb.from("profiles").update({avatar_url:avatarUrl}).eq("id",currentUser.id);}catch(x){}S.profile.avatar=avatarUrl;}
+    if(currentUser.user_metadata)currentUser.user_metadata.onboarded=true;else currentUser.user_metadata={onboarded:true};
+    authMode="login";activePage=null;renderDashboard();go("dashboard");return;}
+  if(e.target.closest("#invSend")){e.preventDefault();
+    const nm=(document.getElementById("invName")||{}).value||"",em=(document.getElementById("invEmail")||{}).value||"",err=document.getElementById("invErr"),msg=document.getElementById("invMsg"),btn=e.target.closest("#invSend");
+    if(err)err.hidden=true;if(msg)msg.hidden=true;
+    if(!sb){if(err){err.textContent="Werkt alleen op de live website.";err.hidden=false;}return;}
+    if(!em.trim()||!nm.trim()){if(err){err.textContent="Vul een naam en e-mailadres in.";err.hidden=false;}return;}
+    if(!currentVerenigingId){if(err){err.textContent="Je account is nog niet aan een vereniging gekoppeld.";err.hidden=false;}return;}
+    btn.disabled=true;btn.textContent="Versturen…";
+    const {error:e1}=await sb.from("uitnodigingen").insert({email:em.trim(),rol:"official",vereniging_id:currentVerenigingId,volledige_naam:nm.trim()});
+    if(e1){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Uitnodiging aanmaken mislukt: "+e1.message;err.hidden=false;}return;}
+    const {error:e2}=await sb.auth.signInWithOtp({email:em.trim(),options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
+    btn.disabled=false;btn.textContent="Uitnodiging versturen";
+    if(e2){if(err){err.textContent="E-mail versturen mislukt: "+e2.message;err.hidden=false;}return;}
+    if(msg){msg.textContent="Uitnodiging verstuurd naar "+em.trim()+". Zodra hij/zij de e-mail bevestigt, kan diegene een wachtwoord instellen en inloggen.";msg.hidden=false;}
+    const ni=document.getElementById("invName"),ei=document.getElementById("invEmail");if(ni)ni.value="";if(ei)ei.value="";
+    return;}
 });
 // dashboard-paginarouter
 document.addEventListener("click",e=>{const p=e.target.closest("[data-page]");if(!p||editing)return;e.preventDefault();activePage=p.dataset.page;renderDashboard();});
@@ -2108,8 +2200,11 @@ function renderApp(){document.getElementById("appScreen").innerHTML=appHTML();}
 if(new URLSearchParams(location.search).get("frame")==="1"){const tb=document.getElementById("toolbar");if(tb)tb.hidden=true;document.body.classList.add("framed");}
 
 renderAll();
-// bestaande sessie herstellen (blijf ingelogd na herladen)
-if(sb)sb.auth.getSession().then(async ({data})=>{if(data&&data.session){currentUser=data.session.user;loggedIn=true;await loadProfile();renderLogin();}});
+// wachtwoord-herstel: als de gebruiker via de resetlink terugkomt
+if(sb)sb.auth.onAuthStateChange((event)=>{if(event==="PASSWORD_RECOVERY"){authMode="reset";go("login");renderLogin();}});
+// bestaande sessie herstellen (of onboarding tonen na uitnodigingslink)
+if(sb)sb.auth.getSession().then(async ({data})=>{if(data&&data.session&&authMode!=="reset"){currentUser=data.session.user;loggedIn=true;await loadProfile();
+  if(needsOnboarding()){authMode="onboard";go("login");}renderLogin();}});
 </script>
 
 <script>document.body.classList.add('framed');</script>
