@@ -67,6 +67,13 @@ body.editing #editbar{display:flex;animation:ebin .22s ease forwards}
 #editbar .eb-msg{font-size:12px;color:var(--lime);min-width:0}
 #editbar .eb-sp{flex:1;min-width:6px}
 @media(max-width:640px){#editbar{left:12px;right:12px;transform:none;bottom:12px}body.editing #editbar{transform:none}@keyframes ebin{to{transform:none}}}
+/* instellingen-tabs */
+.set-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.set-tab{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);color:var(--ink);padding:9px 14px;border-radius:10px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .12s,border-color .12s}
+.set-tab .ic{opacity:.6;font-size:13px}
+.set-tab:hover{border-color:color-mix(in srgb,var(--navy),transparent 60%)}
+.set-tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.set-tab.on .ic{opacity:1}
 
 .view{display:none}.view.on{display:block}
 header.site{background:transparent;position:relative;z-index:5}
@@ -1760,7 +1767,7 @@ async function fillStats(){if(!sb)return;
   try{
     const {data:vs,error}=await sb.from("verenigingen").select("abonnement");
     if(!error&&vs){set("verenigingen",String(vs.length));
-      const prices={Start:195,Grow:395,Pro:695};let abo=0,mrr=0;
+      const sp=settings.prijzen||{},prices={Start:+sp.start||195,Grow:+sp.grow||395,Pro:+sp.pro||695};let abo=0,mrr=0;
       vs.forEach(v=>{const a=(v.abonnement||"").trim();if(prices[a]!=null){abo++;mrr+=prices[a];}});
       set("abonnementen",String(abo));set("mrr","€"+mrr.toLocaleString("nl-NL"));}
     const {count:oc,error:oe}=await sb.from("profiles").select("id",{count:"exact",head:true}).eq("rol","official");
@@ -1861,33 +1868,39 @@ function fld(label,path,ph,full,type){const dis=canEdit()?"":"disabled";const w=
   return `<div style="${w}"><label style="display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px">${esc(label)}</label>
     <input type="${type||"text"}" data-set="${path}" value="${escAttr(getSet(path))}" placeholder="${esc(ph||"")}" ${dis} style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;box-sizing:border-box"></div>`;}
 function grid(inner){return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">${inner}</div>`;}
+let settingsTab="bedrijf";
 function instellingenHTML(logout){const edit=canEdit();
-  const saveBar=edit?`<div style="display:flex;align-items:center;gap:12px;margin-top:16px"><button class="btn btn-lime" data-savesettings>Wijzigingen opslaan</button><span id="setStatus" style="font-size:13px;color:var(--ok)"></span></div>`:"";
-  const sec=(title,desc,inner)=>`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:4px">${title}</h3>${desc?`<p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">${desc}</p>`:""}${inner}</div></div>`;
-  const bedrijf=sec("Bedrijfsgegevens","De gegevens van Arbitrage Partners.",grid(
-    fld("Bedrijfsnaam","bedrijf.naam","Arbitrage Partners")+fld("Contact-e-mail","bedrijf.email","info@arbitragepartners.nl","",("email"))+
+  const saveBar=edit?`<div style="display:flex;align-items:center;gap:12px;margin-top:18px"><button class="btn btn-lime" data-savesettings>Opslaan</button><span id="setStatus" style="font-size:13px;color:var(--ok)"></span></div>`:`<p style="color:var(--muted);font-size:13px;margin-top:14px">Je hebt alleen-lezen rechten en kunt niets wijzigen.</p>`;
+  const sec=(title,desc,inner)=>`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:4px">${title}</h3>${desc?`<p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">${desc}</p>`:`<div style="height:8px"></div>`}${inner}${saveBar}</div></div>`;
+  const tabs=[["bedrijf","◍","Bedrijf"],["facturatie","▤","Facturatie"],["prijzen","★","Prijzen"],["emails","✉","E-mails"],["huisstijl","✎","Huisstijl & website"],["integraties","◑","Integraties"]];
+  const tabBar=`<div class="set-tabs">`+tabs.map(t=>`<button class="set-tab ${settingsTab===t[0]?"on":""}" data-settab="${t[0]}"><span class="ic">${t[1]}</span> ${esc(t[2])}</button>`).join("")+`</div>`;
+  let body="";
+  if(settingsTab==="bedrijf") body=sec("Bedrijfsgegevens","De gegevens van Arbitrage Partners.",grid(
+    fld("Bedrijfsnaam","bedrijf.naam","Arbitrage Partners")+fld("Contact-e-mail","bedrijf.email","info@arbitragepartners.nl","","email")+
     fld("KvK-nummer","bedrijf.kvk","")+fld("BTW-nummer","bedrijf.btw","")+
     fld("Telefoon","bedrijf.telefoon","")+fld("Website","bedrijf.website","www.arbitragepartners.nl")+
     fld("Adres","bedrijf.adres","Straat en huisnummer",true)+fld("Postcode & plaats","bedrijf.plaats","",true)));
-  const fact=sec("Facturatie","Gegevens voor facturen en betalingen.",grid(
+  else if(settingsTab==="facturatie") body=sec("Facturatie","Gegevens voor facturen en betalingen.",grid(
     fld("IBAN","fact.iban","")+fld("Tenaamstelling","fact.tenaam","")+
-    fld("BTW-tarief (%)","fact.btwtarief","21")+fld("Betaaltermijn (dagen)","fact.termijn","14")+
+    fld("BTW-tarief (%)","fact.btwtarief","21","",("number"))+fld("Betaaltermijn (dagen)","fact.termijn","14","",("number"))+
     fld("Standaard opmerking op factuur","fact.opmerking","",true)));
-  const mail=sec("E-mails","Hoe uitgaande e-mails naar klanten worden ondertekend.",grid(
-    fld("Afzendernaam","mail.afzender","Arbitrage Partners")+fld("Antwoordadres","mail.antwoord","info@arbitragepartners.nl","",("email"))+
+  else if(settingsTab==="prijzen") body=sec("Abonnementsprijzen","Wat de pakketten per maand kosten. Deze bedragen voeden de omzet-tegel (MRR) op je dashboard.",grid(
+    fld("Start (€ per maand)","prijzen.start","195","","number")+fld("Grow (€ per maand)","prijzen.grow","395","","number")+
+    fld("Pro (€ per maand)","prijzen.pro","695","","number")));
+  else if(settingsTab==="emails") body=sec("E-mails","Hoe uitgaande e-mails naar klanten worden ondertekend.",grid(
+    fld("Afzendernaam","mail.afzender","Arbitrage Partners")+fld("Antwoordadres","mail.antwoord","info@arbitragepartners.nl","","email")+
     fld("Handtekening / ondertekening","mail.handtekening","Met sportieve groet, team Arbitrage Partners",true)));
-  const integ=`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:12px">Integraties</h3>
+  else if(settingsTab==="huisstijl") body=huisstijlBlock();
+  else if(settingsTab==="integraties") body=`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:12px">Integraties</h3>
     <div class="tbl-scroll"><table class="tbl"><tbody>
       <tr><td>Database &amp; accounts (Supabase)</td><td style="text-align:right"><span class="pill ok">Verbonden</span></td></tr>
       <tr><td>Formulieren &amp; e-mailmeldingen</td><td style="text-align:right"><span class="pill ok">Actief</span></td></tr>
       <tr><td>Betalingen (Mollie/Stripe)</td><td style="text-align:right"><span class="pill idle">Nog niet gekoppeld</span></td></tr>
       <tr><td>Eigen domein</td><td style="text-align:right"><span class="pill idle">Nog niet gekoppeld</span></td></tr>
     </tbody></table></div></div></div>`;
-  return `<div class="hd"><div><h1>Instellingen</h1><p>Bedrijfsgegevens, facturatie, huisstijl, e-mails en integraties.</p></div>
+  return `<div class="hd"><div><h1>Instellingen</h1><p>Bedrijfsgegevens, facturatie, prijzen, huisstijl, e-mails en integraties.</p></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">${logout}</div></div>
-    ${huisstijlBlock()}
-    ${bedrijf}${fact}${mail}${saveBar?`<div class="panel"><div style="padding:22px 24px"><h3 style="margin-bottom:14px">Opslaan</h3><p style="color:var(--muted);font-size:13.5px;margin-bottom:2px">Sla je bedrijfsgegevens, facturatie en e-mailinstellingen op.</p>${saveBar}</div></div>`:""}
-    ${integ}`;}
+    ${tabBar}${body}`;}
 function gebruikersHTML(logout){
   const manage=canManageTeam();
   const cta=manage?`<a class="btn btn-outline" data-invite-open="gebruiker" href="#">＋ Gebruiker toevoegen</a>`:"";
@@ -1981,10 +1994,13 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#ebPublish")){e.preventDefault();publishContent();return;}
   if(e.target.closest("[data-editdone]")){e.preventDefault();setEditing(false);activePage="Instellingen";renderDashboard();go("dashboard");return;}
 });
-// instellingen opslaan
+// instellingen: tabblad wisselen
+document.addEventListener("click",e=>{const t=e.target.closest("[data-settab]");if(!t||editing)return;e.preventDefault();settingsTab=t.getAttribute("data-settab");renderDashboard();});
+// instellingen opslaan (voegt samen met wat er al bewaard is)
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-savesettings]");if(!b)return;e.preventDefault();
   if(!canEdit()){alert("Je hebt alleen-lezen rechten.");return;}
-  const obj={};document.querySelectorAll("#dashMain [data-set]").forEach(inp=>{const path=inp.getAttribute("data-set").split(".");let o=obj;for(let i=0;i<path.length-1;i++){o[path[i]]=o[path[i]]||{};o=o[path[i]];}o[path[path.length-1]]=inp.value;});
+  let obj;try{obj=JSON.parse(JSON.stringify(settings||{}));}catch(x){obj={};}
+  document.querySelectorAll("#dashMain [data-set]").forEach(inp=>{const path=inp.getAttribute("data-set").split(".");let o=obj;for(let i=0;i<path.length-1;i++){if(typeof o[path[i]]!=="object"||o[path[i]]===null)o[path[i]]={};o=o[path[i]];}o[path[path.length-1]]=inp.value;});
   settings=obj;const st=document.getElementById("setStatus");
   if(!sb){if(st){st.textContent="Werkt alleen op de live site.";st.style.color="var(--warn)";}return;}
   b.disabled=true;b.textContent="Opslaan…";
