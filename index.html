@@ -580,6 +580,9 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
 .act .rt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
 .act .rt .tm{font-family:var(--mono);font-size:11px;color:var(--muted)}
 .tbl-scroll{overflow-x:auto}
+.cell-end{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.del-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;flex:none;line-height:1}
+.del-btn:hover{background:#f7e4df;border-color:#e6b9ad;color:#a8402c}
 .chatwrap{display:grid;grid-template-columns:250px 1fr;min-height:440px}
 .chat-threads{border-right:1px solid var(--line);overflow:auto}
 .chat-thread{padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
@@ -1700,13 +1703,14 @@ function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return
   renderImages();refreshEditState();fillLive();window.scrollTo(0,0);}
 async function fillLive(){if(!sb)return;
   document.querySelectorAll("#dashMain table[data-live]").forEach(async tbl=>{const kind=tbl.getAttribute("data-live"),tb=tbl.querySelector("tbody");if(!tb)return;
-    if(kind==="verenigingen"){const {data,error}=await sb.from("verenigingen").select("naam,plaats,abonnement,contactpersoon").order("aangemaakt_op",{ascending:false});
+    const delBtn=(type,id)=>`<button class="del-btn" data-del="${type}" data-id="${esc(id)}" title="Verwijderen">✕</button>`;
+    if(kind==="verenigingen"){const {data,error}=await sb.from("verenigingen").select("id,naam,plaats,abonnement,contactpersoon").order("aangemaakt_op",{ascending:false});
       if(error)return;if(!data||!data.length){tb.innerHTML=`<tr><td colspan="5" style="color:var(--muted)">Nog geen verenigingen. Nodig er een uit via de knop hierboven.</td></tr>`;return;}
-      tb.innerHTML=data.map(v=>`<tr><td><div class="nm">${esc(v.naam||"")}</div><div class="sub">${esc(v.plaats||"")}</div></td><td><span class="pill ${v.abonnement?"info":"idle"}">${esc(v.abonnement||"—")}</span></td><td>${esc(v.contactpersoon||"—")}</td><td>—</td><td><span class="pill ok">Actief</span></td></tr>`).join("");}
+      tb.innerHTML=data.map(v=>`<tr><td><div class="nm">${esc(v.naam||"")}</div><div class="sub">${esc(v.plaats||"")}</div></td><td><span class="pill ${v.abonnement?"info":"idle"}">${esc(v.abonnement||"—")}</span></td><td>${esc(v.contactpersoon||"—")}</td><td>—</td><td><div class="cell-end"><span class="pill ok">Actief</span>${delBtn("vereniging",v.id)}</div></td></tr>`).join("");}
     if(kind==="officials"){if(!currentVerenigingId){tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">Nog geen scheidsrechters.</td></tr>`;return;}
-      const {data,error}=await sb.from("profiles").select("volledige_naam,email").eq("vereniging_id",currentVerenigingId).eq("rol","official");
+      const {data,error}=await sb.from("profiles").select("id,volledige_naam,email").eq("vereniging_id",currentVerenigingId).eq("rol","official");
       if(error)return;if(!data||!data.length){tb.innerHTML=`<tr><td colspan="6" style="color:var(--muted)">Nog geen scheidsrechters. Voeg er een toe via de knop hierboven.</td></tr>`;return;}
-      tb.innerHTML=data.map(o=>`<tr><td><div class="nm">${esc(o.volledige_naam||o.email)}</div><div class="sub">${esc(o.email||"")}</div></td><td>—</td><td><span class="pill ok">Actief</span></td><td>—</td><td>—</td><td>0</td></tr>`).join("");}
+      tb.innerHTML=data.map(o=>`<tr><td><div class="nm">${esc(o.volledige_naam||o.email)}</div><div class="sub">${esc(o.email||"")}</div></td><td>—</td><td><span class="pill ok">Actief</span></td><td>—</td><td>—</td><td><div class="cell-end"><span>0</span>${delBtn("official",o.id)}</div></td></tr>`).join("");}
   });}
 function dashMainHTML(key,P,b,overview){
   const logout=`<button class="btn btn-outline" data-logout>Uitloggen</button>`;
@@ -1911,6 +1915,14 @@ document.addEventListener("change",e=>{const w=e.target.closest("[data-widget]")
 document.addEventListener("click",e=>{const c=e.target.closest("[data-club]");if(!c||editing)return;e.preventDefault();selectedClub=c.dataset.club;renderDashboard();});
 // profiel openen
 document.addEventListener("click",e=>{const pf=e.target.closest("[data-profile]");if(!pf||editing)return;if(e.target.closest("[data-go]")||e.target.closest("[data-logout]"))return;e.preventDefault();activePage="__profile";renderDashboard();});
+// verenigingen/scheidsrechters verwijderen
+document.addEventListener("click",async e=>{const d=e.target.closest("[data-del]");if(!d||editing)return;e.preventDefault();
+  const type=d.dataset.del,id=d.dataset.id;
+  if(!confirm(type==="vereniging"?"Deze vereniging definitief verwijderen?":"Deze persoon verwijderen uit je club?"))return;
+  if(!sb)return;d.disabled=true;
+  const {error}=type==="vereniging"?await sb.from("verenigingen").delete().eq("id",id):await sb.from("profiles").delete().eq("id",id);
+  if(error){d.disabled=false;alert("Verwijderen mislukt: "+error.message);return;}
+  renderDashboard();});
 // uitnodigen pop-up (official of vereniging)
 let inviteType="official";
 function renderInviteModal(){const el=document.getElementById("inviteBody");document.getElementById("inviteTitle").textContent=inviteType==="vereniging"?"Vereniging uitnodigen":"Scheidsrechter toevoegen";
