@@ -1,0 +1,2067 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Arbitrage Partners - sterke officials, sterke verenigingen.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230B1E33'/><text y='73' x='50' font-size='62' text-anchor='middle' fill='%23A6CE4E' font-family='Arial' font-weight='bold'>A</text></svg>">
+<title>Arbitrage Partners Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --navy:#0B1E33; --lime:#A6CE4E; --ground:#F3F5F1; --ink:#0B1E33;
+  --card:#FFFFFF; --muted:#5C6B78; --line:#E4E9E3;
+  --navy2:color-mix(in srgb, var(--navy), #1C5A8A 42%);
+  --lime-ink:#0B1E33; --lime-dark:color-mix(in srgb, var(--lime), #0B1E33 34%);
+  --ok:#2E7D32; --ok-bg:#DCEAD0; --warn:#A9700C; --warn-bg:#F6E8C9;
+  --info:#1E5AA8; --info-bg:#D9E4F4; --idle:#6B7A86; --idle-bg:#E7ECE9;
+  --sans:"Inter",system-ui,-apple-system,Segoe UI,sans-serif;
+  --disp:"Poppins","Inter",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --radius:16px; --shadow:0 1px 2px rgba(11,30,51,.06),0 8px 24px rgba(11,30,51,.06);
+  --maxw:1160px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--ground);line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--disp);margin:0;line-height:1.12;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0}a{color:inherit}img{display:block}button{font-family:inherit;cursor:pointer}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime-dark);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:999px;padding:13px 22px;font-weight:600;font-size:15px;text-decoration:none;transition:transform .12s ease,filter .12s ease}
+.btn:hover{filter:brightness(.97)}.btn:active{transform:translateY(1px)}
+.btn-lime{background:var(--lime);color:var(--lime-ink)}
+.btn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.35)}
+.btn-outline{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+
+/* toolbar */
+#toolbar{position:sticky;top:0;z-index:200;background:#07131f;color:#cfe0d0;display:flex;align-items:center;gap:14px;padding:8px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.08)}
+#toolbar .brandmini{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:700;color:#fff;font-size:13px}
+#toolbar .dot{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--lime);border-right-color:transparent;transform:rotate(-25deg)}
+#toolbar .seg{display:flex;background:rgba(255,255,255,.07);border-radius:999px;padding:3px}
+#toolbar .seg button{background:none;border:none;color:#9fb2b6;padding:5px 13px;border-radius:999px;font-size:12.5px;font-weight:600}
+#toolbar .seg button.on{background:var(--lime);color:#07131f}
+#toolbar .spacer{flex:1}
+.tbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#dfeadf;border-radius:8px;padding:6px 11px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.tbtn.active{background:var(--lime);color:#07131f;border-color:var(--lime)}
+#toolbar .hint{color:#7d9296;font-size:12px}
+body.editing [data-edit]{outline:1.5px dashed color-mix(in srgb,var(--lime),transparent 30%);outline-offset:3px;border-radius:3px;cursor:text}
+body.editing [data-edit]:focus{outline:2px solid var(--lime);background:color-mix(in srgb,var(--lime),transparent 88%)}
+body.editing .ed-img{outline:2px dashed var(--lime);outline-offset:-2px;cursor:pointer;position:relative}
+body.editing .ed-img::after{content:"Klik: wissel afbeelding";position:absolute;inset:auto 8px 8px auto;background:rgba(7,19,31,.85);color:#fff;font-family:var(--sans);font-size:11px;padding:4px 8px;border-radius:6px;pointer-events:none}
+[data-edit]:focus{outline:none}
+
+.view{display:none}.view.on{display:block}
+header.site{background:transparent;position:relative;z-index:5}
+.nav{display:flex;align-items:center;gap:18px;padding:20px 0}
+.logo{display:flex;align-items:center;gap:11px}
+.logo .ring,.miniring{display:none}
+header.site .logo,footer.site .logo{cursor:pointer}
+.logo .ring{width:34px;height:34px;border-radius:50%;border:3px solid var(--lime);border-right-color:transparent;transform:rotate(-20deg);flex:none;background-size:cover;background-position:center}
+.logo .lt{font-family:var(--disp);line-height:1;font-weight:800;font-size:17px;color:#fff}
+.logo .lt small{display:block;font-size:10px;letter-spacing:.22em;color:var(--lime);font-weight:600;margin-top:2px}
+.nav .navgroup{margin-left:auto;display:flex;align-items:center;gap:24px;flex-wrap:nowrap;white-space:nowrap}
+.nav .links{display:flex;gap:24px;flex-wrap:nowrap}
+.nav .links a{color:rgba(255,255,255,.86);text-decoration:none;font-size:14.5px;font-weight:500;white-space:nowrap}
+.nav .links a:hover{color:var(--lime)}
+.nav .navgroup .login{color:#fff;font-weight:600;font-size:14.5px;background:none;border:none;padding:0;white-space:nowrap}
+.btn.btn-sm{white-space:nowrap}
+.nav .navgroup .login:hover{color:var(--lime)}
+.btn.btn-sm{padding:9px 17px;font-size:14px}
+
+.hero{background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;position:relative;overflow:hidden;margin-top:-84px;padding-top:84px}
+.hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding-top:40px;padding-bottom:70px}
+.hero h1{font-size:clamp(34px,4.6vw,58px);font-weight:800}
+.hero h1 .accent{color:var(--lime);display:block}
+.hero .sub{font-size:19px;font-weight:600;margin:18px 0 6px;color:#eaf1ea}
+.hero .body{color:#b9c6cf;font-size:16px;max-width:46ch;margin-bottom:26px}
+.hero .cta{display:flex;gap:14px;flex-wrap:wrap}
+.hero .heroimg{border-radius:20px;min-height:340px;background:#0a1826 center/cover;box-shadow:0 24px 60px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.08)}
+.hero .feats{display:flex;gap:28px;flex-wrap:wrap;margin-top:34px;padding-top:26px;border-top:1px solid rgba(255,255,255,.12)}
+.hero .feats .f{display:flex;align-items:center;gap:9px;color:#dfe8e0;font-size:13.5px;font-weight:600}
+.hero .feats .f .ic{width:26px;height:26px;border-radius:7px;background:rgba(166,206,78,.16);color:var(--lime);display:grid;place-items:center;font-size:14px}
+
+.section{padding:66px 0}
+.section .lead{text-align:center;max-width:640px;margin:0 auto 40px}
+.section .lead h2{font-size:clamp(26px,3.2vw,36px)}
+.section .lead p{color:var(--muted);margin-top:12px;font-size:16px}
+.prob-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.prob{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px 18px;text-align:center;box-shadow:var(--shadow)}
+.prob .ic{width:46px;height:46px;border-radius:12px;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);display:grid;place-items:center;margin:0 auto 14px;font-size:20px}
+.prob p{font-size:14px;font-weight:600;color:var(--ink)}
+.center-note{text-align:center;color:var(--muted);margin:34px auto 22px;max-width:620px}
+.center-cta{text-align:center}
+
+.band{background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;padding:60px 0}
+.band .top{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:end;margin-bottom:36px}
+.band h2{font-size:clamp(24px,3vw,34px)}
+.band h2 .accent{color:var(--lime)}
+.band .top p{color:#b9c6cf;max-width:44ch}
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
+.pillar .num{font-family:var(--mono);color:var(--lime);font-size:22px;font-weight:600}
+.pillar .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:#8fa0ac;text-transform:uppercase;margin:6px 0 10px}
+.pillar h3{font-size:18px;margin-bottom:8px}
+.pillar p{color:#aebac4;font-size:14px}
+
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.svc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;box-shadow:var(--shadow)}
+.svc .ic{width:44px;height:44px;border-radius:11px;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);display:grid;place-items:center;font-size:20px;margin-bottom:14px}
+.svc h3{font-size:17px;margin-bottom:8px}
+.svc p{color:var(--muted);font-size:14px}
+.dpart{margin-bottom:48px}
+.dpart:last-child{margin-bottom:0}
+.dsub{font-size:24px;margin-bottom:20px}
+.dsub-p{color:var(--muted);margin:0 0 24px;font-size:15px;max-width:56ch}
+.dtabs{display:flex;justify-content:center;margin-bottom:30px}
+.dienst-tabs{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px;box-shadow:var(--shadow)}
+.dtab{border:none;background:transparent;border-radius:999px;padding:10px 20px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer}
+.dtab.on{background:var(--navy);color:#fff}
+.svc-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.svc-hd .ic{margin-bottom:0}
+.int-toggle{background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap}
+.int-toggle:hover{border-color:var(--lime)}
+.int-toggle.on{background:var(--lime);border-color:var(--lime);color:var(--navy)}
+.int-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;border-radius:14px;padding:14px 20px;margin-top:24px;flex-wrap:wrap}
+.int-bar span{font-weight:600;font-size:14.5px}
+.int-chips-wrap{margin-bottom:20px}
+.int-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.int-chip{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;border-radius:999px;padding:7px 8px 7px 14px;font-size:12.5px;font-weight:600}
+.int-chip button{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:10px;line-height:1;display:grid;place-items:center}
+.svc .price{margin-top:12px;font-family:var(--disp);font-weight:800;font-size:18px;color:var(--ink)}
+.svc .price small{font-family:var(--sans);font-weight:600;font-size:12px;color:var(--muted)}
+.svc .more{display:inline-block;margin-top:10px;color:var(--lime-dark);font-weight:600;font-size:13.5px;text-decoration:none}
+.subs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
+.tier{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:28px 26px;position:relative;box-shadow:var(--shadow)}
+.tier.featured{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;border-color:var(--navy)}
+.tier .tbadge{position:absolute;top:-12px;left:26px;background:var(--lime);color:var(--navy);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:5px 12px;border-radius:999px}
+.tier h3{font-size:20px;margin-bottom:2px}
+.tier .price{font-family:var(--disp);font-weight:800;font-size:32px;margin:6px 0 2px}
+.tier .price span{font-size:13px;font-weight:600;opacity:.7;font-family:var(--sans)}
+.tier .tag{font-size:13.5px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.tier.featured .tag{color:#c2ced6}
+.tier .flist{list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:11px}
+.tier .flist li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.4}
+.tier .flist li .ck{color:var(--lime-dark);flex:none;font-weight:800}
+.tier.featured .flist li .ck{color:var(--lime)}
+.tier .btn{width:100%;justify-content:center}
+.tier.featured .btn-outline{color:#fff;border-color:rgba(255,255,255,.4)}
+
+.lower{background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;border-radius:22px;padding:46px;display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center;margin:0 24px;box-shadow:var(--shadow)}
+.lower h2{font-size:clamp(24px,3vw,32px)}
+.lower p{color:#c2ced6;margin-top:14px;font-size:15.5px}
+.lower .r{display:flex;justify-content:flex-end}
+footer.site{background:#07131f;color:#9fb2b6;padding:40px 0}
+footer.site .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+footer.site .logo .lt{color:#fff}
+
+/* app-weergave */
+#view-app{background:var(--ground);min-height:calc(100vh - 44px)}
+.app-wrap{display:flex;flex-direction:column;align-items:center;padding:34px 16px 60px}
+.app-intro{text-align:center;max-width:580px;margin-bottom:26px}
+.app-intro .eyebrow{display:block;margin-bottom:10px}
+.app-intro h1{font-size:clamp(24px,3.4vw,32px)}
+.app-intro p{color:var(--muted);margin-top:10px;font-size:15.5px}
+.phone{width:392px;max-width:100%;height:812px;max-height:80vh;background:#0b1e33;border-radius:46px;padding:14px;box-shadow:0 30px 70px rgba(11,30,51,.3);flex:none}
+.phone .screen{width:100%;height:100%;border-radius:34px;overflow:hidden;background:#fff}
+.phone iframe{width:100%;height:100%;border:0;display:block;background:#fff}
+/* native app UI */
+.appui{height:100%;display:flex;flex-direction:column;background:var(--ground);color:var(--ink);position:relative;overflow:hidden;font-size:14px}
+.appui *{box-sizing:border-box}
+.app-top{flex:none;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--navy);color:#fff;z-index:5}
+.app-top .lg{font-family:var(--disp);font-weight:800;font-size:12.5px;color:#fff;line-height:1;cursor:pointer}
+.app-top .lg small{display:block;color:var(--lime);letter-spacing:.2em;font-size:7.5px;margin-top:2px}
+.app-top .tr{display:flex;align-items:center;gap:8px}
+.app-top .mini{background:var(--lime);color:var(--navy);border:none;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800;white-space:nowrap}
+.app-top .burger{background:rgba(255,255,255,.12);border:none;color:#fff;width:34px;height:34px;border-radius:9px;font-size:16px;display:grid;place-items:center}
+.app-top .webmini{background:none;border:none;color:#c2cede;font-size:11px;font-weight:600;padding:6px 4px;white-space:nowrap}
+.app-nav.portal button span:last-child{font-size:8.5px}
+.app-sheet{position:absolute;left:0;right:0;bottom:57px;background:#fff;box-shadow:0 -16px 34px rgba(0,0,0,.16);z-index:7;padding:8px 8px 12px;border-radius:18px 18px 0 0}
+.app-sheet .h{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);padding:8px 12px 6px}
+.app-sheet button{display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;padding:12px 14px;border-radius:11px;font-size:14px;font-weight:600;color:var(--ink);text-align:left}
+.app-sheet button .ic{color:var(--muted);width:18px;text-align:center;font-size:15px}
+.app-sheet button.on{background:color-mix(in srgb,var(--lime),transparent 88%)}
+.app-sheet button.on .ic{color:var(--lime-dark)}
+.app-scrim{position:absolute;inset:0;background:rgba(7,19,31,.35);z-index:6}
+.app-menu{position:absolute;top:52px;left:0;right:0;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 16px 34px rgba(0,0,0,.16);z-index:6;padding:8px}
+.app-menu a{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;font-weight:600;font-size:14px;color:var(--ink);text-decoration:none}
+.app-menu a:active{background:var(--ground)}
+.app-menu .div{height:1px;background:var(--line);margin:6px 8px}
+.app-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.app-nav{flex:none;display:flex;background:#fff;border-top:1px solid var(--line);padding:6px 2px 8px}
+.app-nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 1px;color:#93a2ac;font-size:9px;font-weight:700;cursor:pointer}
+.app-nav button .ic{font-size:17px;line-height:1}
+.app-nav button.on{color:var(--navy)}
+.app-nav button.on .ic{color:var(--lime-dark)}
+.app-hero{background:linear-gradient(155deg,var(--navy),var(--navy2));color:#fff;padding:26px 18px 24px}
+.app-hero .eyebrow{color:var(--lime);display:block;margin-bottom:8px}
+.app-hero h1{font-size:25px;font-weight:800;line-height:1.15;font-family:var(--disp)}
+.app-hero h1 .ac{color:var(--lime);display:block}
+.app-hero p{color:#c2cede;font-size:13.5px;line-height:1.55;margin-top:10px}
+.app-hero .btns{display:flex;flex-direction:column;gap:9px;margin-top:16px}
+.app-btn{border:none;border-radius:12px;padding:13px;font-weight:700;font-size:14px;text-align:center;width:100%;cursor:pointer;display:block;text-decoration:none}
+.app-btn.lime{background:var(--lime);color:var(--navy)}
+.app-btn.ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.4)}
+.app-btn.dark{background:var(--navy);color:#fff}
+.app-btn.outline{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.app-sec{padding:20px 16px}
+.app-sec .eyebrow{display:block;margin-bottom:6px}
+.app-sec h2{font-size:19px;font-weight:800;font-family:var(--disp);line-height:1.2}
+.app-sec .sub{color:var(--muted);font-size:13px;margin-top:6px;line-height:1.5}
+.app-hscroll{display:flex;gap:10px;overflow-x:auto;margin:14px -16px 0;padding:2px 16px 10px;scroll-snap-type:x mandatory}
+.app-hscroll::-webkit-scrollbar{display:none}
+.app-hscroll>*{scroll-snap-align:start;flex:0 0 auto}
+.app-prob{width:170px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.app-prob .ic{width:30px;height:30px;border-radius:9px;background:var(--navy);color:var(--lime);display:grid;place-items:center;margin-bottom:8px;font-size:14px}
+.app-prob p{font-size:12.5px;font-weight:600;line-height:1.4}
+.app-pillar{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.app-pillar:last-child{border-bottom:none}
+.app-pillar .n{width:30px;height:30px;border-radius:9px;background:var(--navy);color:var(--lime);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none;font-family:var(--mono)}
+.app-pillar h4{font-size:14px;font-weight:800}
+.app-pillar p{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:2px}
+.app-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.app-card .ic{width:38px;height:38px;border-radius:11px;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);display:grid;place-items:center;font-size:18px;margin-bottom:10px}
+.app-card h3{font-size:15px;font-weight:800}
+.app-card p{font-size:13px;color:var(--muted);line-height:1.5;margin-top:5px}
+.app-card .price{font-family:var(--disp);font-weight:800;font-size:17px;margin-top:10px}
+.app-card .more{display:inline-block;margin-top:8px;color:var(--lime-dark);font-weight:700;font-size:13px}
+.app-feat{width:200px}
+.app-cta-dark{background:linear-gradient(150deg,var(--navy),var(--navy2));color:#fff;border-radius:16px;padding:20px}
+.app-cta-dark .eyebrow{color:var(--lime)}
+.app-cta-dark h3{font-size:17px;font-weight:800;margin:8px 0;font-family:var(--disp)}
+.app-cta-dark p{color:#c2cede;font-size:13px;line-height:1.5;margin-bottom:14px}
+.app-tier{border:2px solid var(--line);border-radius:16px;padding:18px;margin-bottom:12px;background:#fff}
+.app-tier.feat{background:linear-gradient(155deg,var(--navy),var(--navy2));color:#fff;border-color:var(--navy)}
+.app-tier .badge{display:inline-block;background:var(--lime);color:var(--navy);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:999px;margin-bottom:8px}
+.app-tier .th{display:flex;justify-content:space-between;align-items:baseline}
+.app-tier .nm{font-size:18px;font-weight:800;font-family:var(--disp)}
+.app-tier .pr{font-family:var(--disp);font-weight:800;font-size:17px}
+.app-tier .pr span{font-size:11px;font-weight:600;opacity:.7;font-family:var(--sans)}
+.app-tier .tag{font-size:12.5px;color:var(--muted);margin:6px 0 12px}
+.app-tier.feat .tag{color:#c2cede}
+.app-tier ul{list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:8px}
+.app-tier li{display:flex;gap:8px;font-size:12.5px}
+.app-tier li .ck{color:var(--lime-dark);font-weight:800}
+.app-tier.feat li .ck{color:var(--lime)}
+.app-field{margin-bottom:12px}
+.app-field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px}
+.app-field input,.app-field textarea{width:100%;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;font-size:14px;font-family:inherit;background:#fff}
+.app-field input:focus,.app-field textarea:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+.app-clist{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:12px}
+.app-clist li{display:flex;gap:11px;align-items:center;font-size:13.5px}
+.app-clist .ic{width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);display:grid;place-items:center;flex:none}
+.app-clist .k{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.app-clist .v{font-weight:700}
+.app-detail-top{display:flex;align-items:center;gap:8px;padding:10px 8px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}
+.app-detail-top button{background:none;border:none;font-size:20px;color:var(--ink);width:36px;height:36px}
+.app-detail-top .t{font-weight:800;font-size:15px}
+.app-sub{font-size:15px;font-weight:800;font-family:var(--disp);margin:20px 0 10px}
+.app-points{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px}
+.app-points li{display:flex;gap:9px;font-size:13px;line-height:1.45}
+.app-points .ck{color:var(--lime-dark);font-weight:800;flex:none}
+.app-step{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+.app-step:last-child{border-bottom:none}
+.app-step .n{font-family:var(--mono);color:var(--lime-dark);font-weight:600;flex:none;width:26px}
+.app-step h4{font-size:13.5px;font-weight:800}
+.app-step p{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.app-result{background:linear-gradient(150deg,var(--navy),var(--navy2));color:#fff;border-radius:14px;padding:18px;margin:8px 0}
+.app-result p{color:#c2cede;font-size:13px;line-height:1.55;margin-top:6px}
+.app-faq{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;margin-bottom:10px}
+.app-faq .q{font-weight:800;font-size:13.5px;margin-bottom:5px}
+.app-faq .a{color:var(--muted);font-size:12.5px;line-height:1.5}
+.app-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.app-stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+.app-stat .num{font-family:var(--disp);font-weight:800;font-size:22px}
+.app-stat .lab{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.35}
+.app-pcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:11px}
+.app-pcard .eyebrow{display:block;margin-bottom:4px}
+.app-pcard h3{font-size:16px;font-weight:800}
+.app-pcard p{font-size:12.5px;color:var(--muted);margin:6px 0 12px;line-height:1.45}
+.app-dashsel{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.app-dashsel button{flex:0 0 auto;background:var(--ground);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12px;font-weight:700;color:var(--muted)}
+.app-dashsel button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.app-list{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.app-li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 15px;border-top:1px solid var(--line)}
+.app-li:first-child{border-top:none}
+.app-li .nm{font-weight:700;font-size:13.5px}
+.app-li .sub{color:var(--muted);font-size:11.5px;margin-top:2px}
+.app-li .r{text-align:right;flex:none}
+body.framed #toolbar{display:none}
+body.framed .side{top:0;height:100vh}
+body.framed .scan-top{top:0}
+body.framed .auth,body.framed .dash,body.framed .scan{min-height:100vh}
+
+/* arbitrage scan */
+#view-scan{background:var(--ground)}
+.scan{max-width:620px;margin:0 auto;min-height:calc(100vh - 44px);display:flex;flex-direction:column;background:var(--card);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.scan-top{min-height:60px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--line);position:sticky;top:44px;background:var(--card);z-index:3}
+.scan-top .ico{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--ink);font-size:20px}
+.scan-top .ico:hover{background:var(--ground)}
+.scan-top .ttl{font-weight:700;font-size:14.5px;flex:1;min-width:0}
+.scan-top .close{margin-left:auto;font-size:13px;color:var(--muted);cursor:pointer;padding:8px 10px;white-space:nowrap}
+.scan-top .close:hover{color:var(--ink)}
+.scan-prog{padding:14px 22px 4px;background:var(--card)}
+.scan-prog .track{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.scan-prog .track i{display:block;height:100%;background:var(--lime);border-radius:99px;transition:width .25s}
+.scan-prog .lbl{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:8px}
+.scan-body{flex:1;overflow-y:auto;padding:26px 22px}
+.scan-intro{flex:1;display:flex;flex-direction:column;padding:42px 26px}
+.scan-intro .logo{margin-bottom:34px}
+.scan-intro .logo .lt{color:var(--ink)}
+.scan-intro .eyebrow{margin-bottom:14px}
+.scan-intro h1{font-size:clamp(28px,5vw,34px);margin-bottom:14px}
+.scan-intro>p{color:var(--muted);font-size:15.5px;line-height:1.6;max-width:46ch}
+.scan-intro .meta{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;margin-top:auto;padding-top:24px}
+.scan-intro .exit{background:none;border:none;color:var(--muted);font-size:13.5px;cursor:pointer;margin:14px auto 0}
+.scan-q .qtext{font-size:20px;font-weight:700;line-height:1.35;margin-bottom:6px;font-family:var(--disp)}
+.scan-q .qtype{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px}
+.scan-field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.scan input[type=text],.scan input[type=email],.scan input[type=tel],.scan textarea{width:100%;padding:13px 15px;border:1px solid var(--line);border-radius:12px;font-family:inherit;font-size:15px;background:#fbfcfb;margin-bottom:16px}
+.scan input:focus,.scan textarea:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+.scan textarea{resize:vertical;min-height:130px}
+.scan .num-in{max-width:180px}
+.opt-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.opt{display:flex;align-items:center;gap:13px;padding:15px 16px;border-top:1px solid var(--line);cursor:pointer;font-size:14.5px;font-weight:500}
+.opt:first-child{border-top:none}
+.opt:hover{background:var(--ground)}
+.opt .mk{width:22px;height:22px;border:1.5px solid var(--line);display:grid;place-items:center;flex:none;color:#fff;font-size:12px}
+.opt.radio .mk{border-radius:50%}.opt.check .mk{border-radius:6px}
+.opt.sel .mk{background:var(--navy);border-color:var(--navy)}
+.opt.sel{background:color-mix(in srgb,var(--lime),transparent 90%)}
+.opt.radio.sel .mk::after{content:"";width:8px;height:8px;border-radius:50%;background:#fff}
+.scale{display:flex;gap:8px;margin-bottom:12px}
+.scale.ten{display:grid;grid-template-columns:repeat(5,1fr)}
+.scale .sc{height:54px;border:1.5px solid var(--line);border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:17px;cursor:pointer;background:#fbfcfb}
+.scale:not(.ten) .sc{flex:1}
+.scale .sc:hover{border-color:var(--lime)}
+.scale .sc.sel{background:var(--lime);border-color:var(--lime);color:var(--navy)}
+.scale-ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);gap:14px}
+.scan-cta{padding:16px 22px;border-top:1px solid var(--line);background:var(--card);position:sticky;bottom:0}
+.scan-cta .btn{width:100%;justify-content:center}
+.ovw h2{font-size:22px}
+.ovw .sub{color:var(--muted);font-size:13.5px;margin-top:4px}
+.ovw .track{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin:14px 0 22px}
+.ovw .track i{display:block;height:100%;background:var(--lime)}
+.ovw .rows{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ovw .row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid var(--line)}
+.ovw .row:first-child{border-top:none}
+.ovw .row .nm{flex:1;font-size:14px;font-weight:600}
+.ovw .row .ct{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.dot-done{width:22px;height:22px;border-radius:50%;background:var(--lime);display:grid;place-items:center;color:var(--navy);font-size:12px;font-weight:800;flex:none}
+.dot-todo{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none}
+.dot-bezig{width:20px;height:20px;border-radius:50%;border:2px solid var(--navy);position:relative;flex:none}
+.dot-bezig::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--navy)}
+.final{padding:44px 26px;text-align:center;display:flex;flex-direction:column;align-items:center;flex:1;justify-content:center}
+.final .chk{width:64px;height:64px;border-radius:50%;background:var(--lime);display:grid;place-items:center;color:var(--navy);font-size:30px;font-weight:800;margin-bottom:20px}
+.final h2{font-size:24px;margin-bottom:10px}
+.final .fbody{color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:26px;max-width:44ch}
+.final .nextbox{width:100%;background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:20px;text-align:left}
+.final .nextbox h3{font-size:15px;margin-bottom:6px}
+.final .nextbox p{color:var(--muted);font-size:13.5px;line-height:1.5;margin-bottom:16px}
+.final .plan{width:100%;justify-content:center}
+.final .done{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;color:var(--navy)}
+.final .exit{background:none;border:none;color:var(--muted);font-size:13.5px;cursor:pointer;margin-top:22px}
+
+/* plan een kennismaking */
+.plan-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:44px;align-items:start}
+.plan-info h2{font-size:22px;margin-bottom:18px}
+.plan-points{list-style:none;padding:0;margin:0 0 26px;display:flex;flex-direction:column;gap:16px}
+.plan-points li{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;color:var(--ink);line-height:1.5}
+.plan-points li .ic{width:36px;height:36px;border-radius:10px;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);display:grid;place-items:center;font-size:16px;flex:none}
+.plan-note{color:var(--ink);font-size:13.5px;margin-bottom:14px;font-weight:700}
+.plan-form h3{font-family:var(--disp)}
+.plan-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.plan-form input[type=date]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14.5px;background:#fbfcfb}
+.plan-form input[type=date]:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip-sel{padding:9px 15px;border:1.5px solid var(--line);border-radius:999px;font-size:13.5px;font-weight:600;cursor:pointer;background:#fbfcfb}
+.chip-sel:hover{border-color:var(--lime)}
+.chip-sel.sel{background:var(--lime);border-color:var(--lime);color:var(--navy)}
+.plan-success{max-width:560px;margin:0 auto;text-align:center;padding:20px 0}
+.plan-success .chk{width:64px;height:64px;border-radius:50%;background:var(--lime);display:grid;place-items:center;color:var(--navy);font-size:30px;font-weight:800;margin:0 auto 20px}
+.plan-success h2{font-size:24px;margin-bottom:10px}
+.plan-success p{color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:24px}
+.svc-cta{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);position:sticky;top:80px}
+.svc-cta h3{font-size:18px;margin-bottom:10px}
+.svc-cta p{color:var(--muted);font-size:14px;margin-bottom:18px;line-height:1.55}
+.svc-cta .backlink{display:block;width:100%}
+.svc-price-big{font-family:var(--disp);font-weight:800;font-size:28px;margin:2px 0 4px}
+.svc-duration{font-size:12.5px;color:var(--muted);margin-bottom:14px;font-family:var(--mono)}
+.plan-info h2{font-size:22px;margin-bottom:14px}
+.svc-sub{font-size:17px;margin:28px 0 12px;font-family:var(--disp)}
+.svc-p{color:var(--muted);font-size:15px;line-height:1.65;max-width:62ch}
+.svc-steps{display:flex;flex-direction:column;gap:16px}
+.svc-step{display:flex;gap:14px;align-items:flex-start}
+.svc-step .n{font-family:var(--mono);color:var(--lime-dark);font-weight:600;font-size:16px;flex:none;width:30px}
+.svc-step h4{font-size:15px;margin-bottom:2px;font-family:var(--disp)}
+.svc-step p{color:var(--muted);font-size:14px;line-height:1.5}
+.svc-two{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:start}
+.svc-result{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:32px}
+.svc-result h3{color:#fff;font-size:18px;margin-bottom:8px}
+.svc-result p{color:#c2ced6;font-size:15px;line-height:1.6;max-width:72ch}
+.faq{display:flex;flex-direction:column;gap:12px}
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.faq-item{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--card)}
+.faq-item .q{font-weight:700;font-size:14.5px;margin-bottom:6px}
+.faq-item .a{color:var(--muted);font-size:14px;line-height:1.55}
+
+/* about page */
+.subhero{background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 100%);color:#fff}
+.subhero-body{padding:34px 24px 74px}
+.subhero-body .eyebrow{color:var(--lime);display:block;margin-bottom:14px}
+.subhero-body h1{font-size:clamp(30px,4.4vw,50px);max-width:17ch;font-weight:800}
+.subhero-body p{color:#b9c6cf;font-size:17px;max-width:56ch;margin-top:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.proc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.proc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+.proc .n{font-family:var(--mono);color:var(--lime-dark);font-weight:600;font-size:22px}
+.proc h3{font-size:16px;margin:8px 0 6px}
+.proc p{color:var(--muted);font-size:13.5px;line-height:1.5}
+.ben-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.ben{display:flex;align-items:center;gap:12px;background:var(--ground);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.ben .ck{color:var(--lime-dark);font-weight:800;flex:none;font-size:16px}
+.ben span.t{font-weight:600;font-size:14.5px}
+.about-stats.wide{grid-template-columns:repeat(4,1fr)}
+.about-stats.wide .as{background:var(--card);box-shadow:var(--shadow)}
+
+/* about + contact */
+[id]{scroll-margin-top:64px}
+.about{display:grid;grid-template-columns:1.1fr .9fr;gap:44px;align-items:center}
+.about .eyebrow{display:block;margin-bottom:12px}
+.about h2{font-size:clamp(24px,3vw,34px);margin-bottom:16px}
+.about p{color:var(--muted);font-size:15.5px;margin-bottom:14px;max-width:52ch}
+.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.about-stats .as{background:var(--ground);border:1px solid var(--line);border-radius:14px;padding:22px}
+.about-stats .as .n{font-family:var(--disp);font-weight:800;font-size:30px;color:var(--lime-dark)}
+.about-stats .as .l{color:var(--muted);font-size:13.5px;margin-top:4px}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:start}
+.contact-grid .eyebrow{display:block;margin-bottom:12px}
+.contact-grid h2{font-size:clamp(24px,3vw,34px);margin-bottom:14px}
+.contact-grid>div>p{color:var(--muted);font-size:15.5px;max-width:46ch}
+.contact-list{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-direction:column;gap:14px}
+.contact-list li{display:flex;align-items:center;gap:12px;font-size:14.5px}
+.contact-list li .ic{width:38px;height:38px;border-radius:10px;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);display:grid;place-items:center;font-size:16px;flex:none}
+.contact-list li .v{font-weight:600}
+.contact-list li .k{color:var(--muted);font-size:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.contact-form{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow)}
+.contact-form textarea{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14.5px;background:#fbfcfb;resize:vertical}
+.contact-form textarea:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+.contact-form .btn-lime{width:100%;justify-content:center;margin-top:6px}
+.form-status{margin-top:14px;background:color-mix(in srgb,var(--lime),transparent 84%);border:1px solid color-mix(in srgb,var(--lime),transparent 55%);color:var(--lime-dark);font-size:13.5px;padding:12px 14px;border-radius:10px}
+
+/* CHOOSER */
+.chooser-hero{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;text-align:center;padding:64px 24px 120px}
+.chooser-hero .eyebrow{color:var(--lime);display:block;margin-bottom:14px}
+.chooser-hero h1{font-size:clamp(28px,4vw,42px)}
+.chooser-hero p{color:#b6c3cc;max-width:52ch;margin:14px auto 0}
+.chooser-grid{max-width:1000px;margin:-80px auto 30px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .14s,box-shadow .14s}
+.pcard:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(11,30,51,.12)}
+.pcard .ic{width:52px;height:52px;border-radius:14px;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);display:grid;place-items:center;font-size:22px;margin-bottom:16px}
+.pcard .eyebrow{margin-bottom:6px}
+.pcard h3{font-size:21px;margin-bottom:10px}
+.pcard p{color:var(--muted);font-size:14px;flex:1;margin-bottom:18px}
+.pcard .btn{justify-content:center;white-space:nowrap}
+
+/* LOGIN */
+.auth{min-height:calc(100vh - 44px);display:grid;place-items:center;background:radial-gradient(1200px 600px at 20% -10%,var(--navy2),var(--navy) 60%);padding:32px}
+.login-card{width:min(920px,100%);display:grid;grid-template-columns:1fr 1fr;background:var(--card);border-radius:22px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.login-side{background:linear-gradient(150deg,var(--navy),var(--navy2));color:#fff;padding:38px;display:flex;flex-direction:column}
+.login-side .logo{margin-bottom:10px}
+.login-side h2{font-size:25px;margin:22px 0 14px}
+.login-side p{color:#b6c3cc;font-size:14.5px}
+.login-side .stats{margin-top:auto;display:flex;gap:24px;padding-top:26px;flex-wrap:wrap}
+.login-side .stats .s .n{font-family:var(--disp);color:var(--lime);font-weight:800;font-size:23px}
+.login-side .stats .s .l{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:#9fb0bb;text-transform:uppercase;margin-top:2px}
+.login-form{padding:38px}
+.login-form .eyebrow{margin-bottom:6px}
+.login-form h2{font-size:26px;margin-bottom:8px}
+.login-form .desc{color:var(--muted);font-size:14px;margin-bottom:22px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.field input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14.5px;background:#fbfcfb}
+.field input:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+.admin-box{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:18px;background:#fbfcfb}
+.admin-lbl{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+#adminBox input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-family:var(--mono);font-size:13px;letter-spacing:.05em;text-transform:uppercase;background:#fff}
+#adminBox input:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+#adminBox .hintc{font-size:11.5px;color:var(--muted);margin-top:6px}
+#adminBox .hintc b{font-family:var(--mono);color:var(--lime-dark)}
+.demo-note{background:color-mix(in srgb,var(--lime),transparent 84%);border:1px solid color-mix(in srgb,var(--lime),transparent 55%);color:var(--lime-dark);font-size:13px;padding:12px 14px;border-radius:10px;margin-bottom:18px}
+.login-form .btn-lime{width:100%;justify-content:center;margin-bottom:14px}
+.backlink{background:none;border:none;color:var(--muted);font-size:13.5px;display:block;margin:0 auto;cursor:pointer}
+.beheer-link{margin-top:12px!important;padding-top:12px;border-top:1px solid var(--line);color:var(--lime-dark);font-weight:600;width:100%}
+
+/* DASHBOARD */
+#view-dashboard{background:var(--ground)}
+.dash{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 44px)}
+.side{background:linear-gradient(180deg,var(--navy),#08192a);color:#fff;padding:22px 16px;display:flex;flex-direction:column;gap:2px;position:sticky;top:44px;height:calc(100vh - 44px);align-self:start;overflow:hidden}
+.side-scroll{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.side .logo{flex:none;padding:6px 8px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+.side .navlabel{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:#6d8090;text-transform:uppercase;margin:16px 8px 6px;display:flex;align-items:center;gap:8px}
+.wtoggles{display:flex;flex-wrap:wrap;gap:12px}
+.wtoggle{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;cursor:pointer;background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:9px 13px}
+.wtoggle input{accent-color:var(--lime);width:16px;height:16px}
+.side .navlabel .lockmini{font-size:11px}
+.side a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;color:#c4d2dc;text-decoration:none;font-size:14px;font-weight:500}
+.side a .ic{width:18px;text-align:center;opacity:.9}
+.side a:hover{background:rgba(255,255,255,.06);color:#fff}
+.side a.active{background:var(--lime);color:var(--navy);font-weight:700}
+.side a.locked{opacity:.42;cursor:not-allowed}
+.side a.locked .lk{margin-left:auto;font-size:12px}
+.side .beheer-note{font-size:11px;color:#6d8090;margin:2px 8px 6px}
+.side-profile{flex:none;margin-top:10px;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);cursor:pointer}
+.side-profile:hover{background:rgba(255,255,255,.1)}
+.side-profile .av{width:38px;height:38px;border-radius:50%;background:var(--lime);color:var(--navy);display:grid;place-items:center;font-weight:800;font-family:var(--disp);flex:none;background-size:cover;background-position:center;font-size:16px}
+.side-profile .pi{flex:1;min-width:0}
+.side-profile .pi .nm{font-weight:700;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-profile .pi .st{font-size:11.5px;color:#8fd14f}
+.side-profile .lg{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.08);border:none;color:#c4d2dc;display:grid;place-items:center;flex:none;cursor:pointer;font-size:15px}
+.side-profile .lg:hover{background:rgba(255,255,255,.18);color:#fff}
+.prof-hero{display:flex;align-items:center;gap:18px;padding:26px}
+.prof-av{width:64px;height:64px;border-radius:50%;background:var(--lime);color:var(--navy);display:grid;place-items:center;font-weight:800;font-size:26px;font-family:var(--disp);flex:none;background-size:cover;background-position:center}
+.prof-nm{font-family:var(--disp);font-weight:800;font-size:22px}
+.prof-role{color:var(--muted);font-size:14px;margin-top:2px}
+.side .demo-badge{margin-top:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;display:flex;gap:9px;font-size:12px;color:#9fb2bc}
+.side .demo-badge .o{color:var(--lime)}
+.main{padding:32px 34px 60px;min-width:0}
+.main .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.main .hd h1{font-size:30px;display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.main .hd p{color:var(--muted);margin-top:6px;font-size:14.5px}
+.admin-badge{display:inline-flex;align-items:center;gap:6px;background:var(--ok-bg);color:var(--ok);font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;font-family:var(--sans);letter-spacing:0}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+.stat-grid.flow{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.stat-col{display:flex;flex-direction:column;gap:16px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.tile .row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.tile .ic{width:38px;height:38px;border-radius:10px;background:color-mix(in srgb,var(--lime),transparent 82%);color:var(--lime-dark);display:grid;place-items:center;font-size:17px}
+.tile .badge{font-family:var(--mono);font-size:11px;color:var(--ok);font-weight:600}
+.tile .num{font-family:var(--disp);font-weight:800;font-size:30px;line-height:1}
+.tile .lab{color:var(--muted);font-size:13px;margin-top:5px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden}
+.panel.admin{border-color:color-mix(in srgb,var(--ok),transparent 55%);box-shadow:0 0 0 1px color-mix(in srgb,var(--ok),transparent 70%),var(--shadow)}
+.panel.admin .phd{background:color-mix(in srgb,var(--ok),transparent 92%)}
+.panel .phd{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line);gap:12px}
+.panel .phd h3{font-size:18px}
+.panel .phd .link{color:var(--lime-dark);font-weight:600;font-size:13.5px;text-decoration:none;white-space:nowrap}
+.panel .phd .chip{font-family:var(--mono);font-size:11px;background:var(--idle-bg);color:var(--idle);padding:5px 11px;border-radius:999px;font-weight:600}
+.pillbars{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:22px}
+.pillbars.bars{grid-template-columns:repeat(2,1fr)}
+.pb{border:1px solid var(--line);border-radius:12px;padding:16px}
+.pb .top{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.pb .top .h{font-family:var(--disp);font-size:15px;color:var(--ink);font-weight:600}
+.pb h4{font-size:16px;margin:8px 0 12px;font-family:var(--disp)}
+.pb .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px}
+.pb .bar i{display:block;height:100%;background:var(--lime);border-radius:99px}
+.pb .cap{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px}
+table.tbl{width:100%;border-collapse:collapse}
+table.tbl th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:12px 22px;background:#fafbfa;font-weight:600;white-space:nowrap}
+table.tbl td{padding:14px 22px;border-top:1px solid var(--line);font-size:14px;vertical-align:middle}
+table.tbl .nm{font-weight:700}
+table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:5px 11px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.9}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.info{background:var(--info-bg);color:var(--info)}
+.pill.idle{background:var(--idle-bg);color:var(--idle)}
+.acts .act{display:flex;align-items:center;gap:14px;padding:14px 22px;border-top:1px solid var(--line)}
+.acts .act:first-child{border-top:none}
+.act .mk{width:10px;height:10px;border-radius:50%;flex:none}
+.act .ai{flex:1;min-width:0}
+.act .ai .t{font-weight:700;font-size:14.5px}
+.act .ai .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.act .ai .meta2{font-size:12.5px;color:var(--muted);margin-top:3px}
+.act .rt{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
+.act .rt .tm{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.tbl-scroll{overflow-x:auto}
+.chatwrap{display:grid;grid-template-columns:250px 1fr;min-height:440px}
+.chat-threads{border-right:1px solid var(--line);overflow:auto}
+.chat-thread{padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.chat-thread:hover{background:var(--ground)}
+.chat-thread.active{background:color-mix(in srgb,var(--lime),transparent 90%)}
+.chat-thread .nm{font-weight:700;font-size:14px}
+.chat-thread .pv{color:var(--muted);font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-msgs{display:flex;flex-direction:column;padding:20px;gap:12px;flex:1;overflow:auto}
+.msg{max-width:76%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.45}
+.msg.them{background:var(--ground);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.me{background:var(--navy);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.msg .tm{display:block;font-size:10.5px;opacity:.6;margin-top:4px;font-family:var(--mono)}
+.chat-input{border-top:1px solid var(--line);padding:12px;display:flex;gap:10px}
+.chat-input input{flex:1;padding:11px 14px;border:1px solid var(--line);border-radius:999px;font-family:inherit;font-size:14px;background:#fbfcfb}
+.chat-input input:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+@media(max-width:920px){.chatwrap{grid-template-columns:1fr}.chat-threads{display:none}}
+
+/* drawer */
+#scrim{position:fixed;inset:0;background:rgba(7,19,31,.5);z-index:300;opacity:0;pointer-events:none;transition:opacity .2s}
+#scrim.on{opacity:1;pointer-events:auto}
+#drawer{position:fixed;top:0;right:0;height:100%;width:min(380px,92vw);background:var(--card);z-index:301;transform:translateX(100%);transition:transform .24s ease;box-shadow:-20px 0 60px rgba(0,0,0,.25);display:flex;flex-direction:column}
+#drawer.on{transform:none}
+#drawer .dhd{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+#drawer .dhd h3{font-size:18px}
+#drawer .dhd button{background:none;border:none;font-size:22px;color:var(--muted);line-height:1}
+#drawer .dbody{padding:20px 22px;overflow:auto;flex:1}
+#drawer .grp{margin-bottom:26px}
+#drawer .grp h4{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.color-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.color-row label{font-size:13.5px;font-weight:600}
+.color-row .cc{display:flex;align-items:center;gap:8px}
+.color-row input[type=color]{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:none;padding:2px}
+.color-row .hex{font-family:var(--mono);font-size:12px;color:var(--muted);width:70px}
+.presets{display:flex;gap:8px;flex-wrap:wrap}
+.preset{width:34px;height:34px;border-radius:9px;border:2px solid var(--line);cursor:pointer;position:relative;overflow:hidden}
+.preset i{position:absolute;inset:0}
+.dbtn{width:100%;padding:11px;border:1px solid var(--line);background:#fbfcfb;border-radius:10px;font-weight:600;font-size:13.5px;margin-bottom:10px;color:var(--ink)}
+.dbtn.warn{color:#b03a2e;border-color:#f0d5d0}
+#logoUp{display:none}
+.logo-prev{display:flex;align-items:center;gap:10px;background:#0b1e33;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.miniring{width:26px;height:26px;border-radius:50%;border:3px solid var(--lime);border-right-color:transparent;transform:rotate(-20deg);background-size:cover;background-position:center}
+.logo-prev .lt{font-family:var(--disp);font-weight:800;font-size:14px;color:#fff}
+.logo-prev .lt small{display:block;font-size:9px;letter-spacing:.2em;color:var(--lime)}
+
+@media(max-width:920px){
+  .hero .wrap,.band .top,.lower{grid-template-columns:1fr}
+  .lower{display:block}.lower .r{justify-content:flex-start;margin-top:20px}
+  .prob-grid{grid-template-columns:repeat(2,1fr)}
+  .about,.contact-grid,.plan-grid,.svc-two,.faq-grid{grid-template-columns:1fr}
+  .plan-form .row2{grid-template-columns:1fr}
+  .grid4,.about-stats.wide,.proc-grid,.ben-grid{grid-template-columns:1fr 1fr}
+  .pillars,.svc-grid,.chooser-grid,.subs-grid{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .pillbars,.pillbars.bars{grid-template-columns:1fr 1fr}
+  .login-card{grid-template-columns:1fr}.login-side{display:none}
+  .dash{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;align-items:center;gap:4px;overflow:visible}
+  .side-scroll{flex-direction:row;overflow-x:auto;overflow-y:visible;min-height:0;gap:4px}
+  .side .logo,.side .navlabel,.side .demo-badge,.side .beheer-note,.side .side-profile{display:none}
+  .side a{white-space:nowrap}
+  .nav{flex-wrap:wrap;gap:10px}
+  .nav .navgroup{margin-left:0;width:100%;flex-wrap:wrap;white-space:normal;gap:14px;justify-content:flex-start}
+  .nav .links{display:flex;flex-wrap:wrap;gap:16px;width:100%}
+  .phone{height:760px;max-height:74vh}
+}
+</style>
+</head>
+<body>
+
+
+<div id="toolbar">
+  <div class="brandmini"><span class="dot"></span> Demo-omgeving</div>
+  <div class="seg" id="viewSeg">
+    <button data-go="site" class="on">Website</button>
+    <button data-go="chooser">Portaal</button>
+    <button data-go="app">App</button>
+  </div>
+  <div class="spacer"></div>
+  <span class="hint" id="editHint">Zet bewerken aan om teksten &amp; kleuren te wijzigen</span>
+  <button class="tbtn" id="editToggle">âœŽ Bewerken</button>
+  <button class="tbtn" id="openDrawer">âš™ Stijl &amp; logo</button>
+</div>
+
+<!-- ===== SITE ===== -->
+<section id="view-site" class="view on">
+  <div class="hero">
+    <header class="site">
+      <div class="wrap nav">
+        <div class="logo"><span class="ring" data-img="logo.img"></span>
+          <span class="lt" data-edit="logo.line1">ARBITRAGE<small data-edit="logo.line2">PARTNERS</small></span></div>
+        <div class="navgroup">
+          <nav class="links js-links" id="siteLinks"></nav>
+          <button class="login" data-go="chooser" data-edit="nav.login">Inloggen</button>
+          <a class="btn btn-lime btn-sm" data-go="plan" data-edit="nav.cta">Plan een kennismaking</a>
+        </div>
+      </div>
+    </header>
+    <div class="wrap">
+      <div>
+        <h1><span data-edit="hero.title">Sterke officials.</span><span class="accent" data-edit="hero.titleAccent">Sterke verenigingen.</span></h1>
+        <p class="sub" data-edit="hero.sub">Bouw aan een organisatie die werkt â€” vandaag Ã©n morgen.</p>
+        <p class="body" data-edit="hero.body">Arbitrage Partners helpt jouw vereniging met het werven, ontwikkelen, begeleiden en behouden van officials.</p>
+        <div class="cta">
+          <a class="btn btn-lime" href="#diensten" data-anchor="diensten" data-edit="hero.btn1">Ontdek onze diensten</a>
+          <a class="btn btn-ghost" href="#scan" data-anchor="scan" data-edit="hero.btn2">Doe de arbitrage scan</a>
+        </div>
+        <div class="feats" id="heroFeats"></div>
+      </div>
+      <div class="heroimg ed-img" data-img="hero.image"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="wrap">
+      <div class="lead"><h2 data-edit="problems.title">Arbitrage hoort geen probleem te zijn.</h2>
+        <p data-edit="problems.subtitle">Herken jij een van deze problemen binnen jouw vereniging?</p></div>
+      <div class="prob-grid" id="probGrid"></div>
+      <p class="center-note" data-edit="problems.note">Arbitrage Partners helpt verenigingen om van losse oplossingen naar een structurele aanpak te gaan.</p>
+      <div class="center-cta"><a class="btn btn-lime" href="#diensten" data-anchor="diensten" data-edit="problems.btn">Bekijk hoe wij kunnen helpen</a></div>
+    </div>
+  </div>
+
+  <div class="band" id="aanpak">
+    <div class="wrap">
+      <div class="top">
+        <h2><span data-edit="pillars.title">Van scheidsrechtertekort naar een </span><span class="accent" data-edit="pillars.titleAccent">sterke arbitrageorganisatie.</span></h2>
+        <p data-edit="pillars.body">We kijken niet alleen naar het aantal wedstrijden dat gefloten moet worden. We kijken naar het volledige systeem achter arbitrage.</p>
+      </div>
+      <div class="pillars" id="pillarGrid"></div>
+    </div>
+  </div>
+
+  <div class="section" id="diensten">
+    <div class="wrap">
+      <div class="lead"><h2 data-edit="services.title">Onze diensten</h2>
+        <p data-edit="services.subtitle">Gerichte ondersteuning voor ieder arbitragevraagstuk.</p></div>
+      <div id="dienstenContent"></div>
+      <div class="js-intbar"></div>
+    </div>
+  </div>
+
+  <div class="section" id="scan" style="padding-top:0">
+    <div class="lower">
+      <div>
+        <span class="eyebrow" style="color:var(--lime)" data-edit="lower.eyebrow">Arbitrage Check</span>
+        <h2 style="margin-top:10px" data-edit="lower.title">Benieuwd hoe jouw vereniging ervoor staat?</h2>
+        <p data-edit="lower.body">Ontdek in enkele minuten hoe sterk de arbitrageorganisatie binnen jouw vereniging ervoor staat. Beantwoord een aantal korte vragen over werving, begeleiding, opleiding, behoud en organisatie.</p>
+      </div>
+      <div class="r"><a class="btn btn-lime" data-go="scan" data-edit="lower.btn">Start de gratis Arbitrage Scan</a></div>
+    </div>
+  </div>
+
+  <div class="section" id="contact">
+    <div class="wrap contact-grid">
+      <div>
+        <span class="eyebrow" data-edit="contact.eyebrow">Contact</span>
+        <h2 data-edit="contact.title">Neem contact op</h2>
+        <p data-edit="contact.body">Benieuwd wat Arbitrage Partners voor jouw vereniging kan betekenen?</p>
+        <ul class="contact-list" id="contactList"></ul>
+      </div>
+      <form class="contact-form" id="contactForm" novalidate>
+        <div class="field"><label data-edit="contact.fName">Naam</label><input required></div>
+        <div class="field"><label data-edit="contact.fEmail">E-mailadres</label><input type="email" required></div>
+        <div class="field"><label data-edit="contact.fMsg">Bericht</label><textarea rows="4" required></textarea></div>
+        <button class="btn btn-lime" type="submit" data-edit="contact.fBtn">Verstuur bericht</button>
+        <div class="form-status" id="contactStatus" hidden></div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site">
+    <div class="wrap">
+      <div class="logo"><span class="ring" data-img="logo.img"></span>
+        <span class="lt" data-edit="logo.line1b">ARBITRAGE<small data-edit="logo.line2b">PARTNERS</small></span></div>
+      <p data-edit="footer.text">Â© 2026 Arbitrage Partners â€” Sterke officials. Sterke verenigingen.</p>
+    </div>
+  </footer>
+</section>
+
+<!-- ===== OVER ONS (aparte pagina) ===== -->
+<section id="view-about" class="view">
+  <div class="subhero">
+    <header class="site">
+      <div class="wrap nav">
+        <div class="logo"><span class="ring" data-img="logo.img"></span>
+          <span class="lt" data-edit="logo.line1" data-noedit>ARBITRAGE<small data-edit="logo.line2" data-noedit>PARTNERS</small></span></div>
+        <div class="navgroup">
+          <nav class="links js-links"></nav>
+          <button class="login" data-go="chooser">Inloggen</button>
+          <a class="btn btn-lime btn-sm" data-go="plan">Plan een kennismaking</a>
+        </div>
+      </div>
+    </header>
+    <div class="wrap subhero-body">
+      <span class="eyebrow" data-edit="about.heroEyebrow">Over ons</span>
+      <h1 data-edit="about.heroTitle">Wij bouwen aan sterke arbitrage binnen verenigingen.</h1>
+      <p data-edit="about.heroSub">Arbitrage Partners helpt handbalverenigingen om scheidsrechters te werven, op te leiden, te begeleiden en te behouden.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="wrap about">
+      <div>
+        <h2 data-edit="about.storyTitle">Kennis uit de praktijk. Oplossingen voor de club.</h2>
+        <p data-edit="about.body1">.</p>
+        <p data-edit="about.body2">.</p>
+        <p data-edit="about.body3">.</p>
+      </div>
+      <div class="heroimg ed-img" data-img="about.storyImage" style="min-height:320px"></div>
+    </div>
+  </div>
+
+  <div class="section" style="background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <div class="lead"><h2 data-edit="about.valuesTitle">Waar wij voor staan</h2>
+        <p data-edit="about.valuesSub">Vier uitgangspunten die in alles wat we doen terugkomen.</p></div>
+      <div class="grid4" id="aboutValues"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="wrap">
+      <div class="lead"><h2 data-edit="about.processTitle">Zo werken we</h2>
+        <p data-edit="about.processSub">Van kennismaking tot een arbitrageorganisatie die blijft werken.</p></div>
+      <div class="proc-grid" id="aboutProcess"></div>
+    </div>
+  </div>
+
+  <div class="section" style="background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <div class="lead"><h2 data-edit="about.benefitsTitle">Wat kan het jou opleveren?</h2>
+        <p data-edit="about.benefitsSub">Verenigingen die met ons werken zien concrete resultaten.</p></div>
+      <div class="ben-grid" id="aboutBenefits"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="wrap">
+      <div class="lead"><h2 data-edit="about.statsTitle">Arbitrage Partners in cijfers</h2></div>
+      <div class="about-stats wide" id="aboutStats"></div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:0">
+    <div class="lower">
+      <div>
+        <h2 data-edit="about.ctaTitle">Klaar om te bouwen aan sterke arbitrage?</h2>
+        <p data-edit="about.ctaBody">Plan een vrijblijvende kennismaking.</p>
+      </div>
+      <div class="r"><a class="btn btn-lime" data-go="plan" data-edit="about.ctaBtn">Plan een kennismaking</a></div>
+    </div>
+  </div>
+
+  <footer class="site">
+    <div class="wrap">
+      <div class="logo"><span class="ring" data-img="logo.img"></span>
+        <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
+      <p data-edit="footer.text2">Â© 2026 Arbitrage Partners â€” Sterke officials. Sterke verenigingen.</p>
+    </div>
+  </footer>
+</section>
+
+<!-- ===== ARBITRAGE SCAN ===== -->
+<section id="view-scan" class="view"><div class="scan" id="scanRoot"></div></section>
+
+<!-- ===== PLAN EEN KENNISMAKING ===== -->
+<section id="view-plan" class="view">
+  <div class="subhero">
+    <header class="site">
+      <div class="wrap nav">
+        <div class="logo"><span class="ring" data-img="logo.img"></span>
+          <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
+        <div class="navgroup">
+          <nav class="links js-links"></nav>
+          <button class="login" data-go="chooser">Inloggen</button>
+          <a class="btn btn-lime btn-sm" data-go="plan">Plan een kennismaking</a>
+        </div>
+      </div>
+    </header>
+    <div class="wrap subhero-body">
+      <span class="eyebrow" data-edit="plan.heroEyebrow">Kennismaking</span>
+      <h1 data-edit="plan.heroTitle">Plan een vrijblijvende kennismaking</h1>
+      <p data-edit="plan.heroSub">In een kort gesprek bespreken we waar jullie vereniging staat.</p>
+    </div>
+  </div>
+  <div id="planBody"></div>
+  <footer class="site">
+    <div class="wrap">
+      <div class="logo"><span class="ring" data-img="logo.img"></span>
+        <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
+      <p data-edit="footer.text3">Â© 2026 Arbitrage Partners â€” Sterke officials. Sterke verenigingen.</p>
+    </div>
+  </footer>
+</section>
+
+<!-- ===== DIENSTEN (aparte pagina) ===== -->
+<section id="view-diensten" class="view">
+  <div class="subhero">
+    <header class="site">
+      <div class="wrap nav">
+        <div class="logo"><span class="ring" data-img="logo.img"></span>
+          <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
+        <div class="navgroup">
+          <nav class="links js-links"></nav>
+          <button class="login" data-go="chooser">Inloggen</button>
+          <a class="btn btn-lime btn-sm" data-go="plan">Plan een kennismaking</a>
+        </div>
+      </div>
+    </header>
+    <div class="wrap subhero-body">
+      <span class="eyebrow" data-edit="services.pageEyebrow">Diensten</span>
+      <h1 data-edit="services.pageTitle">Onze diensten & prijzen</h1>
+      <p data-edit="services.pageIntro">Van een gerichte oplossing tot structurele begeleiding.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="wrap">
+      <div id="dienstenPageBody"></div>
+      <div class="js-intbar"></div>
+    </div>
+  </div>
+  <footer class="site">
+    <div class="wrap">
+      <div class="logo"><span class="ring" data-img="logo.img"></span>
+        <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
+      <p data-edit="footer.text5">Â© 2026 Arbitrage Partners â€” Sterke officials. Sterke verenigingen.</p>
+    </div>
+  </footer>
+</section>
+
+<!-- ===== DIENST DETAIL ===== -->
+<section id="view-service" class="view">
+  <div class="subhero">
+    <header class="site">
+      <div class="wrap nav">
+        <div class="logo"><span class="ring" data-img="logo.img"></span>
+          <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
+        <div class="navgroup">
+          <nav class="links js-links"></nav>
+          <button class="login" data-go="chooser">Inloggen</button>
+          <a class="btn btn-lime btn-sm" data-go="plan">Plan een kennismaking</a>
+        </div>
+      </div>
+    </header>
+    <div class="wrap subhero-body" id="serviceHero"></div>
+  </div>
+  <div id="serviceBody"></div>
+  <footer class="site">
+    <div class="wrap">
+      <div class="logo"><span class="ring" data-img="logo.img"></span>
+        <span class="lt">ARBITRAGE<small>PARTNERS</small></span></div>
+      <p data-edit="footer.text4">Â© 2026 Arbitrage Partners â€” Sterke officials. Sterke verenigingen.</p>
+    </div>
+  </footer>
+</section>
+
+<!-- ===== APP-WEERGAVE ===== -->
+<section id="view-app" class="view">
+  <div class="app-wrap">
+    <div class="app-intro">
+      <span class="eyebrow">App-weergave</span>
+      <h1>Zo ziet het eruit op een telefoon</h1>
+      <p>De website Ã©n de portalen in mobiele weergave. Je kunt in het scherm hieronder gewoon scrollen en klikken â€” precies zoals op een telefoon.</p>
+    </div>
+    <div class="phone"><div class="screen"><div class="appui" id="appScreen"></div></div></div>
+  </div>
+</section>
+
+<!-- ===== CHOOSER (eerst) ===== -->
+<section id="view-chooser" class="view">
+  <div class="chooser-hero">
+    <span class="eyebrow" data-edit="chooser.eyebrow">Portaal</span>
+    <h1 data-edit="chooser.title">Voor wie log je in?</h1>
+    <p data-edit="chooser.subtitle">Kies je portaal om verder te gaan. Elk portaal geeft toegang tot de informatie die bij jouw rol hoort.</p>
+  </div>
+  <div class="chooser-grid" id="chooserGrid"></div>
+  <div style="text-align:center;margin-bottom:50px"><button class="backlink" data-go="site">â† Terug naar de website</button></div>
+</section>
+
+<!-- ===== LOGIN (na keuze) ===== -->
+<section id="view-login" class="view">
+  <div class="auth">
+    <div class="login-card">
+      <div class="login-side">
+        <div class="logo"><span class="ring" data-img="logo.img"></span>
+          <span class="lt" data-edit="logo.line1c">ARBITRAGE<small data-edit="logo.line2c">PARTNERS</small></span></div>
+        <h2 id="loginSideTitle"></h2>
+        <p id="loginSideBody"></p>
+        <div class="stats" id="loginStats"></div>
+      </div>
+      <div class="login-form">
+        <span class="eyebrow" id="loginEyebrow"></span>
+        <h2 data-edit="login.formTitle">Inloggen</h2>
+        <p class="desc" data-edit="login.formDesc">Dit is een demo-omgeving. Iedere combinatie van gegevens geeft toegang tot dezelfde voorbeelddata.</p>
+        <div class="field"><label data-edit="login.l1">Naam / vereniging</label><input value="HV De Valken"></div>
+        <div class="field"><label data-edit="login.l2">E-mailadres</label><input value="demo@hvdevalken.nl"></div>
+        <div class="field"><label data-edit="login.l3">Wachtwoord</label><input type="password" value="demodemo"></div>
+        <div class="admin-box" id="adminBox" hidden></div>
+        <div class="demo-note" data-edit="login.note">Geen account nodig â€” vul demo-inloggegevens in en klik op inloggen.</div>
+        <button class="btn btn-lime" id="loginSubmit" data-edit="login.btn">Inloggen bij het portaal</button>
+        <button class="backlink" data-go="chooser" data-edit="login.back">â† Andere rol kiezen</button>
+        <button class="backlink beheer-link" id="beheerBtn">Naar beheerderspagina â†’</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DASHBOARD (generiek) ===== -->
+<section id="view-dashboard" class="view">
+  <div class="dash">
+    <aside class="side" id="dashSide"></aside>
+    <main class="main" id="dashMain"></main>
+  </div>
+</section>
+
+<!-- drawer -->
+<div id="scrim"></div>
+<div id="drawer">
+  <div class="dhd"><h3>Stijl &amp; logo</h3><button id="closeDrawer">Ã—</button></div>
+  <div class="dbody">
+    <div class="grp"><h4>Kleurenschema</h4>
+      <div class="color-row"><label>Donker (navy)</label><div class="cc"><span class="hex" id="hex-navy"></span><input type="color" data-color="navy"></div></div>
+      <div class="color-row"><label>Accent</label><div class="cc"><span class="hex" id="hex-lime"></span><input type="color" data-color="lime"></div></div>
+      <div class="color-row"><label>Achtergrond</label><div class="cc"><span class="hex" id="hex-ground"></span><input type="color" data-color="ground"></div></div>
+      <div class="color-row"><label>Tekst</label><div class="cc"><span class="hex" id="hex-ink"></span><input type="color" data-color="ink"></div></div>
+    </div>
+    <div class="grp"><h4>Voorbeeld-thema's</h4><div class="presets" id="presets"></div></div>
+    <div class="grp"><h4>Logo</h4>
+      <div class="logo-prev"><span class="miniring" id="logoRing"></span><span class="lt" id="logoPrev">ARBITRAGE<small>PARTNERS</small></span></div>
+      <button class="dbtn" id="pickLogo">Logo-afbeelding uploaden</button>
+      <button class="dbtn" id="clearLogo">Logo-afbeelding wissen</button>
+      <input type="file" id="logoUp" accept="image/*">
+    </div>
+    <div class="grp"><h4>Demo delen &amp; herstellen</h4>
+      <button class="dbtn" id="exportBtn">Configuratie exporteren (.json)</button>
+      <button class="dbtn" id="importBtn">Configuratie importeren</button>
+      <input type="file" id="importUp" accept="application/json" style="display:none">
+      <button class="dbtn warn" id="resetBtn">Alles terugzetten naar standaard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_CODE="AP-BEHEER";
+const DEFAULTS = {
+  theme:{navy:"#0B1E33",lime:"#A6CE4E",ground:"#F3F5F1",ink:"#0B1E33"},
+  logo:{line1:"ARBITRAGE",line2:"PARTNERS",img:""},
+  profile:{name:"Thomas",email:"thomas@arbitragepartners.nl",phone:"+31 6 12 34 56 78",since:"januari 2026",avatar:""},
+  nav:{login:"Inloggen",cta:"Plan een kennismaking",
+    links:[{label:"Diensten",page:"diensten"},{label:"Aanpak",anchor:"aanpak"},{label:"Arbitrage scan",anchor:"scan"},{label:"Over ons",page:"about"},{label:"Contact",anchor:"contact"}]},
+  subs:{eyebrow:"Abonnementen",title:"Structureel investeren in arbitrage?",subtitle:"Van de basis op orde brengen tot volledige professionalisering.",featuredLabel:"Meest gekozen",
+    tiers:[
+      {name:"Start",price:"â‚¬195",per:"/ maand",featured:false,tagline:"Voor verenigingen die arbitrage op orde willen brengen.",
+        features:["Periodieke begeleiding","Advies","Arbitrageplanning","Evaluatiemomenten","Ondersteuning bij werving"],cta:"Kies Start"},
+      {name:"Grow",price:"â‚¬395",per:"/ maand",featured:true,tagline:"Voor verenigingen die structureel ontwikkelen.",
+        features:["Alles uit Start","Structurele ontwikkelactiviteiten","Clinics & workshops","Wervingsondersteuning","Monitoring","Seizoensevaluatie"],cta:"Kies Grow"},
+      {name:"Pro",price:"â‚¬695",per:"/ maand",featured:false,tagline:"Voor verenigingen die arbitrage volledig willen professionaliseren.",
+        features:["Alles uit Grow","Volledig arbitrageprogramma","Structurele begeleiding","Strategisch advies","Jaarplanning","Evaluatie & bijsturing"],cta:"Plan een gesprek"}],
+    note:"Liever eerst Ã©Ã©n probleem oplossen? Bekijk onze eenmalige diensten hierboven."},
+  about:{heroEyebrow:"Over ons",heroTitle:"Wij bouwen aan sterke arbitrage binnen verenigingen.",
+    heroSub:"Arbitrage Partners helpt handbalverenigingen om scheidsrechters te werven, op te leiden, te begeleiden en te behouden â€” met een aanpak die vandaag Ã©n morgen blijft werken.",
+    storyTitle:"Kennis uit de praktijk. Oplossingen voor de club.",
+    body1:"Arbitrage Partners is ontstaan vanuit een passie voor het scheidsrechtersvak en de overtuiging dat sterke arbitrage begint bij goed opgeleide en begeleide officials.",
+    body2:"We combineren kennis van het officialsvak met een praktische blik op organisatie, ontwikkeling en beleid â€” zodat verenigingen zelf een sterke arbitrageorganisatie kunnen bouwen die ook op lange termijn blijft werken.",
+    body3:"Van Ã©Ã©n gericht probleem tot een compleet arbitragejaarprogramma: we sluiten altijd aan bij waar jullie vereniging nu staat en waar de grootste kansen liggen.",
+    storyImage:"",
+    valuesTitle:"Waar wij voor staan",valuesSub:"Vier uitgangspunten die in alles wat we doen terugkomen.",
+    values:[
+      {ic:"â—Ž",h:"Praktijkgericht",p:"Geen theoretische plannen die in de la verdwijnen â€” we werken met oplossingen die de vereniging morgen kan uitvoeren."},
+      {ic:"â—",h:"Verenigingsgericht",p:"Iedere vereniging is anders. We sluiten aan bij jullie cultuur, structuur en ambities."},
+      {ic:"â—ˆ",h:"Structureel",p:"We lossen niet alleen het probleem van dit seizoen op, maar bouwen aan een systeem dat blijft werken."},
+      {ic:"â—†",h:"Onafhankelijk",p:"We nemen de arbitrage niet over, maar helpen de vereniging om het zelf sterk te maken."}],
+    processTitle:"Zo werken we",processSub:"Van kennismaking tot een arbitrageorganisatie die blijft werken â€” in zes stappen.",
+    process:[
+      {n:"01",h:"Kennismaken",p:"We bespreken de huidige situatie, uitdagingen en ambities van jullie vereniging."},
+      {n:"02",h:"Analyseren",p:"Met de Arbitrage Scan brengen we de huidige arbitrageorganisatie in kaart."},
+      {n:"03",h:"Plan maken",p:"We vertalen de analyse naar concrete doelen en acties."},
+      {n:"04",h:"Uitvoeren",p:"We helpen met werving, opleiding, begeleiding en organisatie."},
+      {n:"05",h:"Evalueren",p:"We bekijken samen wat werkt en wat beter kan."},
+      {n:"06",h:"Doorontwikkelen",p:"Arbitrage wordt een structureel onderdeel van de vereniging."}],
+    benefitsTitle:"Wat kan het jou opleveren?",benefitsSub:"Verenigingen die met ons werken zien concrete resultaten.",
+    benefits:["Meer officials","Betere begeleiding","Meer behoud","Meer structuur","Minder ad-hoc oplossingen","Een sterkere vereniging"],
+    statsTitle:"Arbitrage Partners in cijfers",
+    stats:[{n:"50+",l:"Verenigingen ondersteund"},{n:"4",l:"Pijlers in elke aanpak"},{n:"10 jr",l:"Ervaring in het veld"},{n:"1.200+",l:"Officials bereikt"}],
+    ctaTitle:"Klaar om te bouwen aan sterke arbitrage?",
+    ctaBody:"Plan een vrijblijvende kennismaking. We bespreken waar jullie vereniging staat en welke stappen het meeste opleveren.",
+    ctaBtn:"Plan een kennismaking"},
+  contact:{eyebrow:"Contact",title:"Neem contact op",
+    body:"Benieuwd wat Arbitrage Partners voor jouw vereniging kan betekenen? Plan een vrijblijvende kennismaking of stuur ons een bericht â€” we reageren doorgaans binnen Ã©Ã©n werkdag.",
+    items:[{ic:"âœ‰",k:"E-mail",v:"info@arbitragepartners.nl"},{ic:"â˜Ž",k:"Telefoon",v:"+31 6 12 34 56 78"},{ic:"â—",k:"Werkgebied",v:"Heel Nederland"}],
+    fName:"Naam",fEmail:"E-mailadres",fMsg:"Bericht",fBtn:"Verstuur bericht",
+    formSuccess:"Bedankt! Je bericht is ontvangen â€” dit is een demo, er wordt niets echt verstuurd."},
+  scan:{eyebrow:"Arbitrage Scan",introTitle:"Arbitrage Scan",
+    introBody:"Beantwoord 37 vragen over hoe scheidsrechters en officials bij jullie vereniging nu geregeld zijn. Op basis daarvan bereiden we een advies op maat voor, dat we samen bespreken in een gesprek.",
+    introMeta:"37 vragen Â· ongeveer 10â€“15 minuten",
+    startBtn:"Start de scan",ctaContact:"Start de vragenlijst",ctaNext:"Volgende",ctaOverview:"Bekijk voortgang",ctaFinal:"Naar afronding",
+    contactTitle:"Wie vult deze scan in?",contactSub:"Zodat we contact kunnen opnemen over de uitkomsten van de scan.",
+    cName:"Naam",cRole:"Functie binnen de vereniging",cEmail:"E-mailadres",cPhone:"Telefoonnummer",
+    overviewTitle:"Jullie voortgang",
+    finalTitle:"Scan compleet",finalBody:"Bedankt {naam}. We hebben alle antwoorden ontvangen en gaan ermee aan de slag.",
+    finalNextTitle:"Volgende stap",finalNextBody:"Plan een gesprek in om de uitkomsten en het advies samen met Arbitrage Partners te bespreken.",
+    finalBtn:"Plan gesprek in",finalConfirm:"Aanvraag verstuurd â€” we nemen binnen 2 werkdagen contact op.",finalBack:"â† Terug naar de website",
+    sections:[
+      {code:"A",name:"Algemene clubgegevens",from:1,to:5},
+      {code:"B",name:"Huidige situatie scheidsrechters/officials",from:6,to:10},
+      {code:"C",name:"Werving en instroom",from:11,to:14},
+      {code:"D",name:"Opleiding en begeleiding",from:15,to:18},
+      {code:"E",name:"Waardering en behoud",from:19,to:22},
+      {code:"F",name:"Organisatie en coÃ¶rdinatie",from:23,to:26},
+      {code:"G",name:"Cultuur, gedrag en sfeer",from:27,to:29},
+      {code:"H",name:"FinanciÃ«n en vergoedingen",from:30,to:32},
+      {code:"I",name:"Ambities en doelen",from:33,to:35},
+      {code:"J",name:"Tot slot",from:36,to:37}],
+    questions:[
+      {code:1,section:"A",type:"open",text:"Naam van de vereniging"},
+      {code:2,section:"A",type:"multi",text:"Bij welke sport(en) is jullie vereniging actief?",options:["Handbal","Voetbal","Hockey","Basketbal","Volleybal","Korfbal"]},
+      {code:3,section:"A",type:"number",text:"Aantal leden totaal"},
+      {code:4,section:"A",type:"open",text:"Aantal teams en gemiddeld aantal wedstrijden per weekend"},
+      {code:5,section:"A",type:"single",text:"Niveau van de vereniging",options:["Voornamelijk recreatief","Voornamelijk prestatief","Gemengd (recreatief en prestatief)"]},
+      {code:6,section:"B",type:"number",text:"Hoeveel actieve scheidsrechters/officials heeft de vereniging op dit moment?"},
+      {code:7,section:"B",type:"number",text:"Hoeveel scheidsrechters/officials zijn er structureel nodig om alle wedstrijden goed te bemensen?"},
+      {code:8,section:"B",type:"single",text:"Hoe vaak komt het voor dat een wedstrijd zonder (gekwalificeerde) scheidsrechter gefloten moet worden?",options:["Nooit","Af en toe","Regelmatig","Vaak / structureel"]},
+      {code:9,section:"B",type:"open",text:"Wat is de leeftijdsopbouw van de huidige groep scheidsrechters/officials? (bijv. % jeugd / volwassenen / 50+)"},
+      {code:10,section:"B",type:"open",text:"Zijn er scheidsrechters actief op verschillende niveaus (verenigings-, bonds-, topniveau)? Zo ja, hoeveel op elk niveau?"},
+      {code:11,section:"C",type:"multi",text:"Op welke manier(en) werft de vereniging op dit moment nieuwe scheidsrechters/officials?",options:["Verplichting voor leden en/of ouders","Vrijwillige aanmelding","Actieve wervingscampagne","Geen structurele werving"]},
+      {code:12,section:"C",type:"open",text:"Is er een verplichting voor leden of ouders om (een aantal keer per seizoen) te fluiten? Zo ja, hoe is dit geregeld?"},
+      {code:13,section:"C",type:"scale5",text:"Hoeveel moeite kost het de vereniging om voldoende nieuwe scheidsrechters te werven?",labels:["geen enkele moeite","zeer veel moeite"]},
+      {code:14,section:"C",type:"single",text:"Wordt er structureel geworven onder spelende leden (bijvoorbeeld vanaf een bepaalde leeftijd)?",options:["Ja, structureel","Soms / incidenteel","Nee"]},
+      {code:15,section:"D",type:"open",text:"Welke opleidingen of cursussen volgen scheidsrechters/officials op dit moment?"},
+      {code:16,section:"D",type:"open",text:"Is er een vorm van begeleiding of mentoring voor (beginnende) scheidsrechters? Zo ja, hoe ziet die eruit?"},
+      {code:17,section:"D",type:"single",text:"Worden opleidingskosten (deels) vergoed door de vereniging?",options:["Ja, volledig","Ja, gedeeltelijk","Nee","Niet van toepassing / weten we niet"]},
+      {code:18,section:"D",type:"single",text:"Hoe vaak vindt er bijscholing of evaluatie van scheidsrechters/officials plaats?",options:["Nooit","EÃ©n keer per seizoen","Meerdere keren per seizoen"]},
+      {code:19,section:"E",type:"number",text:"Hoeveel scheidsrechters/officials stoppen er gemiddeld per seizoen? (aantal of %)"},
+      {code:20,section:"E",type:"open",text:"Wat zijn, voor zover bekend, de belangrijkste redenen dat scheidsrechters stoppen?"},
+      {code:21,section:"E",type:"multi",text:"Ontvangen scheidsrechters een vergoeding, kleding/materiaal of andere vorm van waardering?",options:["FinanciÃ«le vergoeding per wedstrijd","Kleding / materiaal","Vrijkaartjes, teametentje of vergelijkbaar","Publieke waardering (bijv. uitreiking, bedankje)","Geen van bovenstaande"]},
+      {code:22,section:"E",type:"scale5",text:"Hoe tevreden zijn scheidsrechters volgens de vereniging over hun rol en de manier waarop zij behandeld worden?",labels:["zeer ontevreden","zeer tevreden"]},
+      {code:23,section:"F",type:"single",text:"Is er een aangewezen scheidsrechterscoÃ¶rdinator of arbitragecommissie binnen de vereniging?",options:["Ja, een vaste persoon","Ja, een commissie","Nee, dit ligt bij het bestuur","Nee, dit is nergens structureel belegd"]},
+      {code:24,section:"F",type:"open",text:"Hoeveel tijd besteedt deze persoon of commissie gemiddeld per week aan arbitragezaken?"},
+      {code:25,section:"F",type:"open",text:"Hoe wordt de indeling en planning van scheidsrechters nu geregeld? (bijv. Excel, app/software, WhatsApp)"},
+      {code:26,section:"F",type:"single",text:"Is er een duidelijk aanspreekpunt voor scheidsrechters bij vragen of problemen?",options:["Ja, duidelijk bekend bij scheidsrechters","Ja, maar niet altijd duidelijk bekend","Nee"]},
+      {code:27,section:"G",type:"single",text:"Hoe vaak krijgen scheidsrechters te maken met ongewenst gedrag van spelers, coaches of publiek?",options:["Nooit","Zelden","Soms","Regelmatig"]},
+      {code:28,section:"G",type:"single",text:"Heeft de vereniging beleid of een protocol rond respect richting scheidsrechters en de omgang met incidenten?",options:["Ja, vastgelegd beleid","Informele afspraken, niet vastgelegd","Nee"]},
+      {code:29,section:"G",type:"open",text:"Zijn er in het afgelopen seizoen tuchtzaken geweest die met arbitrage te maken hadden?"},
+      {code:30,section:"H",type:"single",text:"Is er een vastgesteld budget voor arbitragezaken (werving, opleiding, vergoeding, materiaal)?",options:["Ja, een vast jaarbudget","Er wordt incidenteel geld vrijgemaakt","Nee, geen budget"]},
+      {code:31,section:"H",type:"open",text:"Hoe hoog is de gemiddelde vergoeding per gefloten wedstrijd, indien van toepassing?"},
+      {code:32,section:"H",type:"scale5",text:"Ziet de vereniging ruimte en bereidheid om meer te investeren in arbitrage, mits dit concrete resultaten oplevert?",labels:["geen ruimte/bereidheid","veel ruimte/bereidheid"]},
+      {code:33,section:"I",type:"openLong",text:"Wat is voor de vereniging het belangrijkste doel op het gebied van arbitrage voor het komende seizoen?"},
+      {code:34,section:"I",type:"multi",text:"Welke onderwerpen hebben voor de vereniging op dit moment de hoogste prioriteit? (max. 2 aankruisen)",options:["Werving van nieuwe scheidsrechters","Opleiding en ontwikkeling","Behoud en waardering","Organisatie en planning","Cultuur en gedrag rond arbitrage","FinanciÃ«n en vergoedingen"]},
+      {code:35,section:"I",type:"scale10",text:"Hoe urgent vindt de vereniging het om de arbitragesituatie structureel te verbeteren?",labels:["niet urgent","zeer urgent"]},
+      {code:36,section:"J",type:"openLong",text:"Zijn er specifieke knelpunten, wensen of vragen die nog niet aan bod zijn gekomen?"},
+      {code:37,section:"J",type:"openLong",text:"Is er nog aanvullende informatie die belangrijk is voor het gesprek met Arbitrage Partners?"}]},
+  plan:{heroEyebrow:"Kennismaking",heroTitle:"Plan een vrijblijvende kennismaking",
+    heroSub:"In een kort gesprek bespreken we waar jullie vereniging staat en waar de grootste kansen liggen. Geen verplichtingen â€” je bepaalt zelf of en hoe je verder wilt.",
+    infoTitle:"Wat je kunt verwachten",
+    points:[
+      {ic:"â—”",t:"Een gesprek van 30â€“45 minuten, telefonisch of bij jullie op de club."},
+      {ic:"â—",t:"We bespreken jullie situatie rond werving, opleiding, behoud en organisatie."},
+      {ic:"â—ˆ",t:"Je krijgt concrete eerste inzichten â€” ook als je (nog) geen traject start."}],
+    contactNote:"Liever direct contact? Bel of mail ons.",
+    items:[{ic:"âœ‰",k:"E-mail",v:"info@arbitragepartners.nl"},{ic:"â˜Ž",k:"Telefoon",v:"+31 6 12 34 56 78"}],
+    formTitle:"Jouw gegevens",
+    fName:"Naam",fClub:"Vereniging",fRole:"Functie binnen de vereniging",fEmail:"E-mailadres",fPhone:"Telefoonnummer",
+    fDate:"Voorkeursdatum",fSlot:"Voorkeursmoment",slots:["Ochtend","Middag","Avond","Maakt niet uit"],
+    fWay:"Hoe nemen we contact op?",ways:["Telefonisch","Op locatie","Videobellen"],
+    fMsg:"Waar wil je het vooral over hebben? (optioneel)",submit:"Verstuur aanvraag",
+    successTitle:"Aanvraag verstuurd",
+    successBody:"Bedankt! We nemen binnen 2 werkdagen contact met je op om de kennismaking in te plannen. Dit is een demo â€” er wordt niets echt verstuurd.",
+    successBtn:"â† Terug naar de website"},
+  hero:{title:"Sterke officials.",titleAccent:"Sterke verenigingen.",sub:"Bouw aan een organisatie die werkt â€” vandaag Ã©n morgen.",
+    body:"Arbitrage Partners helpt jouw vereniging met het werven, ontwikkelen, begeleiden en behouden van officials.",
+    btn1:"Ontdek onze diensten",btn2:"Doe de arbitrage scan",image:"",
+    feats:[{ic:"â—Ž",t:"Werving"},{ic:"â—ˆ",t:"Opleiding"},{ic:"â—",t:"Begeleiding"},{ic:"â—†",t:"Arbitragebeleid"}]},
+  problems:{title:"Arbitrage hoort geen probleem te zijn.",subtitle:"Herken jij een van deze problemen binnen jouw vereniging?",
+    note:"Arbitrage Partners helpt verenigingen om van losse oplossingen naar een structurele aanpak te gaan.",btn:"Bekijk hoe wij kunnen helpen",
+    items:[{ic:"âš‘",t:"Te weinig scheidsrechters"},{ic:"â†»",t:"Nieuwe officials stoppen na een paar wedstrijden"},
+      {ic:"â—«",t:"Er is weinig structurele begeleiding"},{ic:"â—”",t:"De commissie lost alles op het laatste moment op"},
+      {ic:"?",t:"Jullie willen verbeteren, maar weten niet waar te beginnen"}]},
+  pillars:{title:"Van scheidsrechtertekort naar een ",titleAccent:"sterke arbitrageorganisatie.",
+    body:"We kijken niet alleen naar het aantal wedstrijden dat gefloten moet worden. We kijken naar het volledige systeem achter arbitrage.",
+    items:[{tag:"Werving",h:"Nieuwe officials",p:"Nieuwe officials aantrekken en enthousiast krijgen."},
+      {tag:"Ontwikkeling",h:"Beter fluiten",p:"Officials helpen beter te worden door training, clinics en praktijkgerichte begeleiding."},
+      {tag:"Behoud",h:"Betrokken blijven",p:"Zorgen dat beginnende en ervaren officials betrokken blijven bij de vereniging."},
+      {tag:"Organisatie",h:"Structuur",p:"Structuur in verantwoordelijkheden, planning, communicatie en arbitragebeleid."}]},
+  services:{title:"Onze diensten",subtitle:"Gerichte ondersteuning voor ieder arbitragevraagstuk.",tabEenmalig:"Eenmalige diensten",tabStructureel:"Structureel",
+    teaserBtn:"Bekijk alle diensten & prijzen â†’",pageEyebrow:"Diensten",pageTitle:"Onze diensten & prijzen",
+    pageIntro:"Van een gerichte oplossing voor Ã©Ã©n probleem tot structurele begeleiding gedurende het seizoen. Kies een eenmalige dienst of een abonnement dat met jullie vereniging meegroeit.",
+    items:[
+      {ic:"âŒ•",h:"Arbitrage Scan",p:"Krijg inzicht in waar jouw vereniging staat en waar de grootste kansen liggen.",price:"â‚¬495",duration:"Doorlooptijd: circa 1â€“2 weken",
+        long:"De Arbitrage Scan brengt in kaart hoe jullie arbitrage er nu voor staat â€” van werving en opleiding tot behoud en organisatie. Op basis van 37 gerichte vragen krijg je inzicht in de sterke punten en de grootste kansen binnen jullie vereniging.",
+        long2:"Je vult de vragenlijst zelfstandig of samen met ons in. Wij analyseren de antwoorden en vertalen ze naar een helder beeld met scores per pijler, zodat je precies weet waar de meeste winst te behalen valt.",
+        points:["Analyse over 4 pijlers: werving, ontwikkeling, behoud en organisatie","Een score en toelichting per pijler","Concreet inzicht in de grootste kansen","Een overzichtelijke rapportage","De basis voor een gericht arbitrageplan"],
+        forWho:"Voor verenigingen die willen weten waar ze staan op het gebied van arbitrage â€” of dat nu vanuit een concreet probleem is of gewoon om scherp te krijgen wat er beter kan.",
+        steps:[{h:"Intake",p:"Een kort gesprek om jullie situatie en doel te bepalen."},{h:"Vragenlijst",p:"37 gerichte vragen over de vier pijlers."},{h:"Analyse",p:"Wij verwerken de antwoorden tot scores en inzichten."},{h:"Terugkoppeling",p:"We bespreken de uitkomsten en mogelijke vervolgstappen."}],
+        result:"Na de scan weet je precies waar de grootste winst te behalen is en heb je een onderbouwd startpunt om gericht mee aan de slag te gaan.",
+        faq:[{q:"Moeten we overal een antwoord op hebben?",a:"Nee. Ook 'weet ik niet' is waardevolle informatie â€” dat laat juist zien waar het overzicht ontbreekt."},{q:"Zit er een vervolg aan vast?",a:"Nee, de scan is vrijblijvend. Je bepaalt zelf of en hoe je verder gaat."}]},
+      {ic:"â—±",h:"Arbitrageplan",p:"Van analyse naar een concreet plan waarmee jullie structureel aan arbitrage werken.",price:"â‚¬1.250",duration:"Doorlooptijd: circa 2â€“3 weken",
+        long:"Het arbitrageplan vertaalt de uitkomsten van de scan naar concrete stappen, met verantwoordelijken en deadlines, zodat 'we moeten iets met arbitrage' een uitvoerbaar plan wordt.",
+        long2:"Samen bepalen we prioriteiten en werken die uit tot acties die de vereniging zelf kan uitvoeren. Je krijgt een helder document waar de hele arbitragecommissie mee vooruit kan.",
+        points:["Concrete acties per pijler","Duidelijke verantwoordelijkheden","Realistische planning en deadlines","Meetbare doelen voor het seizoen","Een document waar de hele commissie mee vooruit kan"],
+        forWho:"Voor verenigingen die van analyse naar actie willen en behoefte hebben aan structuur, richting en overzicht.",
+        steps:[{h:"Analyse",p:"We gebruiken de scan of een intake als vertrekpunt."},{h:"Prioriteren",p:"Samen bepalen we wat het eerst moet gebeuren."},{h:"Uitwerken",p:"We vertalen prioriteiten naar concrete acties met eigenaren."},{h:"Vastleggen",p:"Je ontvangt een helder plan om direct mee te starten."}],
+        result:"Een praktisch arbitrageplan dat de vereniging zelf kan uitvoeren en waar je gedurende het seizoen op kunt sturen.",
+        faq:[{q:"Voeren jullie het plan ook uit?",a:"Dat kan, maar hoeft niet. Het plan is zo opgesteld dat je het zelf kunt uitvoeren; wil je begeleiding, dan kan dat via een abonnement."},{q:"Is een scan verplicht vooraf?",a:"Niet per se, maar een scan geeft wel de scherpste basis voor het plan."}]},
+      {ic:"â—ˆ",h:"Wervingscampagne",p:"Bereik potentiÃ«le officials met een gerichte en professionele wervingscampagne.",price:"Op aanvraag",duration:"Vorm: op maat, in overleg",
+        long:"Bereik potentiÃ«le scheidsrechters en officials met een professionele, op jullie vereniging toegesneden wervingscampagne â€” van boodschap tot middelen en acties.",
+        long2:"We helpen je met een aansprekende boodschap en kant-en-klare communicatie om nieuwe mensen te bereiken: onder leden, onder ouders Ã©n daarbuiten. Zo vul je het tekort structureel aan.",
+        points:["Een heldere wervingsboodschap","Kant-en-klare communicatiemiddelen","Aanpak voor werving onder leden en ouders","Ondersteuning bij open dagen en acties","Tips om nieuwe officials te behouden"],
+        forWho:"Voor verenigingen met te weinig scheidsrechters die gericht nieuwe mensen willen aantrekken en behouden.",
+        steps:[{h:"Doelgroep",p:"We bepalen wie je wilt bereiken en via welke kanalen."},{h:"Boodschap & middelen",p:"We maken aansprekende communicatie op maat."},{h:"Campagne",p:"We zetten de werving uit via de juiste kanalen."},{h:"Opvolging",p:"We zorgen dat aanmeldingen goed worden opgevangen."}],
+        result:"Meer aanmeldingen van potentiÃ«le officials en een herbruikbare aanpak voor de seizoenen daarna.",
+        faq:[{q:"Werkt dit ook bij een klein ledenaantal?",a:"Ja. We stemmen de aanpak af op de omvang en cultuur van jullie vereniging."},{q:"Maken jullie het campagnemateriaal?",a:"Ja, we leveren kant-en-klare middelen die je zelf kunt inzetten."}]},
+      {ic:"â—",h:"Official Clinic",p:"Praktijkgerichte ontwikkeling voor beginnende en ervaren scheidsrechters.",price:"Op aanvraag",duration:"Vorm: 1 dagdeel, op locatie",
+        long:"Praktijkgerichte clinics waarin beginnende en ervaren scheidsrechters hun spelinzicht, positiespel en communicatie verbeteren â€” op jullie eigen accommodatie.",
+        long2:"Onze trainers werken praktijkgericht: beginnende scheidsrechters krijgen zelfvertrouwen, ervaren officials scherpen hun spelinzicht en positiespel aan. Iedere deelnemer gaat naar huis met concrete verbeterpunten.",
+        points:["Praktijk op de eigen accommodatie","Op maat voor beginners of gevorderden","Aandacht voor spelregels, positiespel en communicatie","Directe, bruikbare feedback","Materiaal om zelf mee verder te oefenen"],
+        forWho:"Voor scheidsrechters en officials die zich verder willen ontwikkelen, van net begonnen tot ervaren.",
+        steps:[{h:"Niveaubepaling",p:"We stemmen de clinic af op de deelnemers."},{h:"Clinic",p:"Praktijkgerichte training op locatie."},{h:"Feedback",p:"Iedere deelnemer krijgt concrete verbeterpunten."},{h:"Vervolg",p:"Tips en materiaal om zelf mee door te gaan."}],
+        result:"Officials die met meer zelfvertrouwen en beter spelinzicht de wedstrijd in gaan.",
+        faq:[{q:"Hoeveel deelnemers kunnen er mee?",a:"Dat stemmen we af; voor de kwaliteit werken we het liefst met kleinere groepen."},{q:"Kan het voor jeugd Ã©n volwassenen?",a:"Ja, we passen de clinic aan op leeftijd en niveau."}]},
+      {ic:"â—«",h:"Official Workshop",p:"Een praktische workshop voor bestuur, arbitragecommissie en coÃ¶rdinatoren.",price:"Op aanvraag",duration:"Vorm: 1 avond of dagdeel",
+        long:"Een praktische workshop voor bestuur, arbitragecommissie en coÃ¶rdinatoren over het structureel organiseren van arbitrage binnen de vereniging.",
+        long2:"Deze workshop richt zich niet op de fluitende official, maar op de mensen eromheen. Samen kijken we naar rollen, verantwoordelijkheden, planning en beleid â€” en eindigen met concrete afspraken.",
+        points:["Rollen, verantwoordelijkheden en planning","Beleid rond gedrag en waardering","Praktische handvatten voor de commissie","Voorbeelden van andere verenigingen","Een concrete lijst met vervolgstappen"],
+        forWho:"Voor bestuursleden, arbitragecommissies en coÃ¶rdinatoren die arbitrage beter willen organiseren.",
+        steps:[{h:"Voorbereiding",p:"We inventariseren jullie huidige organisatie."},{h:"Workshop",p:"Interactieve sessie met het betrokken team."},{h:"Actiepunten",p:"We eindigen met concrete afspraken."},{h:"Follow-up",p:"Optioneel: we blijven meedenken bij de uitvoering."}],
+        result:"Een team dat weet wie waarvoor verantwoordelijk is en hoe arbitrage structureel geregeld wordt.",
+        faq:[{q:"Hoeveel mensen doen mee?",a:"Meestal het bestuur en de arbitragecommissie; de groep mag compact blijven."},{q:"Is dit los te boeken?",a:"Ja, de workshop kan als losse dienst of als onderdeel van een abonnement."}]},
+      {ic:"â–¤",h:"Arbitragejaarprogramma",p:"Een compleet programma om gedurende een seizoen structureel aan arbitrage te werken.",price:"Op aanvraag",duration:"Vorm: doorlopend, per seizoen",
+        long:"Een compleet programma dat gedurende het seizoen structureel aan alle pijlers werkt â€” van scan tot begeleiding en evaluatie â€” met Arbitrage Partners als vaste partner.",
+        long2:"Het jaarprogramma combineert alle diensten tot Ã©Ã©n doorlopend traject. We werken samen aan werving, ontwikkeling, behoud en organisatie, met vaste evaluatiemomenten om bij te sturen.",
+        points:["Doorlopende begeleiding het hele seizoen","Combinatie van scan, plan, clinics en workshops","Vaste evaluatie- en bijstuurmomenten","Een vast aanspreekpunt bij Arbitrage Partners","Structurele borging binnen de vereniging"],
+        forWho:"Voor verenigingen die arbitrage niet als los project maar als vast onderdeel willen inrichten.",
+        steps:[{h:"Nulmeting",p:"We starten met een scan als vertrekpunt."},{h:"Jaarplan",p:"We stellen een programma op voor het hele seizoen."},{h:"Uitvoeren",p:"Gedurende het jaar voeren we de acties samen uit."},{h:"Evalueren",p:"Op vaste momenten meten we de voortgang en sturen bij."}],
+        result:"Een vereniging waar arbitrage structureel geregeld is en die zichzelf blijft verbeteren.",
+        faq:[{q:"Is dit hetzelfde als een abonnement?",a:"Het jaarprogramma is de meest complete vorm; de abonnementen Start, Grow en Pro zijn lichtere varianten."},{q:"Kunnen we tussentijds op- of afschalen?",a:"Ja, we stemmen het programma af op wat de vereniging nodig heeft."}]}]},
+  lower:{eyebrow:"Arbitrage Check",title:"Benieuwd hoe jouw vereniging ervoor staat?",
+    body:"Ontdek in enkele minuten hoe sterk de arbitrageorganisatie binnen jouw vereniging ervoor staat. Beantwoord een aantal korte vragen over werving, begeleiding, opleiding, behoud en organisatie.",
+    btn:"Start de gratis Arbitrage Scan"},
+  footer:{text:"Â© 2026 Arbitrage Partners â€” Sterke officials. Sterke verenigingen."},
+  login:{formTitle:"Inloggen",formDesc:"Dit is een demo-omgeving. Iedere combinatie van gegevens geeft toegang tot dezelfde voorbeelddata.",
+    l1:"Naam / vereniging",l2:"E-mailadres",l3:"Wachtwoord",
+    adminToggle:"Inloggen als beheerder",adminHint:"Demo-code: AP-BEHEER â€” geeft toegang tot de Beheer-omgeving.",
+    note:"Geen account nodig â€” vul demo-inloggegevens in en klik op inloggen.",btn:"Inloggen bij het portaal",back:"â† Andere rol kiezen"},
+  chooser:{eyebrow:"Portaal",title:"Voor wie log je in?",subtitle:"Kies je portaal om verder te gaan. Elk portaal geeft toegang tot de informatie die bij jouw rol hoort.",
+    cards:[
+      {ic:"âŒ‚",tag:"Verenigingsportaal",h:"Vereniging",p:"Voor bestuursleden en de arbitragecommissie die werving, ontwikkeling en organisatie regelen.",btn:"Verenigingsportaal â†’",portal:"vereniging"},
+      {ic:"â—Ž",tag:"Officialsportaal",h:"Official",p:"Voor scheidsrechters en officials die hun wedstrijden, beschikbaarheid en ontwikkeling willen inzien.",btn:"Officialsportaal â†’",portal:"official"},
+      {ic:"â—",tag:"Begeleidersportaal",h:"Begeleider",p:"Voor coaches en begeleiders die de voortgang van officials volgen en coachtrajecten plannen.",btn:"Begeleidersportaal â†’",portal:"begeleider"}]},
+  admin:{title:"Beheer â€” gebruikers & rechten",link:"Alle gebruikers â†’",
+    cols:[{label:"Gebruiker",kind:"name"},{label:"Rol",kind:"text",key:"rol"},{label:"Rechten",kind:"pill",key:"rights"},{label:"Laatst actief",kind:"text",key:"last"}],
+    rows:[
+      {nm:"Iris van Beek",sub:"iris@hvdevalken.nl",rol:"Arbitragecommissie",rights:"Beheerder",rightsSt:"ok",last:"Vandaag"},
+      {nm:"Sven Willems",sub:"sven@hvdevalken.nl",rol:"CoÃ¶rdinator",rights:"Bewerker",rightsSt:"info",last:"2 dagen geleden"},
+      {nm:"Daan Hermans",sub:"daan@hvdevalken.nl",rol:"Official",rights:"Alleen-lezen",rightsSt:"idle",last:"1 week geleden"}]},
+  portals:{
+    vereniging:{
+      login:{eyebrow:"Verenigingsportaal",sideTitle:"Alle arbitrage van je vereniging op Ã©Ã©n plek.",
+        sideBody:"Het verenigingsportaal bundelt werving, ontwikkeling, behoud en organisatie in Ã©Ã©n dashboard â€” zodat de arbitragecommissie niet meer op het laatste moment hoeft bij te sturen.",
+        stats:[{n:"24",l:"Actieve officials"},{n:"62",l:"Arbitrage scan"},{n:"4",l:"Pijlers in beeld"}]},
+      nav:["Dashboard","Arbitrage scan","Arbitrageplan","Documenten","Scheidsrechters","Begeleiders","Activiteiten","Chat"],
+      beheer:["Instellingen","Account","Gebruikers","Support","Abonnement","Betalingen"],
+      demoBadge:"Demo-portaal â€” alle gegevens zijn voorbeelddata en gedeeld tussen bezoekers.",
+      title:"Dashboard",subtitle:"Overzicht van je arbitrageorganisatie â€” bijgewerkt zodra je iets aanpast.",cta:"Bekijk volledige scan",
+      stats:[
+        {ic:"â—",badge:"+2 dit seizoen",num:"7",lab:"Actieve scheidsrechters"},
+        {ic:"ï¼‹",badge:"dit seizoen",num:"2",lab:"Nieuwe scheidsrechters dit seizoen"},
+        {ic:"â—Ž",badge:"dit kwartaal",num:"3",lab:"Nieuw dit kwartaal"},
+        {ic:"â˜Ž",badge:"benaderd",num:"8",lab:"Benaderde potentiÃ«len (kwartaal)"},
+        {ic:"â—ˆ",badge:"totaal",num:"5",lab:"Begeleiders voor scheidsrechters"},
+        {ic:"â–¤",badge:"dit seizoen",num:"14",lab:"Ingediende rapportages totaal"},
+        {ic:"âœ“",badge:"tevredenheid",num:"92%",lab:"Retentie scheidsrechters"},
+        {ic:"â—”",badge:"gem. 4 pijlers",num:"60%",lab:"Voortgang arbitrageplan"}],
+      panels:[
+        {type:"pillars",title:"Voortgang pijlers arbitragescan",chip:"4 pijlers",
+          items:[{n:"01",h:"Werving",pct:80},{n:"02",h:"Ontwikkeling",pct:55},{n:"03",h:"Behoud",pct:40},{n:"04",h:"Organisatie",pct:65}]},
+        {type:"table",title:"Scheidsrechters",link:"Alle scheidsrechters â†’",
+          cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},
+            {label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],
+          rows:[
+            {nm:"Daan Hermans",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"20 sep 2026",last:"12 aug 2026",rep:"6"},
+            {nm:"Femke de Groot",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"27 sep 2026",last:"â€”",rep:"1"},
+            {nm:"Iris van Beek",sub:"CoÃ¶rdinator",niv:"BeNe League",status:"Actief",statusSt:"ok",next:"18 sep 2026",last:"2 sep 2026",rep:"9"},
+            {nm:"Sven Willems",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"21 sep 2026",last:"5 sep 2026",rep:"4"},
+            {nm:"Noa Jansen",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"â€”",last:"â€”",rep:"0"}]},
+        {type:"acts",title:"Aankomende activiteiten",link:"Alles â†’",
+          items:[
+            {mk:"#A6CE4E",t:"Clinic gevorderden BeNe-niveau",cat:"Clinic",date:"16 aug 2026",loc:"Sporthal De Valk",who:"Iris van Beek Â· 8 deelnemers",time:"19:00â€“21:00",stt:"Gepland",st:"idle"},
+            {mk:"#A9700C",t:"Evaluatiegesprekken lichting 2025",cat:"Evaluatie",date:"18 sep 2026",loc:"Clubhuis",who:"Arbitragecommissie",time:"20:00â€“22:00",stt:"Bezig",st:"info"},
+            {mk:"#1E5AA8",t:"Workshop spelregels seizoen 26/27",cat:"Workshop",date:"4 okt 2026",loc:"Vergaderzaal 2",who:"Sven Willems",time:"19:30â€“21:00",stt:"Gepland",st:"idle"},
+            {mk:"#B4482E",t:"Open dag: word scheidsrechter",cat:"Wervingsactie",date:"8 nov 2026",loc:"Hoofdveld",who:"Bestuur + vrijwilligers",time:"10:00â€“14:00",stt:"Afgerond",st:"ok"}]}
+      ],
+      pages:{
+        "Arbitrage scan":{subtitle:"De laatste scan en de score per pijler.",cta:"Nieuwe scan starten",panels:[
+          {type:"note",title:"Laatste scan",body:"Ingevuld op 2 sep 2026 door Iris van Beek â€” 37 van 37 vragen beantwoord. De scores hieronder komen uit de meest recente scan."},
+          {type:"pillars",title:"Score per pijler",chip:"4 pijlers",items:[{n:"01",h:"Werving",pct:80},{n:"02",h:"Ontwikkeling",pct:55},{n:"03",h:"Behoud",pct:40},{n:"04",h:"Organisatie",pct:65}]},
+          {type:"table",title:"Onderdelen",cols:[{label:"Onderdeel",kind:"strong",key:"nm"},{label:"Status",kind:"pill",key:"status"},{label:"Score",kind:"text",key:"score"}],rows:[
+            {nm:"Werving en instroom",status:"Op koers",statusSt:"ok",score:"80%"},
+            {nm:"Opleiding en begeleiding",status:"Aandacht",statusSt:"warn",score:"55%"},
+            {nm:"Waardering en behoud",status:"Actie nodig",statusSt:"warn",score:"40%"},
+            {nm:"Organisatie en coÃ¶rdinatie",status:"Op koers",statusSt:"ok",score:"65%"}]}]},
+        "Arbitrageplan":{subtitle:"Concrete acties per pijler met verantwoordelijke en deadline.",cta:"Actie toevoegen",panels:[
+          {type:"bars",title:"Voortgang per pijler",chip:"seizoen 26/27",items:[{h:"Werving",pct:80},{h:"Ontwikkeling",pct:55},{h:"Behoud",pct:40},{h:"Organisatie",pct:65}]},
+          {type:"table",title:"Acties",link:"Alle acties â†’",cols:[{label:"Actie",kind:"strong",key:"nm"},{label:"Pijler",kind:"text",key:"pijler"},{label:"Verantwoordelijke",kind:"text",key:"who"},{label:"Deadline",kind:"text",key:"deadline"},{label:"Status",kind:"pill",key:"status"}],rows:[
+            {nm:"Wervingscampagne najaar opzetten",pijler:"Werving",who:"Sven Willems",deadline:"1 okt 2026",status:"Bezig",statusSt:"info"},
+            {nm:"Clinic gevorderden organiseren",pijler:"Ontwikkeling",who:"Iris van Beek",deadline:"16 aug 2026",status:"Afgerond",statusSt:"ok"},
+            {nm:"Waarderingsbeleid opstellen",pijler:"Behoud",who:"Bestuur",deadline:"1 nov 2026",status:"Gepland",statusSt:"idle"},
+            {nm:"Rol coÃ¶rdinator formaliseren",pijler:"Organisatie",who:"Bestuur",deadline:"15 sep 2026",status:"Bezig",statusSt:"info"}]}]},
+        "Documenten":{subtitle:"Alle documenten rond arbitrage op Ã©Ã©n plek.",cta:"Uploaden",panels:[
+          {type:"table",title:"Bestanden",cols:[{label:"Naam",kind:"strong",key:"nm"},{label:"Type",kind:"text",key:"type"},{label:"Bijgewerkt",kind:"text",key:"date"},{label:"Door",kind:"text",key:"who"}],rows:[
+            {nm:"Arbitrageplan 26-27.pdf",type:"PDF",date:"2 sep 2026",who:"Iris van Beek"},
+            {nm:"Scan-resultaten najaar.pdf",type:"PDF",date:"2 sep 2026",who:"Arbitrage Partners"},
+            {nm:"Vergoedingenoverzicht.xlsx",type:"Spreadsheet",date:"20 aug 2026",who:"Penningmeester"},
+            {nm:"Draaiboek open dag.docx",type:"Document",date:"12 aug 2026",who:"Sven Willems"},
+            {nm:"Spelregels 26-27.pdf",type:"PDF",date:"1 aug 2026",who:"NHV"}]}]},
+        "Scheidsrechters":{subtitle:"Alle scheidsrechters en officials van de vereniging.",cta:"Toevoegen",
+          stats:[{ic:"â—",badge:"actief",num:"7",lab:"Actief"},{ic:"ï¼‹",badge:"seizoen",num:"2",lab:"Nieuw dit seizoen"},{ic:"â—Ž",badge:"opleiding",num:"2",lab:"In opleiding"},{ic:"âœ“",badge:"tevredenheid",num:"92%",lab:"Retentie"}],
+          panels:[{type:"table",title:"Alle scheidsrechters",link:"Toevoegen",cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Status",kind:"pill",key:"status"},{label:"Eerstvolgende wedstrijd",kind:"text",key:"next"},{label:"Laatste wedstrijd",kind:"text",key:"last"},{label:"Rapportages",kind:"text",key:"rep"}],rows:[
+            {nm:"Daan Hermans",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"20 sep 2026",last:"12 aug 2026",rep:"6"},
+            {nm:"Femke de Groot",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"27 sep 2026",last:"â€”",rep:"1"},
+            {nm:"Iris van Beek",sub:"CoÃ¶rdinator",niv:"BeNe League",status:"Actief",statusSt:"ok",next:"18 sep 2026",last:"2 sep 2026",rep:"9"},
+            {nm:"Sven Willems",sub:"Scheidsrechter",niv:"Landelijk",status:"Actief",statusSt:"ok",next:"21 sep 2026",last:"5 sep 2026",rep:"4"},
+            {nm:"Noa Jansen",sub:"Jeugdscheidsrechter",niv:"Recreanten",status:"In opleiding",statusSt:"warn",next:"â€”",last:"â€”",rep:"0"},
+            {nm:"Tim Bakker",sub:"Scheidsrechter",niv:"Regionaal",status:"Actief",statusSt:"ok",next:"22 sep 2026",last:"7 sep 2026",rep:"3"}]}]},
+        "Begeleiders":{subtitle:"Wie begeleidt welke scheidsrechters.",cta:"Toevoegen",panels:[
+          {type:"table",title:"Begeleiders",cols:[{label:"Naam",kind:"name"},{label:"Officials",kind:"text",key:"count"},{label:"Laatste rapportage",kind:"text",key:"last"},{label:"Status",kind:"pill",key:"status"}],rows:[
+            {nm:"Iris van Beek",sub:"CoÃ¶rdinator",count:"4 officials",last:"5 sep 2026",status:"Actief",statusSt:"ok"},
+            {nm:"Sven Willems",sub:"Begeleider",count:"3 officials",last:"1 sep 2026",status:"Actief",statusSt:"ok"},
+            {nm:"Mark de Vries",sub:"Begeleider i.o.",count:"1 official",last:"â€”",status:"In opleiding",statusSt:"warn"}]}]},
+        "Activiteiten":{subtitle:"Alle geplande clinics, workshops en acties.",cta:"Activiteit toevoegen",panels:[
+          {type:"acts",title:"Alle activiteiten",link:"",items:[
+            {mk:"#A6CE4E",t:"Clinic gevorderden BeNe-niveau",cat:"Clinic",date:"16 aug 2026",loc:"Sporthal De Valk",who:"Iris van Beek Â· 8 deelnemers",time:"19:00â€“21:00",stt:"Gepland",st:"idle"},
+            {mk:"#A9700C",t:"Evaluatiegesprekken lichting 2025",cat:"Evaluatie",date:"18 sep 2026",loc:"Clubhuis",who:"Arbitragecommissie",time:"20:00â€“22:00",stt:"Bezig",st:"info"},
+            {mk:"#1E5AA8",t:"Workshop spelregels seizoen 26/27",cat:"Workshop",date:"4 okt 2026",loc:"Vergaderzaal 2",who:"Sven Willems",time:"19:30â€“21:00",stt:"Gepland",st:"idle"},
+            {mk:"#B4482E",t:"Open dag: word scheidsrechter",cat:"Wervingsactie",date:"8 nov 2026",loc:"Hoofdveld",who:"Bestuur + vrijwilligers",time:"10:00â€“14:00",stt:"Afgerond",st:"ok"},
+            {mk:"#7A5AF0",t:"Bijscholing spelregelwijzigingen",cat:"Workshop",date:"15 nov 2026",loc:"Online",who:"Alle officials",time:"20:00â€“21:00",stt:"Gepland",st:"idle"}]}]},
+        "Chat":{subtitle:"Communicatie met scheidsrechters en begeleiders.",panels:[
+          {type:"chat",title:"Berichten",threads:[
+            {name:"Daan Hermans",preview:"Top, ik ben er zaterdag bij.",active:true},
+            {name:"Femke de Groot",preview:"Wanneer is de volgende clinic?"},
+            {name:"Arbitragecommissie",preview:"Planning najaar staat klaar."}],
+           messages:[
+            {them:true,text:"Hoi! Kun jij zaterdag H1 â€“ DSS H1 fluiten?",time:"09:12"},
+            {me:true,text:"Ja hoor, dat lukt. Hoe laat moet ik er zijn?",time:"09:15"},
+            {them:true,text:"Graag 30 min van tevoren, dus 14:30.",time:"09:16"},
+            {me:true,text:"Top, ik ben er zaterdag bij.",time:"09:18"}]}]}
+      }},
+    official:{
+      login:{eyebrow:"Officialsportaal",sideTitle:"Jouw wedstrijden en ontwikkeling in Ã©Ã©n overzicht.",
+        sideBody:"Zie je aankomende wedstrijden, geef je beschikbaarheid door en volg hoe je je als official ontwikkelt â€” met feedback uit elke rapportage.",
+        stats:[{n:"12",l:"Wedstrijden dit seizoen"},{n:"3",l:"Komende wedstrijden"},{n:"8.4",l:"Gem. beoordeling"}]},
+      nav:["Dashboard","Mijn wedstrijden","Beschikbaarheid","Ontwikkeling","Rapportages","Clinics","Chat"],
+      beheer:["Instellingen","Account","Support"],
+      demoBadge:"Demo-portaal â€” dit is het persoonlijke portaal van een official (voorbeeld: Daan Hermans).",
+      title:"Welkom terug, Daan",subtitle:"Jouw persoonlijke overzicht als official â€” bijgewerkt per wedstrijd.",cta:"Beschikbaarheid doorgeven",
+      stats:[
+        {ic:"â–§",badge:"seizoen 26/27",num:"12",lab:"Wedstrijden dit seizoen"},
+        {ic:"â—”",badge:"komend",num:"3",lab:"Komende wedstrijden"},
+        {ic:"â–¤",badge:"ontvangen",num:"6",lab:"Rapportages ontvangen"},
+        {ic:"â˜…",badge:"gemiddeld",num:"8.4",lab:"Gem. beoordeling"},
+        {ic:"â—ˆ",badge:"niveau",num:"70%",lab:"Voortgang ontwikkeling"}],
+      panels:[
+        {type:"table",title:"Mijn aankomende wedstrijden",link:"Volledige agenda â†’",
+          cols:[{label:"Datum",kind:"text",key:"date"},{label:"Wedstrijd",kind:"strong",key:"wed"},{label:"Locatie",kind:"text",key:"loc"},
+            {label:"Tijd",kind:"text",key:"time"},{label:"Status",kind:"pill",key:"status"}],
+          rows:[
+            {date:"20 sep 2026",wed:"HV De Valken H1 â€“ DSS H1",loc:"Sporthal De Valk",time:"15:00",status:"Bevestigd",statusSt:"ok"},
+            {date:"27 sep 2026",wed:"Aristos DA1 â€“ De Valken DA1",loc:"Topsporthal Zoetermeer",time:"13:30",status:"Aangevraagd",statusSt:"warn"},
+            {date:"4 okt 2026",wed:"De Valken JA1 â€“ Quintus JA1",loc:"Sporthal De Valk",time:"11:00",status:"Bevestigd",statusSt:"ok"}]},
+        {type:"bars",title:"Mijn ontwikkeling",chip:"5 aandachtspunten",
+          items:[{h:"Spelregels",pct:85},{h:"Positiespel",pct:70},{h:"Communicatie",pct:60},{h:"Wedstrijdmanagement",pct:55}]},
+        {type:"acts",title:"Clinics & workshops voor jou",link:"Alle clinics â†’",
+          items:[
+            {mk:"#A6CE4E",t:"Clinic gevorderden BeNe-niveau",cat:"Clinic",date:"16 aug 2026",loc:"Sporthal De Valk",who:"Begeleider: Iris van Beek",time:"19:00â€“21:00",stt:"Ingeschreven",st:"ok"},
+            {mk:"#1E5AA8",t:"Workshop spelregels seizoen 26/27",cat:"Workshop",date:"4 okt 2026",loc:"Vergaderzaal 2",who:"Verplicht voor Landelijk",time:"19:30â€“21:00",stt:"Gepland",st:"idle"},
+            {mk:"#A9700C",t:"Evaluatiegesprek met begeleider",cat:"Evaluatie",date:"18 sep 2026",loc:"Clubhuis",who:"Iris van Beek",time:"20:00â€“20:30",stt:"Bezig",st:"info"}]}
+      ]},
+    begeleider:{
+      login:{eyebrow:"Begeleidersportaal",sideTitle:"Volg de voortgang van jouw officials.",
+        sideBody:"Plan coachmomenten, dien rapportages in en houd overzicht over de officials die je begeleidt â€” van eerste wedstrijd tot Landelijk niveau.",
+        stats:[{n:"6",l:"Officials in begeleiding"},{n:"4",l:"Coachmomenten gepland"},{n:"11",l:"Rapportages"}]},
+      nav:["Dashboard","Mijn officials","Coachtrajecten","Rapportages","Activiteiten","Chat"],
+      beheer:["Instellingen","Account","Support"],
+      demoBadge:"Demo-portaal â€” dit is het portaal van een begeleider/coach (voorbeeld: Iris van Beek).",
+      title:"Dashboard begeleider",subtitle:"Overzicht van jouw officials en coachtrajecten.",cta:"Nieuwe rapportage",
+      stats:[
+        {ic:"â—",badge:"actief",num:"6",lab:"Officials in begeleiding"},
+        {ic:"â—”",badge:"gepland",num:"4",lab:"Coachmomenten gepland"},
+        {ic:"â–¤",badge:"dit seizoen",num:"11",lab:"Ingediende rapportages"},
+        {ic:"â—ˆ",badge:"gemiddeld",num:"63%",lab:"Gem. voortgang officials"}],
+      panels:[
+        {type:"table",title:"Mijn officials",link:"Alle officials â†’",
+          cols:[{label:"Naam",kind:"name"},{label:"Niveau",kind:"text",key:"niv"},{label:"Laatste rapportage",kind:"text",key:"lastrep"},
+            {label:"Voortgang",kind:"text",key:"prog"},{label:"Volgend coachmoment",kind:"text",key:"nextc"}],
+          rows:[
+            {nm:"Daan Hermans",sub:"Landelijk",niv:"Landelijk",lastrep:"5 sep 2026",prog:"70%",nextc:"18 sep 2026"},
+            {nm:"Femke de Groot",sub:"In opleiding",niv:"Recreanten",lastrep:"â€”",prog:"25%",nextc:"27 sep 2026"},
+            {nm:"Sven Willems",sub:"CoÃ¶rdinator",niv:"Landelijk",lastrep:"1 sep 2026",prog:"80%",nextc:"2 okt 2026"},
+            {nm:"Noa Jansen",sub:"In opleiding",niv:"Recreanten",lastrep:"â€”",prog:"15%",nextc:"â€”"}]},
+        {type:"acts",title:"Geplande coachmomenten",link:"Volledige planning â†’",
+          items:[
+            {mk:"#A6CE4E",t:"Coachmoment Daan Hermans",cat:"Wedstrijdbegeleiding",date:"18 sep 2026",loc:"Sporthal De Valk",who:"H1 â€“ DSS H1",time:"14:30â€“16:30",stt:"Gepland",st:"idle"},
+            {mk:"#A9700C",t:"Evaluatie Femke de Groot",cat:"Evaluatie",date:"27 sep 2026",loc:"Clubhuis",who:"Voortgangsgesprek",time:"12:00â€“12:45",stt:"Bezig",st:"info"},
+            {mk:"#1E5AA8",t:"Coachmoment Sven Willems",cat:"Wedstrijdbegeleiding",date:"2 okt 2026",loc:"Topsporthal",who:"Landelijk niveau",time:"18:00â€“20:00",stt:"Gepland",st:"idle"}]},
+        {type:"bars",title:"Gem. ontwikkeling over jouw officials",chip:"4 pijlers",
+          items:[{h:"Spelregels",pct:68},{h:"Positiespel",pct:61},{h:"Communicatie",pct:59},{h:"Mentale weerbaarheid",pct:52}]}
+      ]},
+    beheer:{
+      login:{eyebrow:"Beheerdersportaal",sideTitle:"Het overzicht voor Arbitrage Partners.",
+        sideBody:"Beheer je aangesloten verenigingen, abonnementen, aanvragen en betalingen â€” het volledige overzicht van het bedrijf op Ã©Ã©n plek."},
+      sections:[
+        {items:["Dashboard"]},
+        {label:"Beheer",items:["Verenigingen","Gebruikers","Aanvragen","Support","Berichten","Documenten"]},
+        {label:"Administratie",items:["Abonnementen","Betalingen"]},
+        {label:"Systeem",items:["Instellingen"]}],
+      dashHidden:[],
+      demoBadge:"Beheerdersportaal â€” intern overzicht voor de eigenaar van Arbitrage Partners.",
+      title:"Beheeroverzicht",subtitle:"Alles rond je verenigingen, abonnementen en aanvragen.",cta:"Vereniging toevoegen",
+      stats:[
+        {ic:"â—",badge:"actief",num:"24",lab:"Aangesloten verenigingen"},
+        {ic:"â˜…",badge:"lopend",num:"18",lab:"Actieve abonnementen"},
+        {ic:"â–¤",badge:"per maand",num:"â‚¬7.410",lab:"Maandelijkse omzet (MRR)"},
+        {ic:"âœ‰",badge:"open",num:"5",lab:"Openstaande aanvragen"},
+        {ic:"â—ˆ",badge:"totaal",num:"1.240",lab:"Officials in beeld"},
+        {ic:"âœ“",badge:"gemiddeld",num:"8.6",lab:"Tevredenheid verenigingen"}],
+      panels:[
+        {type:"table",title:"Verenigingen",link:"Alle verenigingen â†’",cols:[{label:"Vereniging",kind:"name"},{label:"Abonnement",kind:"pill",key:"abo"},{label:"Laatste scan",kind:"text",key:"scan"},{label:"Status",kind:"pill",key:"status"}],rows:[
+          {nm:"HV De Valken",sub:"Zoetermeer",abo:"Grow",aboSt:"info",scan:"2 sep 2026",status:"Actief",statusSt:"ok"},
+          {nm:"DSS Handbal",sub:"Den Haag",abo:"Pro",aboSt:"ok",scan:"18 aug 2026",status:"Actief",statusSt:"ok"},
+          {nm:"Aristos",sub:"Rotterdam",abo:"Start",aboSt:"idle",scan:"â€”",status:"Onboarding",statusSt:"warn"},
+          {nm:"Quintus",sub:"Kwintsheul",abo:"Grow",aboSt:"info",scan:"1 sep 2026",status:"Actief",statusSt:"ok"},
+          {nm:"Hellas",sub:"Den Haag",abo:"â€”",aboSt:"idle",scan:"â€”",status:"Prospect",statusSt:"warn"}]},
+        {type:"table",title:"Recente aanvragen",link:"Alle aanvragen â†’",cols:[{label:"Naam",kind:"name"},{label:"Interesse",kind:"text",key:"interest"},{label:"Datum",kind:"text",key:"date"},{label:"Status",kind:"pill",key:"status"}],rows:[
+          {nm:"Mark Jansen",sub:"HV Athletica",interest:"Arbitrage Scan",date:"10 sep 2026",status:"Nieuw",statusSt:"warn"},
+          {nm:"Lisa Bakker",sub:"SV Nova",interest:"Abonnement Grow",date:"8 sep 2026",status:"In gesprek",statusSt:"info"},
+          {nm:"Peter Smit",sub:"HC Oranje",interest:"Wervingscampagne",date:"5 sep 2026",status:"Afgerond",statusSt:"ok"}]},
+        {type:"bars",title:"Abonnementen per pakket",chip:"18 actief",items:[{h:"Start",pct:33},{h:"Grow",pct:50},{h:"Pro",pct:17}]}],
+      pages:{
+        "Verenigingen":{subtitle:"Beheer je aangesloten verenigingen: toevoegen, verwijderen en custom links aanmaken.",cta:"Vereniging toevoegen",panels:[
+          {type:"table",title:"Verenigingen",link:"Vereniging toevoegen",cols:[{label:"Vereniging",kind:"name"},{label:"Abonnement",kind:"pill",key:"abo"},{label:"Contactpersoon",kind:"text",key:"contact"},{label:"Laatste scan",kind:"text",key:"scan"},{label:"Status",kind:"pill",key:"status"}],rows:[
+            {nm:"HV De Valken",sub:"Zoetermeer",abo:"Grow",aboSt:"info",contact:"Iris van Beek",scan:"2 sep 2026",status:"Actief",statusSt:"ok"},
+            {nm:"DSS Handbal",sub:"Den Haag",abo:"Pro",aboSt:"ok",contact:"Rob Meijer",scan:"18 aug 2026",status:"Actief",statusSt:"ok"},
+            {nm:"Aristos",sub:"Rotterdam",abo:"Start",aboSt:"idle",contact:"Nadia El Amrani",scan:"â€”",status:"Onboarding",statusSt:"warn"},
+            {nm:"Quintus",sub:"Kwintsheul",abo:"Grow",aboSt:"info",contact:"Jeroen Prins",scan:"1 sep 2026",status:"Actief",statusSt:"ok"},
+            {nm:"Hellas",sub:"Den Haag",abo:"â€”",aboSt:"idle",contact:"Sanne Vos",scan:"â€”",status:"Prospect",statusSt:"warn"}]},
+          {type:"note",title:"Custom links",body:"Maak per vereniging een eigen inloglink aan zodat zij direct in hun portaal terechtkomen. In deze demo nog niet actief."}]},
+        "Gebruikers":{subtitle:"Beheer gebruikers: toevoegen, verwijderen en rollen of functies toekennen.",cta:"Gebruiker toevoegen",panels:[
+          {type:"table",title:"Team",link:"Gebruiker toevoegen",cols:[{label:"Naam",kind:"name"},{label:"Rol",kind:"text",key:"rol"},{label:"Rechten",kind:"pill",key:"rights"},{label:"Laatst actief",kind:"text",key:"last"}],rows:[
+            {nm:"Jij (Eigenaar)",sub:"eigenaar@arbitragepartners.nl",rol:"Eigenaar",rights:"Beheerder",rightsSt:"ok",last:"Nu"},
+            {nm:"Tom Verhoef",sub:"tom@arbitragepartners.nl",rol:"Adviseur",rights:"Bewerker",rightsSt:"info",last:"Vandaag"},
+            {nm:"Sanne de Wit",sub:"sanne@arbitragepartners.nl",rol:"Trainer",rights:"Alleen-lezen",rightsSt:"idle",last:"Gisteren"}]}]},
+        "Aanvragen":{subtitle:"Alle binnengekomen aanvragen voor een kennismaking of dienst.",panels:[
+          {type:"table",title:"Aanvragen",cols:[{label:"Naam",kind:"name"},{label:"Interesse",kind:"text",key:"interest"},{label:"Datum",kind:"text",key:"date"},{label:"Status",kind:"pill",key:"status"}],rows:[
+            {nm:"Mark Jansen",sub:"HV Athletica",interest:"Arbitrage Scan",date:"10 sep 2026",status:"Nieuw",statusSt:"warn"},
+            {nm:"Lisa Bakker",sub:"SV Nova",interest:"Abonnement Grow",date:"8 sep 2026",status:"In gesprek",statusSt:"info"},
+            {nm:"Peter Smit",sub:"HC Oranje",interest:"Wervingscampagne",date:"5 sep 2026",status:"Afgerond",statusSt:"ok"},
+            {nm:"Emma de Boer",sub:"HV Spirit",interest:"Official Clinic",date:"3 sep 2026",status:"Nieuw",statusSt:"warn"}]}]},
+        "Support":{subtitle:"Alle supportvragen en berichten uit het contactformulier.",panels:[
+          {type:"table",title:"Berichten",cols:[{label:"Van",kind:"name"},{label:"Onderwerp",kind:"text",key:"subj"},{label:"Datum",kind:"text",key:"date"},{label:"Status",kind:"pill",key:"status"}],rows:[
+            {nm:"Iris van Beek",sub:"HV De Valken",subj:"Vraag over rapportages",date:"11 sep 2026",status:"Open",statusSt:"warn"},
+            {nm:"Rob Meijer",sub:"DSS Handbal",subj:"Inloggen lukt niet",date:"9 sep 2026",status:"In behandeling",statusSt:"info"},
+            {nm:"Contactformulier",sub:"info@sportclub.nl",subj:"Interesse in samenwerking",date:"7 sep 2026",status:"Beantwoord",statusSt:"ok"},
+            {nm:"Contactformulier",sub:"bestuur@hvspirit.nl",subj:"Vraag over de Arbitrage Scan",date:"6 sep 2026",status:"Open",statusSt:"warn"}]}]},
+        "Berichten":{subtitle:"Berichten met verenigingen en je team â€” de chat van het portaal.",panels:[
+          {type:"chat",title:"Berichten",threads:[
+            {name:"HV De Valken",preview:"Bedankt voor het plan!",active:true},
+            {name:"DSS Handbal",preview:"Kunnen we volgende week bellen?"},
+            {name:"Team â€” intern",preview:"Aanvraag Aristos opgepakt."}],
+           messages:[
+            {them:true,text:"Hoi! We hebben het arbitrageplan ontvangen, ziet er top uit.",time:"10:02"},
+            {me:true,text:"Fijn om te horen! Zullen we een moment plannen om het door te nemen?",time:"10:05"},
+            {them:true,text:"Ja graag, volgende week dinsdag?",time:"10:06"},
+            {me:true,text:"Dinsdag 14:00 staat genoteerd.",time:"10:08"}]}]},
+        "Documenten":{subtitle:"Je persoonlijke documenten, en de documenten per vereniging.",cta:"Uploaden",panels:[
+          {type:"table",title:"Mijn documenten",link:"Uploaden",cols:[{label:"Naam",kind:"strong",key:"nm"},{label:"Type",kind:"text",key:"type"},{label:"Bijgewerkt",kind:"text",key:"date"}],rows:[
+            {nm:"Sjabloon arbitrageplan.docx",type:"Document",date:"2 sep 2026"},
+            {nm:"Prijslijst 2026.pdf",type:"PDF",date:"1 aug 2026"},
+            {nm:"Presentatie kennismaking.pptx",type:"Presentatie",date:"20 aug 2026"}]},
+          {type:"clubdocs",title:"Documenten per vereniging",clubs:["HV De Valken","DSS Handbal","Aristos","Quintus"],docs:{
+            "HV De Valken":[{nm:"Arbitrageplan 26-27.pdf",type:"PDF",date:"2 sep 2026",who:"Iris van Beek"},{nm:"Scan-resultaten najaar.pdf",type:"PDF",date:"2 sep 2026",who:"Arbitrage Partners"},{nm:"Contract Grow.pdf",type:"PDF",date:"1 aug 2026",who:"Arbitrage Partners"}],
+            "DSS Handbal":[{nm:"Arbitrageplan 26-27.pdf",type:"PDF",date:"18 aug 2026",who:"Rob Meijer"},{nm:"Contract Pro.pdf",type:"PDF",date:"1 jul 2026",who:"Arbitrage Partners"}],
+            "Aristos":[{nm:"Onboarding checklist.docx",type:"Document",date:"5 sep 2026",who:"Nadia El Amrani"}],
+            "Quintus":[{nm:"Arbitrageplan 26-27.pdf",type:"PDF",date:"1 sep 2026",who:"Jeroen Prins"},{nm:"Clinic draaiboek.docx",type:"Document",date:"20 aug 2026",who:"Arbitrage Partners"}]}}]},
+        "Abonnementen":{subtitle:"Overzicht van alle lopende abonnementen en de groei daarvan.",
+          stats:[{ic:"â˜…",badge:"lopend",num:"18",lab:"Actieve abonnementen"},{ic:"â–¤",badge:"per maand",num:"â‚¬7.410",lab:"Maandelijkse omzet (MRR)"},{ic:"â—ˆ",badge:"dit kwartaal",num:"+3",lab:"Netto groei"},{ic:"â†»",badge:"dit jaar",num:"1",lab:"Opzeggingen"}],
+          panels:[
+            {type:"table",title:"Pakketten",cols:[{label:"Pakket",kind:"strong",key:"nm"},{label:"Prijs",kind:"text",key:"price"},{label:"Verenigingen",kind:"text",key:"count"},{label:"Omzet/maand",kind:"text",key:"rev"}],rows:[
+              {nm:"Start",price:"â‚¬195 / maand",count:"6",rev:"â‚¬1.170"},
+              {nm:"Grow",price:"â‚¬395 / maand",count:"9",rev:"â‚¬3.555"},
+              {nm:"Pro",price:"â‚¬695 / maand",count:"3",rev:"â‚¬2.085"}]},
+            {type:"bars",title:"Verdeling per pakket",chip:"18 actief",items:[{h:"Start",pct:33},{h:"Grow",pct:50},{h:"Pro",pct:17}]}]},
+        "Betalingen":{subtitle:"Alle betalingen: voldaan, nog openstaand of ingepland.",panels:[
+          {type:"table",title:"Facturen",cols:[{label:"Vereniging",kind:"name"},{label:"Bedrag",kind:"text",key:"amount"},{label:"Datum",kind:"text",key:"date"},{label:"Status",kind:"pill",key:"status"}],rows:[
+            {nm:"HV De Valken",sub:"Factuur #2026-041",amount:"â‚¬395",date:"1 sep 2026",status:"Betaald",statusSt:"ok"},
+            {nm:"DSS Handbal",sub:"Factuur #2026-040",amount:"â‚¬695",date:"1 sep 2026",status:"Betaald",statusSt:"ok"},
+            {nm:"Aristos",sub:"Factuur #2026-039",amount:"â‚¬195",date:"1 sep 2026",status:"Open",statusSt:"warn"},
+            {nm:"Quintus",sub:"Factuur #2026-042",amount:"â‚¬395",date:"1 okt 2026",status:"Ingepland",statusSt:"info"},
+            {nm:"Hellas",sub:"Factuur #2026-043",amount:"â‚¬195",date:"1 okt 2026",status:"Ingepland",statusSt:"info"}]}]},
+        "Instellingen":{subtitle:"Pas hier de instellingen van je Arbitrage Partners-account aan.",panels:[
+          {type:"note",title:"Instellingen",body:"Deze pagina krijgt subbladen voor bedrijfsgegevens, facturatie, huisstijl, e-mails en integraties. De precieze inhoud werken we uit in de echte versie."}]}
+      }}
+  }
+};
+const PRESETS = [
+  {navy:"#0B1E33",lime:"#A6CE4E",ground:"#F3F5F1",ink:"#0B1E33"},
+  {navy:"#101C3A",lime:"#F2B705",ground:"#F5F3ED",ink:"#101C3A"},
+  {navy:"#0E2A2A",lime:"#3DD9A0",ground:"#EEF4F1",ink:"#0E2A2A"},
+  {navy:"#1C1233",lime:"#B98BF0",ground:"#F3F0F7",ink:"#1C1233"},
+  {navy:"#2A1414",lime:"#F07A4B",ground:"#F6F0EC",ink:"#2A1414"}];
+const SIDE_ICONS={Dashboard:"â–¦","Arbitrage scan":"â—”",Arbitrageplan:"â—±",Documenten:"â–¤",Scheidsrechters:"â—",Begeleiders:"â—ˆ",Activiteiten:"â–§",Chat:"âœ‰",
+  Instellingen:"âš™",Account:"â—Ž",Gebruikers:"â—‘",Support:"?",Abonnement:"â˜…",Betalingen:"â–¢",
+  "Mijn wedstrijden":"â–§",Beschikbaarheid:"â—”",Ontwikkeling:"â—ˆ",Rapportages:"â–¤",Clinics:"â—","Mijn officials":"â—",Coachtrajecten:"â—ˆ",
+  Verenigingen:"â—",Abonnementen:"â˜…",Aanvragen:"âœ‰",Berichten:"âœ†",Documenten:"â–¤",Support:"?"};
+const BEHEER_ITEMS=new Set(["Instellingen","Account","Gebruikers","Support","Abonnement","Betalingen"]);
+
+const KEY="ap_demo_v2";
+let S=load(), currentPortal="vereniging", isAdmin=false, editing=false, activePage=null, selectedService=0;
+function deepMerge(base,ov){const o=structuredClone(base);for(const k in ov){if(ov[k]&&typeof ov[k]==="object"&&!Array.isArray(ov[k])&&base[k]&&typeof base[k]==="object"&&!Array.isArray(base[k]))o[k]=deepMerge(base[k],ov[k]);else o[k]=ov[k];}return o;}
+function migrate(s){if(s&&s.nav&&Array.isArray(s.nav.links))s.nav.links=s.nav.links.map((l,i)=>{
+    if(typeof l==="string")l={label:l,anchor:(DEFAULTS.nav.links[i]||{}).anchor||l.toLowerCase().replace(/[^a-z0-9]+/g,"-")};
+    if(l.anchor==="over-ons")l={label:l.label,page:"about"};
+    if(l.page==="scan")l={label:l.label,anchor:"scan"};
+    if(l.anchor==="diensten")l={label:l.label,page:"diensten"};
+    return l;}).filter(l=>l.anchor!=="abonnementen");
+  if(s.chooser&&Array.isArray(s.chooser.cards))s.chooser.cards=s.chooser.cards.filter(c=>c.portal!=="beheer").map(c=>{const d=DEFAULTS.chooser.cards.find(x=>x.portal===c.portal);return d?Object.assign({},c,{btn:d.btn}):c;});
+  if(s.portals&&s.portals.beheer)s.portals.beheer.sections=structuredClone(DEFAULTS.portals.beheer.sections);
+  if(s.services&&Array.isArray(s.services.items))s.services.items=DEFAULTS.services.items.map((d,i)=>Object.assign({},d,s.services.items[i]||{}));
+  return s;}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return s?migrate(deepMerge(DEFAULTS,s)):structuredClone(DEFAULTS);}catch(e){return structuredClone(DEFAULTS);}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function getPath(p){return p.split(".").reduce((o,k)=>o==null?o:o[k],S);}
+function setPath(p,v){const ks=p.split(".");let o=S;for(let i=0;i<ks.length-1;i++)o=o[ks[i]];o[ks[ks.length-1]]=v;}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function applyTheme(){const t=S.theme,r=document.documentElement.style;
+  r.setProperty("--navy",t.navy);r.setProperty("--lime",t.lime);r.setProperty("--ground",t.ground);r.setProperty("--ink",t.ink);
+  document.querySelectorAll("[data-color]").forEach(i=>{i.value=t[i.dataset.color];const h=document.getElementById("hex-"+i.dataset.color);if(h)h.textContent=t[i.dataset.color].toUpperCase();});}
+
+/* ---- site renderers ---- */
+function renderLinks(){const html=S.nav.links.map((l,i)=>l.page?`<a href="#" data-go="${l.page}" data-edit="nav.links.${i}.label">${esc(l.label)}</a>`:`<a href="#${l.anchor}" data-anchor="${l.anchor}" data-edit="nav.links.${i}.label">${esc(l.label)}</a>`).join("");document.querySelectorAll(".js-links").forEach(el=>el.innerHTML=html);}
+function renderHeroFeats(){document.getElementById("heroFeats").innerHTML=S.hero.feats.map((f,i)=>`<div class="f"><span class="ic">${esc(f.ic)}</span><span data-edit="hero.feats.${i}.t">${esc(f.t)}</span></div>`).join("");}
+function renderProblems(){document.getElementById("probGrid").innerHTML=S.problems.items.map((p,i)=>`<div class="prob"><div class="ic">${esc(p.ic)}</div><p data-edit="problems.items.${i}.t">${esc(p.t)}</p></div>`).join("");}
+function renderPillars(){document.getElementById("pillarGrid").innerHTML=S.pillars.items.map((p,i)=>`<div class="pillar"><div class="num">0${i+1}</div><div class="tag" data-edit="pillars.items.${i}.tag">${esc(p.tag)}</div><h3 data-edit="pillars.items.${i}.h">${esc(p.h)}</h3><p data-edit="pillars.items.${i}.p">${esc(p.p)}</p></div>`).join("");}
+let dienstFilter="eenmalig", interests=[], selectedClub=null;
+function hasInterest(l){return interests.indexOf(l)!==-1;}
+function addInterest(l){if(!hasInterest(l))interests.push(l);}
+function removeInterest(l){interests=interests.filter(x=>x!==l);}
+function toggleInterest(l){hasInterest(l)?removeInterest(l):addInterest(l);}
+function serviceCardsHTML(){return `<div class="svc-grid">`+S.services.items.map((s,i)=>{const sel=hasInterest(s.h);
+  return `<div class="svc"><div class="svc-hd"><div class="ic">${esc(s.ic)}</div><button class="int-toggle ${sel?"on":""}" data-interest="${escAttr(s.h)}">${sel?"âœ“ Toegevoegd":"+ Interesse"}</button></div>
+   <h3 data-edit="services.items.${i}.h">${esc(s.h)}</h3><p data-edit="services.items.${i}.p">${esc(s.p)}</p>${s.price?`<div class="price" data-edit="services.items.${i}.price">${esc(s.price)}</div>`:""}<a class="more" href="#" data-service="${i}">Meer informatie â†’</a></div>`;}).join("")+`</div>`;}
+function tiersHTML(){return `<div class="subs-grid">`+S.subs.tiers.map((t,i)=>`<div class="tier ${t.featured?"featured":""}">${t.featured?`<div class="tbadge" data-edit="subs.featuredLabel">${esc(S.subs.featuredLabel)}</div>`:""}
+  <h3 data-edit="subs.tiers.${i}.name">${esc(t.name)}</h3>
+  <div class="price"><span data-edit="subs.tiers.${i}.price">${esc(t.price)}</span> <span data-edit="subs.tiers.${i}.per">${esc(t.per)}</span></div>
+  <p class="tag" data-edit="subs.tiers.${i}.tagline">${esc(t.tagline)}</p>
+  <ul class="flist">${t.features.map((f,j)=>`<li><span class="ck">âœ“</span><span data-edit="subs.tiers.${i}.features.${j}">${esc(f)}</span></li>`).join("")}</ul>
+  <a class="btn ${t.featured?"btn-lime":"btn-outline"}" data-go="plan" data-add-interest="Abonnement ${escAttr(t.name)}" data-edit="subs.tiers.${i}.cta">${esc(t.cta)}</a></div>`).join("")+`</div>`;}
+function renderInterestBar(){const html=interests.length?`<div class="int-bar"><span>${interests.length} ${interests.length===1?"interesse":"interesses"} geselecteerd</span><button class="btn btn-lime btn-sm" data-go="plan">Doorgeven â†’</button></div>`:"";
+  document.querySelectorAll(".js-intbar").forEach(el=>el.innerHTML=html);}
+function renderDiensten(){
+  const home=document.getElementById("dienstenContent");
+  if(home)home.innerHTML=serviceCardsHTML()+`<div class="center-cta" style="margin-top:26px"><a class="btn btn-outline" data-go="diensten" data-edit="services.teaserBtn">${esc(S.services.teaserBtn)}</a></div>`;
+  const page=document.getElementById("dienstenPageBody");
+  if(page)page.innerHTML=
+    `<div class="dpart"><h2 class="dsub" data-edit="services.tabEenmalig">${esc(S.services.tabEenmalig)}</h2>${serviceCardsHTML()}</div>`+
+    `<div class="dpart"><span class="eyebrow" data-edit="subs.eyebrow">${esc(S.subs.eyebrow)}</span><h2 class="dsub" style="margin-top:6px" data-edit="subs.title">${esc(S.subs.title)}</h2><p class="dsub-p" data-edit="subs.subtitle">${esc(S.subs.subtitle)}</p>${tiersHTML()}<p class="center-note" data-edit="subs.note">${esc(S.subs.note)}</p></div>`+
+    `<div class="lower" style="margin:0"><div><span class="eyebrow" style="color:var(--lime)" data-edit="lower.eyebrow">${esc(S.lower.eyebrow)}</span><h2 style="margin-top:10px" data-edit="lower.title">${esc(S.lower.title)}</h2><p data-edit="lower.body">${esc(S.lower.body)}</p></div><div class="r"><a class="btn btn-lime" data-go="scan" data-edit="lower.btn">${esc(S.lower.btn)}</a></div></div>`;
+  renderInterestBar();refreshEditState();}
+function renderAbout(){document.getElementById("aboutStats").innerHTML=S.about.stats.map((s,i)=>`<div class="as"><div class="n" data-edit="about.stats.${i}.n">${esc(s.n)}</div><div class="l" data-edit="about.stats.${i}.l">${esc(s.l)}</div></div>`).join("");
+  document.getElementById("aboutValues").innerHTML=S.about.values.map((v,i)=>`<div class="svc"><div class="ic">${esc(v.ic)}</div><h3 data-edit="about.values.${i}.h">${esc(v.h)}</h3><p data-edit="about.values.${i}.p">${esc(v.p)}</p></div>`).join("");
+  const pr=document.getElementById("aboutProcess");if(pr)pr.innerHTML=S.about.process.map((p,i)=>`<div class="proc"><div class="n">${esc(p.n)}</div><h3 data-edit="about.process.${i}.h">${esc(p.h)}</h3><p data-edit="about.process.${i}.p">${esc(p.p)}</p></div>`).join("");
+  const bn=document.getElementById("aboutBenefits");if(bn)bn.innerHTML=S.about.benefits.map((b,i)=>`<div class="ben"><span class="ck">âœ“</span><span class="t" data-edit="about.benefits.${i}">${esc(b)}</span></div>`).join("");}
+function renderContact(){document.getElementById("contactList").innerHTML=S.contact.items.map((c,i)=>`<li><span class="ic">${esc(c.ic)}</span><span><span class="k" data-edit="contact.items.${i}.k">${esc(c.k)}</span><br><span class="v" data-edit="contact.items.${i}.v">${esc(c.v)}</span></span></li>`).join("");}
+function renderChooser(){document.getElementById("chooserGrid").innerHTML=S.chooser.cards.map((c,i)=>`<div class="pcard"><div class="ic">${esc(c.ic)}</div><div class="eyebrow" data-edit="chooser.cards.${i}.tag">${esc(c.tag)}</div><h3 data-edit="chooser.cards.${i}.h">${esc(c.h)}</h3><p data-edit="chooser.cards.${i}.p">${esc(c.p)}</p><a class="btn btn-lime" data-go="login" data-portal="${c.portal}" data-edit="chooser.cards.${i}.btn">${esc(c.btn)}</a></div>`).join("");}
+
+/* ---- login (portal-specific) ---- */
+function renderLogin(){const b=`portals.${currentPortal}.login`,L=S.portals[currentPortal].login;
+  document.getElementById("loginEyebrow").outerHTML=`<span class="eyebrow" id="loginEyebrow" data-edit="${b}.eyebrow">${esc(L.eyebrow)}</span>`;
+  document.getElementById("loginSideTitle").outerHTML=`<h2 id="loginSideTitle" data-edit="${b}.sideTitle">${esc(L.sideTitle)}</h2>`;
+  document.getElementById("loginSideBody").outerHTML=`<p id="loginSideBody" data-edit="${b}.sideBody">${esc(L.sideBody)}</p>`;
+  const ls=document.getElementById("loginStats");ls.innerHTML="";ls.hidden=true;
+  const box=document.getElementById("adminBox");
+  if(currentPortal==="beheer"){box.hidden=false;box.innerHTML=`<label class="admin-lbl">Beheerderscode</label><input id="adminCode" placeholder="Voer de beheerderscode in" autocomplete="off"><div class="hintc">Demo-code: <b>AP-BEHEER</b></div>`;}
+  else{box.hidden=true;box.innerHTML="";}
+  refreshEditState();}
+
+/* ---- dashboard (generic) ---- */
+function panelHTML(p,b){
+  if(p.type==="pillars"||p.type==="bars"){const isBars=p.type==="bars";
+    const body=p.items.map((it,j)=>{const ib=`${b}.items.${j}`;const w=parseInt(it.pct)||0;
+      if(isBars)return `<div class="pb"><div class="top"><span class="h" data-edit="${ib}.h">${esc(it.h)}</span><span data-edit="${ib}.pct" data-suffix="%">${esc(it.pct)}%</span></div><div class="bar"><i style="width:${w}%"></i></div><div class="cap">Voortgang</div></div>`;
+      return `<div class="pb"><div class="top"><span>${esc(it.n)}</span><span data-edit="${ib}.pct" data-suffix="%">${esc(it.pct)}%</span></div><h4 data-edit="${ib}.h">${esc(it.h)}</h4><div class="bar"><i style="width:${w}%"></i></div><div class="cap">Voortgang dit seizoen</div></div>`;}).join("");
+    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.chip?`<span class="chip" data-edit="${b}.chip">${esc(p.chip)}</span>`:""}</div><div class="pillbars${isBars?" bars":""}">${body}</div></div>`;}
+  if(p.type==="table"){
+    const head=p.cols.map((c,ci)=>`<th data-edit="${b}.cols.${ci}.label">${esc(c.label)}</th>`).join("");
+    const body=p.rows.map((r,ri)=>{const rb=`${b}.rows.${ri}`;
+      const tds=p.cols.map(c=>{if(c.kind==="name")return `<td><div class="nm" data-edit="${rb}.nm">${esc(r.nm)}</div><div class="sub" data-edit="${rb}.sub">${esc(r.sub)}</div></td>`;
+        if(c.kind==="strong")return `<td><span class="nm" data-edit="${rb}.${c.key}">${esc(r[c.key])}</span></td>`;
+        if(c.kind==="pill")return `<td><span class="pill ${r[c.key+"St"]||"idle"}" data-edit="${rb}.${c.key}">${esc(r[c.key])}</span></td>`;
+        return `<td data-edit="${rb}.${c.key}">${esc(r[c.key])}</td>`;}).join("");
+      return `<tr>${tds}</tr>`;}).join("");
+    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="tbl-scroll"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;}
+  if(p.type==="acts"){
+    const body=p.items.map((a,j)=>{const ib=`${b}.items.${j}`;
+      return `<div class="act"><span class="mk" style="background:${esc(a.mk)}"></span><div class="ai"><div class="t" data-edit="${ib}.t">${esc(a.t)}</div><div class="meta"><span data-edit="${ib}.cat">${esc(a.cat)}</span> Â· <span data-edit="${ib}.date">${esc(a.date)}</span></div><div class="meta2">â— <span data-edit="${ib}.loc">${esc(a.loc)}</span> Â· <span data-edit="${ib}.who">${esc(a.who)}</span></div></div><div class="rt"><span class="pill ${a.st||"idle"}" data-edit="${ib}.stt">${esc(a.stt)}</span><span class="tm" data-edit="${ib}.time">${esc(a.time)}</span></div></div>`;}).join("");
+    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3>${p.link?`<a class="link" data-edit="${b}.link">${esc(p.link)}</a>`:""}</div><div class="acts">${body}</div></div>`;}
+  if(p.type==="note")return `<div class="panel"><div style="padding:24px">${p.title?`<h3 style="margin-bottom:8px" data-edit="${b}.title">${esc(p.title)}</h3>`:""}<p style="color:var(--muted);font-size:14.5px;line-height:1.6" data-edit="${b}.body">${esc(p.body)}</p></div></div>`;
+  if(p.type==="chat")return chatPanelHTML(p,b);
+  if(p.type==="clubdocs"){const clubs=p.clubs||[],sel=(selectedClub&&clubs.includes(selectedClub))?selectedClub:clubs[0];
+    const rows=(p.docs&&p.docs[sel])||[];
+    const chips=clubs.map(c=>`<div class="chip-sel ${c===sel?"sel":""}" data-club="${escAttr(c)}">${esc(c)}</div>`).join("");
+    const body=rows.map(r=>`<tr><td><span class="nm">${esc(r.nm)}</span></td><td>${esc(r.type)}</td><td>${esc(r.date)}</td><td>${esc(r.who||"")}</td></tr>`).join("");
+    return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title)}</h3></div><div style="padding:16px 22px 4px"><div class="chips">${chips}</div></div><div class="tbl-scroll"><table class="tbl"><thead><tr><th>Naam</th><th>Type</th><th>Bijgewerkt</th><th>Door</th></tr></thead><tbody>${body}</tbody></table></div></div>`;}
+  return "";}
+function chatPanelHTML(p,b){
+  const threads=(p.threads||[]).map((t,i)=>`<div class="chat-thread ${t.active?"active":""}"><div class="nm" data-edit="${b}.threads.${i}.name">${esc(t.name)}</div><div class="pv" data-edit="${b}.threads.${i}.preview">${esc(t.preview)}</div></div>`).join("");
+  const msgs=(p.messages||[]).map((m,i)=>`<div class="msg ${m.me?"me":"them"}"><span data-edit="${b}.messages.${i}.text">${esc(m.text)}</span><span class="tm">${esc(m.time)}</span></div>`).join("");
+  return `<div class="panel"><div class="phd"><h3 data-edit="${b}.title">${esc(p.title||"Berichten")}</h3></div><div class="chatwrap"><div class="chat-threads">${threads}</div><div style="display:flex;flex-direction:column;min-width:0"><div class="chat-msgs">${msgs}</div><div class="chat-input"><input placeholder="Typ een berichtâ€¦"><button class="btn btn-lime">Verstuur</button></div></div></div></div>`;}
+
+function adminPanelHTML(){const a=S.admin;
+  const head=a.cols.map((c,ci)=>`<th data-edit="admin.cols.${ci}.label">${esc(c.label)}</th>`).join("");
+  const body=a.rows.map((r,ri)=>{const rb=`admin.rows.${ri}`;
+    const tds=a.cols.map(c=>{if(c.kind==="name")return `<td><div class="nm" data-edit="${rb}.nm">${esc(r.nm)}</div><div class="sub" data-edit="${rb}.sub">${esc(r.sub)}</div></td>`;
+      if(c.kind==="pill")return `<td><span class="pill ${r[c.key+"St"]||"idle"}" data-edit="${rb}.${c.key}">${esc(r[c.key])}</span></td>`;
+      return `<td data-edit="${rb}.${c.key}">${esc(r[c.key])}</td>`;}).join("");
+    return `<tr>${tds}</tr>`;}).join("");
+  return `<div class="panel admin"><div class="phd"><h3 data-edit="admin.title">${esc(a.title)}</h3><a class="link" data-edit="admin.link">${esc(a.link)}</a></div><div class="tbl-scroll"><table class="tbl"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;}
+
+function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return;const b=`portals.${key}`;
+  const useSec=Array.isArray(P.sections);
+  const allItems=useSec?P.sections.flatMap(s=>s.items):P.nav;
+  const overview=useSec?P.sections[0].items[0]:P.nav[0];
+  if(activePage!=="__profile"&&!allItems.includes(activePage))activePage=overview;
+  const pr=S.profile,avStyle=pr.avatar?`style="background-image:url(${pr.avatar})"`:"",avInit=pr.avatar?"":esc((pr.name||"?").charAt(0).toUpperCase());
+  const profileBlock=`<div class="side-profile" data-profile><div class="av" ${avStyle}>${avInit}</div><div class="pi"><div class="nm" data-edit="profile.name">${esc(pr.name)}</div><div class="st">Ingelogd</div></div><button class="lg" data-go="site" title="Uitloggen">â»</button></div>`;
+  let sideNav;
+  if(useSec)sideNav=P.sections.map((sec,si)=>{
+    const lbl=sec.label?`<div class="navlabel"><span data-edit="${b}.sections.${si}.label">${esc(sec.label)}</span></div>`:"";
+    return lbl+sec.items.map((n,ii)=>`<a href="#" data-page="${escAttr(n)}" class="${n===activePage?"active":""}"><span class="ic">${SIDE_ICONS[n]||"â€¢"}</span><span data-edit="${b}.sections.${si}.items.${ii}">${esc(n)}</span></a>`).join("");
+  }).join("");
+  else sideNav=P.nav.map((n,i)=>`<a href="#" data-page="${escAttr(n)}" class="${n===activePage?"active":""}"><span class="ic">${SIDE_ICONS[n]||"â€¢"}</span><span data-edit="${b}.nav.${i}">${esc(n)}</span></a>`).join("");
+  document.getElementById("dashSide").innerHTML=
+    `<div class="logo"><span class="ring" data-img="logo.img"></span><span class="lt" data-edit="logo.line1d">ARBITRAGE<small data-edit="logo.line2d">PARTNERS</small></span></div>
+     <div class="side-scroll">${sideNav}</div>
+     ${profileBlock}`;
+  document.getElementById("dashMain").innerHTML=dashMainHTML(key,P,b,overview);
+  renderImages();refreshEditState();window.scrollTo(0,0);}
+function dashMainHTML(key,P,b,overview){
+  const logout=`<button class="btn btn-outline" data-go="site">Uitloggen</button>`;
+  if(activePage==="__profile")return profileHTML(key,logout);
+  if(activePage===overview){
+    if(key==="beheer")return beheerOverviewHTML(P,b,logout);
+    return `<div class="hd"><div><h1 data-edit="${b}.title">${esc(P.title)}</h1><p data-edit="${b}.subtitle">${esc(P.subtitle)}</p></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-outline" data-edit="${b}.cta">${esc(P.cta)}</a>${logout}</div></div>`+
+      statGridHTML(P.stats,b)+P.panels.map((p,pi)=>panelHTML(p,`${b}.panels.${pi}`)).join("");
+  }
+  const pg=(P.pages||{})[activePage],pb=`${b}.pages.${activePage}`;
+  const hd=`<div class="hd"><div><h1>${esc(activePage)}</h1>${pg&&pg.subtitle?`<p data-edit="${pb}.subtitle">${esc(pg.subtitle)}</p>`:""}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${pg&&pg.cta?`<a class="btn btn-outline" data-edit="${pb}.cta">${esc(pg.cta)}</a>`:""}${logout}</div></div>`;
+  if(!pg)return hd+`<div class="panel"><div style="padding:26px"><p style="color:var(--muted)">Deze pagina wordt binnenkort ingericht.</p></div></div>`;
+  return hd+(pg.stats?statGridHTML(pg.stats,pb):"")+(pg.panels||[]).map((p,pi)=>panelHTML(p,`${pb}.panels.${pi}`)).join("");}
+const ROLE_MAP={vereniging:"Verenigingsbeheerder",official:"Official",begeleider:"Begeleider",beheer:"Eigenaar / Beheerder"};
+const PORTAL_NAME={vereniging:"Verenigingsportaal",official:"Officialsportaal",begeleider:"Begeleidersportaal",beheer:"Beheerdersportaal"};
+const ROLE_DESC={
+  vereniging:"Als verenigingsbeheerder beheer je de arbitrageorganisatie van je vereniging: scheidsrechters, begeleiders, activiteiten en het arbitrageplan.",
+  official:"Als official beheer je je eigen wedstrijden, beschikbaarheid en ontwikkeling.",
+  begeleider:"Als begeleider volg je de voortgang van je officials en plan je coachtrajecten.",
+  beheer:"Als eigenaar/beheerder van Arbitrage Partners heb je volledige toegang: verenigingen, gebruikers, abonnementen, betalingen en instellingen."};
+function profileHTML(key,logout){const pr=S.profile,role=ROLE_MAP[key]||"Gebruiker",portal=PORTAL_NAME[key]||"het portaal";
+  const av=pr.avatar?`style="background-image:url(${pr.avatar})"`:"",init=pr.avatar?"":esc((pr.name||"?").charAt(0).toUpperCase());
+  const row=(l,v,path)=>`<tr><td style="color:var(--muted);width:190px">${l}</td><td${path?` data-edit="${path}"`:""}>${esc(v)}</td></tr>`;
+  return `<div class="hd"><div><h1>Mijn profiel</h1><p>Je gegevens en rol binnen ${esc(portal)}.</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${logout}</div></div>
+    <div class="panel"><div class="prof-hero"><div class="prof-av" ${av}>${init}</div>
+      <div><div class="prof-nm" data-edit="profile.name">${esc(pr.name)}</div><div class="prof-role">${esc(role)} Â· ${esc(portal)}</div></div></div></div>
+    <div class="panel"><div class="phd"><h3>Persoonlijke gegevens</h3></div><div class="tbl-scroll"><table class="tbl"><tbody>
+      ${row("Naam",pr.name,"profile.name")}${row("E-mailadres",pr.email,"profile.email")}${row("Telefoon",pr.phone,"profile.phone")}
+      ${row("Rol",role)}${row("Portaal",portal)}${row("Lid sinds",pr.since,"profile.since")}</tbody></table></div></div>
+    <div class="panel"><div style="padding:24px"><h3 style="margin-bottom:8px">Rol &amp; rechten</h3><p style="color:var(--muted);font-size:14.5px;line-height:1.6">${esc(ROLE_DESC[key]||"")}</p></div></div>`;}
+let dashCustomOpen=false;
+function beheerOverviewHTML(P,b,logout){
+  const hidden=P.dashHidden||[];
+  const widgets=[
+    {key:"stats",label:"Kerncijfers",html:()=>statGridHTML(P.stats,b)},
+    {key:"verenigingen",label:"Verenigingen",html:()=>panelHTML(P.panels[0],`${b}.panels.0`)},
+    {key:"aanvragen",label:"Recente aanvragen",html:()=>panelHTML(P.panels[1],`${b}.panels.1`)},
+    {key:"abonnementen",label:"Abonnementen per pakket",html:()=>panelHTML(P.panels[2],`${b}.panels.2`)}];
+  let html=`<div class="hd"><div><h1 data-edit="${b}.title">${esc(P.title)}</h1><p data-edit="${b}.subtitle">${esc(P.subtitle)}</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-outline" data-dashcustom>âš™ Pas dashboard aan</button>${logout}</div></div>`;
+  if(dashCustomOpen)html+=`<div class="panel"><div style="padding:18px 22px"><div style="font-weight:700;margin-bottom:12px;font-family:var(--disp)">Kies wat je op je dashboard ziet</div><div class="wtoggles">`+
+    widgets.map(w=>`<label class="wtoggle"><input type="checkbox" data-widget="${w.key}" ${hidden.includes(w.key)?"":"checked"}> ${esc(w.label)}</label>`).join("")+`</div></div></div>`;
+  const shown=widgets.filter(w=>!hidden.includes(w.key));
+  html+=shown.length?shown.map(w=>w.html()).join(""):`<div class="panel"><div style="padding:26px"><p style="color:var(--muted)">Alle onderdelen zijn verborgen. Klik op â€œPas dashboard aanâ€ om ze weer te tonen.</p></div></div>`;
+  return html;}
+
+function statGridHTML(stats,b){
+  const tile=(s,i)=>`<div class="tile"><div class="row1"><span class="ic">${esc(s.ic)}</span><span class="badge" data-edit="${b}.stats.${i}.badge">${esc(s.badge)}</span></div><div class="num" data-edit="${b}.stats.${i}.num">${esc(s.num)}</div><div class="lab" data-edit="${b}.stats.${i}.lab">${esc(s.lab)}</div></div>`;
+  if(stats.length===8){let cols="";for(let c=0;c<4;c++)cols+=`<div class="stat-col">${tile(stats[c*2],c*2)}${tile(stats[c*2+1],c*2+1)}</div>`;return `<div class="stat-grid">${cols}</div>`;}
+  return `<div class="stat-grid flow">${stats.map((s,i)=>tile(s,i)).join("")}</div>`;}
+
+/* ---- logo & images ---- */
+function renderLogoPrev(){document.getElementById("logoPrev").innerHTML=esc(S.logo.line1)+`<small>${esc(S.logo.line2)}</small>`;
+  const ring=document.getElementById("logoRing");ring.style.backgroundImage=S.logo.img?`url(${S.logo.img})`:"none";ring.style.borderColor=S.logo.img?"transparent":"var(--lime)";}
+function renderImages(){
+  document.querySelectorAll("[data-img='logo.img']").forEach(el=>{if(S.logo.img){el.style.backgroundImage=`url(${S.logo.img})`;el.style.border="none";}else{el.style.backgroundImage="none";el.style.border="3px solid var(--lime)";el.style.borderRightColor="transparent";}});
+  document.querySelectorAll(".ed-img[data-img]").forEach(el=>{const v=getPath(el.dataset.img);if(v)el.style.backgroundImage=`linear-gradient(0deg,rgba(0,0,0,.05),rgba(0,0,0,.05)),url(${v})`;});
+  renderLogoPrev();}
+
+function renderAll(){applyTheme();renderLinks();renderHeroFeats();renderProblems();renderPillars();renderDiensten();renderAbout();renderContact();renderChooser();renderLogin();renderDashboard();renderImages();refreshEditState();}
+
+/* ---- editing ---- */
+function refreshEditState(){document.querySelectorAll("[data-edit]").forEach(el=>el.contentEditable=editing);}
+function setEditing(on){editing=on;document.body.classList.toggle("editing",on);refreshEditState();
+  const btn=document.getElementById("editToggle");btn.classList.toggle("active",on);btn.textContent=on?"âœ“ Klaar met bewerken":"âœŽ Bewerken";
+  document.getElementById("editHint").textContent=on?"Klik op een tekst om te wijzigen Â· klik op afbeeldingen om ze te vervangen":"Zet bewerken aan om teksten & kleuren te wijzigen";}
+document.addEventListener("focusout",e=>{const el=e.target.closest("[data-edit]");if(!el||!editing)return;
+  let v=el.textContent.trim();if(el.dataset.suffix)v=v.replace(el.dataset.suffix,"").trim();
+  setPath(el.dataset.edit,v);save();
+  if(el.dataset.edit.endsWith(".pct")){renderDashboard();}
+  if(el.dataset.edit.startsWith("logo.line"))renderLogoPrev();});
+document.addEventListener("keydown",e=>{if(editing&&e.key==="Enter"&&e.target.closest("[data-edit]")&&!e.shiftKey){e.preventDefault();e.target.blur();}});
+
+/* image swap */
+let imgTarget=null;const imgInput=document.createElement("input");imgInput.type="file";imgInput.accept="image/*";
+document.addEventListener("click",e=>{const im=e.target.closest(".ed-img");if(im&&editing){imgTarget=im.dataset.img;imgInput.click();}});
+imgInput.addEventListener("change",()=>{const f=imgInput.files[0];if(!f||!imgTarget)return;const r=new FileReader();r.onload=()=>{setPath(imgTarget,r.result);save();renderImages();imgInput.value="";};r.readAsDataURL(f);});
+
+/* ---- navigation ---- */
+function go(view){document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  document.getElementById("view-"+view).classList.add("on");
+  const group=view==="app"?"app":(["chooser","login","dashboard"].includes(view)?"portaal":"site");
+  document.querySelectorAll("#viewSeg button").forEach(bt=>{const g=bt.dataset.go==="app"?"app":(bt.dataset.go==="chooser"?"portaal":"site");bt.classList.toggle("on",g===group);});
+  if(view==="scan")renderScan();
+  if(view==="plan")renderPlan();
+  if(view==="service")renderService();
+  if(view==="diensten")renderDiensten();
+  if(view==="app")renderApp();
+  window.scrollTo(0,0);}
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(!g||editing)return;e.preventDefault();
+  if(g.dataset.portal){currentPortal=g.dataset.portal;renderLogin();}
+  if(g.dataset.go==="chooser"||g.dataset.go==="site"){isAdmin=false;}
+  if(g.dataset.addInterest)addInterest(g.dataset.addInterest);
+  if(g.dataset.go==="scan")resetScan();
+  if(g.dataset.go==="plan")resetPlan();
+  go(g.dataset.go);});
+// diensten-tab + interesse
+document.addEventListener("click",e=>{const t=e.target.closest("[data-dfilter]");if(t&&!editing){e.preventDefault();dienstFilter=t.dataset.dfilter;renderDiensten();return;}
+  const b=e.target.closest("[data-interest]");if(b&&!editing){e.preventDefault();toggleInterest(b.dataset.interest);renderDiensten();return;}
+  const r=e.target.closest("[data-remove-interest]");if(r){e.preventDefault();removeInterest(r.dataset.removeInterest);renderPlan();}});
+// logo â†’ home
+document.addEventListener("click",e=>{const lg=e.target.closest(".logo");if(!lg||editing)return;
+  if(lg.closest("header.site")||lg.closest("footer.site")){e.preventDefault();isAdmin=false;go("site");}});
+// smooth-scroll site tabs (switch to homepage first if elsewhere)
+document.addEventListener("click",e=>{const a=e.target.closest("[data-anchor]");if(!a||editing)return;e.preventDefault();
+  const scroll=()=>{const t=document.getElementById(a.dataset.anchor);if(t)t.scrollIntoView({behavior:"smooth",block:"start"});};
+  if(!document.getElementById("view-site").classList.contains("on")){go("site");setTimeout(scroll,60);}else scroll();});
+// contact form (demo)
+document.getElementById("contactForm").addEventListener("submit",e=>{e.preventDefault();if(editing)return;const s=document.getElementById("contactStatus");s.textContent=S.contact.formSuccess;s.hidden=false;e.target.reset();});
+
+/* login submit */
+document.getElementById("loginSubmit").addEventListener("click",()=>{if(editing)return;
+  activePage=null;renderDashboard();go("dashboard");});
+document.getElementById("beheerBtn").addEventListener("click",()=>{if(editing)return;currentPortal="beheer";activePage=null;renderDashboard();go("dashboard");});
+// dashboard-paginarouter
+document.addEventListener("click",e=>{const p=e.target.closest("[data-page]");if(!p||editing)return;e.preventDefault();activePage=p.dataset.page;renderDashboard();});
+// beheer-dashboard aanpassen
+document.addEventListener("click",e=>{if(e.target.closest("[data-dashcustom]")&&!editing){e.preventDefault();dashCustomOpen=!dashCustomOpen;renderDashboard();}});
+document.addEventListener("change",e=>{const w=e.target.closest("[data-widget]");if(!w)return;const P=S.portals.beheer;P.dashHidden=P.dashHidden||[];const k=w.dataset.widget;
+  if(P.dashHidden.includes(k))P.dashHidden=P.dashHidden.filter(x=>x!==k);else P.dashHidden.push(k);save();renderDashboard();});
+// documenten: vereniging selecteren
+document.addEventListener("click",e=>{const c=e.target.closest("[data-club]");if(!c||editing)return;e.preventDefault();selectedClub=c.dataset.club;renderDashboard();});
+// profiel openen
+document.addEventListener("click",e=>{const pf=e.target.closest("[data-profile]");if(!pf||editing)return;if(e.target.closest("[data-go]"))return;e.preventDefault();activePage="__profile";renderDashboard();});
+// dienst-detail
+document.addEventListener("click",e=>{const s=e.target.closest("[data-service]");if(!s||editing)return;e.preventDefault();selectedService=+s.dataset.service;go("service");});
+function renderService(){const items=S.services.items;if(selectedService<0||selectedService>=items.length)selectedService=0;
+  const i=selectedService,s=items[i],b=`services.items.${i}`;
+  document.getElementById("serviceHero").innerHTML=`<span class="eyebrow">Dienst</span><h1 data-edit="${b}.h">${esc(s.h)}</h1><p data-edit="${b}.p">${esc(s.p)}</p>`;
+  const pts=(s.points||[]).map((p,j)=>`<li><span class="ic">âœ“</span><span data-edit="${b}.points.${j}">${esc(p)}</span></li>`).join("");
+  const steps=(s.steps||[]).map((st,j)=>`<div class="svc-step"><div class="n">0${j+1}</div><div><h4 data-edit="${b}.steps.${j}.h">${esc(st.h)}</h4><p data-edit="${b}.steps.${j}.p">${esc(st.p)}</p></div></div>`).join("");
+  const faq=(s.faq||[]).map((f,j)=>`<div class="faq-item"><div class="q" data-edit="${b}.faq.${j}.q">${esc(f.q)}</div><div class="a" data-edit="${b}.faq.${j}.a">${esc(f.a)}</div></div>`).join("");
+  const long2=s.long2?`<p class="svc-p" style="margin-top:14px" data-edit="${b}.long2">${esc(s.long2)}</p>`:"";
+  const cta=`<div class="svc-cta"><h3>Interesse in deze dienst?</h3>
+      ${s.price?`<div class="svc-price-big" data-edit="${b}.price">${esc(s.price)}</div>`:""}
+      ${s.duration?`<div class="svc-duration" data-edit="${b}.duration">${esc(s.duration)}</div>`:""}
+      <p>Plan een vrijblijvende kennismaking, dan bespreken we of en hoe deze dienst bij jullie past.</p>
+      <a class="btn btn-lime" data-go="plan" data-add-interest="${escAttr(s.h)}" style="width:100%;justify-content:center">Plan een kennismaking</a>
+      <button class="backlink" data-go="diensten" style="margin-top:14px">â† Terug naar alle diensten</button></div>`;
+  document.getElementById("serviceBody").innerHTML=
+    `<div class="section"><div class="wrap plan-grid">
+      <div class="plan-info"><h2>Over deze dienst</h2>
+        <p class="svc-p" data-edit="${b}.long">${esc(s.long||s.p)}</p>${long2}
+        ${s.forWho?`<h3 class="svc-sub">Voor wie</h3><p class="svc-p" data-edit="${b}.forWho">${esc(s.forWho)}</p>`:""}</div>
+      <div>${cta}</div>
+    </div></div>`+
+    ((pts||steps)?`<div class="section" style="background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap svc-two">
+      ${pts?`<div><h3 class="svc-sub" style="margin-top:0">Wat je krijgt</h3><ul class="plan-points">${pts}</ul></div>`:""}
+      ${steps?`<div><h3 class="svc-sub" style="margin-top:0">Hoe het werkt</h3><div class="svc-steps">${steps}</div></div>`:""}
+    </div></div>`:"")+
+    ((s.result||faq)?`<div class="section"><div class="wrap">
+      ${s.result?`<div class="svc-result"><h3>Het resultaat</h3><p data-edit="${b}.result">${esc(s.result)}</p></div>`:""}
+      ${faq?`<h3 class="svc-sub">Veelgestelde vragen</h3><div class="faq faq-grid">${faq}</div>`:""}
+    </div></div>`:"");
+  renderImages();refreshEditState();}
+
+/* ---- drawer + theme controls ---- */
+const drawer=document.getElementById("drawer"),scrim=document.getElementById("scrim");
+document.getElementById("openDrawer").onclick=()=>{drawer.classList.add("on");scrim.classList.add("on");};
+document.getElementById("closeDrawer").onclick=()=>{drawer.classList.remove("on");scrim.classList.remove("on");};
+scrim.onclick=()=>{drawer.classList.remove("on");scrim.classList.remove("on");};
+document.getElementById("editToggle").onclick=()=>setEditing(!editing);
+document.querySelectorAll("[data-color]").forEach(inp=>inp.addEventListener("input",()=>{S.theme[inp.dataset.color]=inp.value;save();applyTheme();}));
+document.getElementById("presets").innerHTML=PRESETS.map((p,i)=>`<div class="preset" data-preset="${i}" title="Thema ${i+1}"><i style="background:linear-gradient(135deg,${p.navy} 0 50%,${p.lime} 50% 100%)"></i></div>`).join("");
+document.querySelectorAll(".preset").forEach(el=>el.onclick=()=>{S.theme={...PRESETS[el.dataset.preset]};save();applyTheme();});
+document.getElementById("pickLogo").onclick=()=>document.getElementById("logoUp").click();
+document.getElementById("logoUp").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{S.logo.img=r.result;save();renderImages();e.target.value="";};r.readAsDataURL(f);});
+document.getElementById("clearLogo").onclick=()=>{S.logo.img="";save();renderImages();};
+document.getElementById("exportBtn").onclick=async()=>{const json=JSON.stringify(S,null,2);
+  try{const dl=window.claude&&claude.use?await claude.use("downloads"):null;if(dl){await dl.save({filename:"arbitrage-partners-demo.json",data:json});return;}}catch(err){if(err&&err.code==="declined")return;}
+  const blob=new Blob([json],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="arbitrage-partners-demo.json";a.click();};
+document.getElementById("importBtn").onclick=()=>document.getElementById("importUp").click();
+document.getElementById("importUp").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{S=deepMerge(DEFAULTS,JSON.parse(r.result));save();renderAll();alert("Configuratie geladen.");}catch(err){alert("Ongeldig bestand.");}};r.readAsText(f);});
+document.getElementById("resetBtn").onclick=()=>{if(confirm("Alles terugzetten naar de standaard demo?")){S=structuredClone(DEFAULTS);save();isAdmin=false;currentPortal="vereniging";setEditing(false);renderAll();}};
+
+/* ---------- arbitrage scan ---------- */
+let scanState;
+function resetScan(){scanState={step:0,contact:{name:"",role:"",email:"",phone:""},answers:{},meeting:false};}
+resetScan();
+function escAttr(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
+const SC_ISANS=v=>Array.isArray(v)?v.length>0:(v!==undefined&&v!==null&&v!=="");
+function scanSectionName(code){const s=S.scan.sections.find(x=>x.code===code);return s?s.name:"";}
+function scanTop(title,showBack){return `<div class="scan-top">${showBack?`<div class="ico" data-scan="back" title="Vorige">â€¹</div>`:""}<div class="ttl">${esc(title)}</div><div class="close" data-scan="close">âœ• Sluiten</div></div>`;}
+function scanCta(path){return `<div class="scan-cta"><button class="btn btn-lime" data-scan="next"><span data-edit="${path}">${esc(getPath(path))}</span></button></div>`;}
+function scanQBody(q,i){const b=`scan.questions.${i}`,val=scanState.answers[q.code];
+  const tl={open:"Open antwoord",openLong:"Open antwoord",number:"Getal / aantal",single:"Meerkeuze â€” kies Ã©Ã©n optie",multi:"Meerkeuze â€” kruis aan wat van toepassing is",scale5:"Schaal 1â€“5",scale10:"Schaal 1â€“10"};
+  let body="";
+  if(q.type==="open")body=`<div class="scan-field"><input type="text" data-ans="${q.code}" value="${escAttr(val||"")}" placeholder="Typ hier je antwoordâ€¦"></div>`;
+  else if(q.type==="openLong")body=`<div class="scan-field"><textarea data-ans="${q.code}" placeholder="Typ hier je antwoordâ€¦">${esc(val||"")}</textarea></div>`;
+  else if(q.type==="number")body=`<div class="scan-field"><input class="num-in" type="text" inputmode="numeric" data-ans="${q.code}" value="${escAttr(val||"")}" placeholder="Bijv. 12"></div>`;
+  else if(q.type==="single"||q.type==="multi"){const cls=q.type==="single"?"radio":"check",arr=q.type==="multi"?(val||[]):null;
+    body=`<div class="opt-list">`+q.options.map((o,j)=>{const sel=q.type==="single"?val===o:arr.indexOf(o)!==-1;
+      return `<div class="opt ${cls}${sel?" sel":""}" data-opt data-code="${q.code}" data-val="${escAttr(o)}" data-otype="${q.type}"><span class="mk">${sel&&q.type==="multi"?"âœ“":""}</span><span data-edit="${b}.options.${j}">${esc(o)}</span></div>`;}).join("")+`</div>`;}
+  else if(q.type==="scale5"||q.type==="scale10"){const n=q.type==="scale5"?5:10,nums=[];for(let k=1;k<=n;k++)nums.push(k);
+    body=`<div class="scale ${n===10?"ten":""}">`+nums.map(k=>`<div class="sc${val===k?" sel":""}" data-opt data-code="${q.code}" data-val="${k}" data-otype="scale">${k}</div>`).join("")+`</div>`+
+      `<div class="scale-ends"><span data-edit="${b}.labels.0">${esc(q.labels[0])}</span><span style="text-align:right" data-edit="${b}.labels.1">${esc(q.labels[1])}</span></div>`;}
+  return `<div class="scan-q"><div class="qtext" data-edit="${b}.text">${esc(q.text)}</div><div class="qtype">${tl[q.type]||""}</div>${body}</div>`;}
+function renderScan(){const SC=S.scan,qs=SC.questions,N=qs.length,step=scanState.step,root=document.getElementById("scanRoot");
+  const logoHtml=`<div class="logo"><span class="ring" data-img="logo.img"></span><span class="lt">${esc(S.logo.line1)}<small>${esc(S.logo.line2)}</small></span></div>`;
+  let html="";
+  if(step===0){
+    html=`<div class="scan-intro">${logoHtml}<span class="eyebrow" data-edit="scan.eyebrow">${esc(SC.eyebrow)}</span>
+      <h1 data-edit="scan.introTitle">${esc(SC.introTitle)}</h1>
+      <p data-edit="scan.introBody">${esc(SC.introBody)}</p>
+      <div class="meta" data-edit="scan.introMeta">${esc(SC.introMeta)}</div>
+      <button class="exit" data-scan="close">â† Terug naar de website</button></div>`+
+      `<div class="scan-cta"><button class="btn btn-lime" data-scan="start"><span data-edit="scan.startBtn">${esc(SC.startBtn)}</span></button></div>`;
+  } else if(step===1){
+    const c=scanState.contact;
+    html=scanTop("Contactgegevens",true)+
+      `<div class="scan-body">
+        <div class="qtext" style="font-family:var(--disp);font-size:21px;font-weight:700;margin-bottom:6px" data-edit="scan.contactTitle">${esc(SC.contactTitle)}</div>
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:22px" data-edit="scan.contactSub">${esc(SC.contactSub)}</p>
+        <div class="scan-field"><label data-edit="scan.cName">${esc(SC.cName)}</label><input type="text" data-field="name" value="${escAttr(c.name)}" placeholder="Voor- en achternaam"></div>
+        <div class="scan-field"><label data-edit="scan.cRole">${esc(SC.cRole)}</label><input type="text" data-field="role" value="${escAttr(c.role)}" placeholder="Bijv. voorzitter, wedstrijdsecretaris"></div>
+        <div class="scan-field"><label data-edit="scan.cEmail">${esc(SC.cEmail)}</label><input type="email" data-field="email" value="${escAttr(c.email)}" placeholder="naam@vereniging.nl"></div>
+        <div class="scan-field"><label data-edit="scan.cPhone">${esc(SC.cPhone)}</label><input type="tel" data-field="phone" value="${escAttr(c.phone)}" placeholder="06 12345678"></div>
+      </div>`+scanCta("scan.ctaContact");
+  } else if(step>=2&&step<=N+1){
+    const q=qs[step-2],pct=Math.round(((step-1)/N)*100);
+    html=scanTop(q.section+". "+scanSectionName(q.section),true)+
+      `<div class="scan-prog"><div class="track"><i style="width:${pct}%"></i></div><div class="lbl">Vraag ${step-1} van ${N}</div></div>`+
+      `<div class="scan-body">${scanQBody(q,step-2)}</div>`+
+      scanCta(step===N+1?"scan.ctaOverview":"scan.ctaNext");
+  } else if(step===N+2){
+    const answered=qs.filter(q=>SC_ISANS(scanState.answers[q.code])).length,overallPct=Math.round(answered/N*100);
+    const rows=SC.sections.map((sec,si)=>{let codes=[];for(let c=sec.from;c<=sec.to;c++)codes.push(c);
+      const aN=codes.filter(c=>SC_ISANS(scanState.answers[c])).length,status=aN===0?"todo":(aN===codes.length?"done":"bezig");
+      const dot=status==="done"?`<div class="dot-done">âœ“</div>`:status==="bezig"?`<div class="dot-bezig"></div>`:`<div class="dot-todo"></div>`;
+      return `<div class="row">${dot}<div class="nm">${esc(sec.code)}. <span data-edit="scan.sections.${si}.name">${esc(sec.name)}</span></div><div class="ct">${aN}/${codes.length}</div></div>`;}).join("");
+    html=scanTop("Voortgang",true)+
+      `<div class="scan-body ovw"><h2 data-edit="scan.overviewTitle">${esc(SC.overviewTitle)}</h2>
+        <div class="sub">${answered} van ${N} vragen beantwoord</div>
+        <div class="track"><i style="width:${overallPct}%"></i></div>
+        <div class="rows">${rows}</div></div>`+scanCta("scan.ctaFinal");
+  } else {
+    const fname=scanState.contact.name?scanState.contact.name.split(" ")[0]:"jullie vereniging";
+    const fbody=SC.finalBody.replace("{naam}",fname);
+    html=scanTop("Afronding",false)+
+      `<div class="final"><div class="chk">âœ“</div>
+        <h2 data-edit="scan.finalTitle">${esc(SC.finalTitle)}</h2>
+        <div class="fbody">${esc(fbody)}</div>
+        <div class="nextbox"><h3 data-edit="scan.finalNextTitle">${esc(SC.finalNextTitle)}</h3><p data-edit="scan.finalNextBody">${esc(SC.finalNextBody)}</p>
+          ${scanState.meeting?`<div class="done"><span class="dot-done">âœ“</span><span data-edit="scan.finalConfirm">${esc(SC.finalConfirm)}</span></div>`:`<button class="btn btn-lime plan" data-scan="meeting"><span data-edit="scan.finalBtn">${esc(SC.finalBtn)}</span></button>`}
+        </div>
+        <button class="exit" data-scan="close" data-edit="scan.finalBack">${esc(SC.finalBack)}</button></div>`;
+  }
+  root.innerHTML=html;renderImages();refreshEditState();}
+function goNextScan(){scanState.step=Math.min(scanState.step+1,S.scan.questions.length+3);renderScan();}
+function goBackScan(){scanState.step=Math.max(scanState.step-1,0);renderScan();}
+(function(){const root=document.getElementById("scanRoot");
+  root.addEventListener("click",e=>{if(editing)return;const act=e.target.closest("[data-scan]");
+    if(act){const a=act.dataset.scan;if(a==="start"||a==="next")goNextScan();else if(a==="back")goBackScan();else if(a==="close")go("site");else if(a==="meeting"){scanState.meeting=true;renderScan();}return;}
+    const opt=e.target.closest("[data-opt]");if(!opt)return;const code=+opt.dataset.code,val=opt.dataset.val,t=opt.dataset.otype;
+    if(t==="scale")scanState.answers[code]=+val;else if(t==="single")scanState.answers[code]=val;
+    else{const arr=scanState.answers[code]||[];const idx=arr.indexOf(val);if(idx>=0)arr.splice(idx,1);else arr.push(val);scanState.answers[code]=arr;}
+    renderScan();});
+  root.addEventListener("input",e=>{const f=e.target.closest("[data-field]");if(f){scanState.contact[f.dataset.field]=e.target.value;return;}
+    const an=e.target.closest("[data-ans]");if(an)scanState.answers[+an.dataset.ans]=e.target.value;});
+})();
+
+/* ---------- plan een kennismaking ---------- */
+let planState;
+function resetPlan(){planState={slot:null,way:null,submitted:false};}
+resetPlan();
+function renderPlan(){const P=S.plan,root=document.getElementById("planBody");let html;
+  if(planState.submitted){
+    html=`<div class="section"><div class="plan-success"><div class="chk">âœ“</div>
+      <h2 data-edit="plan.successTitle">${esc(P.successTitle)}</h2>
+      <p data-edit="plan.successBody">${esc(P.successBody)}</p>
+      <button class="btn btn-lime" data-go="site" data-edit="plan.successBtn">${esc(P.successBtn)}</button></div></div>`;
+  } else {
+    const points=P.points.map((p,i)=>`<li><span class="ic">${esc(p.ic)}</span><span data-edit="plan.points.${i}.t">${esc(p.t)}</span></li>`).join("");
+    const items=P.items.map((c,i)=>`<li><span class="ic">${esc(c.ic)}</span><span><span class="k" data-edit="plan.items.${i}.k">${esc(c.k)}</span><br><span class="v" data-edit="plan.items.${i}.v">${esc(c.v)}</span></span></li>`).join("");
+    const slots=P.slots.map((s,i)=>`<div class="chip-sel${planState.slot===i?" sel":""}" data-planchip="slot" data-i="${i}" data-edit="plan.slots.${i}">${esc(s)}</div>`).join("");
+    const ways=P.ways.map((s,i)=>`<div class="chip-sel${planState.way===i?" sel":""}" data-planchip="way" data-i="${i}" data-edit="plan.ways.${i}">${esc(s)}</div>`).join("");
+    html=`<div class="section"><div class="wrap plan-grid">
+      <div class="plan-info">
+        <h2 data-edit="plan.infoTitle">${esc(P.infoTitle)}</h2>
+        <ul class="plan-points">${points}</ul>
+        <div class="plan-note" data-edit="plan.contactNote">${esc(P.contactNote)}</div>
+        <ul class="contact-list">${items}</ul>
+      </div>
+      <form class="contact-form plan-form" id="planForm" novalidate>
+        ${interests.length?`<div class="int-chips-wrap"><div class="plan-note">Geselecteerde interesses</div><div class="int-chips">${interests.map(x=>`<span class="int-chip">${esc(x)}<button type="button" data-remove-interest="${escAttr(x)}">âœ•</button></span>`).join("")}</div></div>`:""}
+        <h3 style="font-size:17px;margin-bottom:16px" data-edit="plan.formTitle">${esc(P.formTitle)}</h3>
+        <div class="field"><label data-edit="plan.fName">${esc(P.fName)}</label><input type="text" required></div>
+        <div class="row2">
+          <div class="field"><label data-edit="plan.fClub">${esc(P.fClub)}</label><input type="text"></div>
+          <div class="field"><label data-edit="plan.fRole">${esc(P.fRole)}</label><input type="text"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label data-edit="plan.fEmail">${esc(P.fEmail)}</label><input type="email" required></div>
+          <div class="field"><label data-edit="plan.fPhone">${esc(P.fPhone)}</label><input type="tel"></div>
+        </div>
+        <div class="field"><label data-edit="plan.fDate">${esc(P.fDate)}</label><input type="date"></div>
+        <div class="field"><label data-edit="plan.fSlot">${esc(P.fSlot)}</label><div class="chips">${slots}</div></div>
+        <div class="field"><label data-edit="plan.fWay">${esc(P.fWay)}</label><div class="chips">${ways}</div></div>
+        <div class="field"><label data-edit="plan.fMsg">${esc(P.fMsg)}</label><textarea rows="3"></textarea></div>
+        <button class="btn btn-lime" type="submit" style="width:100%;justify-content:center" data-edit="plan.submit">${esc(P.submit)}</button>
+      </form>
+    </div></div>`;
+  }
+  root.innerHTML=html;renderImages();refreshEditState();}
+(function(){const root=document.getElementById("planBody");
+  root.addEventListener("click",e=>{if(editing)return;const c=e.target.closest("[data-planchip]");if(!c)return;
+    planState[c.dataset.planchip]=+c.dataset.i;renderPlan();});
+  root.addEventListener("submit",e=>{e.preventDefault();if(editing)return;planState.submitted=true;interests=[];renderPlan();});
+})();
+
+/* ---------- native app-weergave ---------- */
+let appTab="home",appMenu=false,appService=null,appLoginPortal=null,appPortal=null,appDashPage=null,appMoreOpen=false;
+function appPanel(p){
+  if(p.type==="pillars"||p.type==="bars")return `<div class="app-pcard"><h3 style="font-size:15px;margin-bottom:12px">${esc(p.title)}</h3>${p.items.map(it=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700"><span>${esc(it.h||it.n)}</span><span>${esc(it.pct)}%</span></div><div style="height:7px;border-radius:99px;background:var(--line);margin-top:5px;overflow:hidden"><i style="display:block;height:100%;width:${parseInt(it.pct)||0}%;background:var(--lime);border-radius:99px"></i></div></div>`).join("")}</div>`;
+  if(p.type==="acts")return `<div class="app-pcard" style="padding:0"><div style="padding:14px 16px 4px"><h3 style="font-size:15px">${esc(p.title)}</h3></div><div class="app-list" style="border:none">${p.items.map(a=>`<div class="app-li"><div><div class="nm">${esc(a.t)}</div><div class="sub">${esc(a.cat)} Â· ${esc(a.date)}</div></div><div class="r"><span class="pill ${a.st||"idle"}">${esc(a.stt)}</span></div></div>`).join("")}</div></div>`;
+  if(p.type==="table"){const nameCol=p.cols.find(c=>c.kind==="name"),pillCol=p.cols.find(c=>c.kind==="pill"),strongCol=p.cols.find(c=>c.kind==="strong");
+    return `<div class="app-pcard" style="padding:0"><div style="padding:14px 16px 4px"><h3 style="font-size:15px">${esc(p.title)}</h3></div><div class="app-list" style="border:none">${p.rows.map(r=>{
+      const left=nameCol?`<div class="nm">${esc(r.nm)}</div><div class="sub">${esc(r.sub||"")}</div>`:(strongCol?`<div class="nm">${esc(r[strongCol.key])}</div>`:`<div class="nm">${esc(r[p.cols[0].key]||"")}</div>`);
+      const right=pillCol?`<span class="pill ${r[pillCol.key+"St"]||"idle"}">${esc(r[pillCol.key])}</span>`:`<span class="sub">${esc(r[p.cols[p.cols.length-1].key]||"")}</span>`;
+      return `<div class="app-li"><div>${left}</div><div class="r">${right}</div></div>`;}).join("")}</div></div>`;}
+  if(p.type==="note")return `<div class="app-pcard"><h3 style="font-size:15px">${esc(p.title||"")}</h3><p style="color:var(--muted);font-size:12.5px;line-height:1.5;margin-top:6px">${esc(p.body)}</p></div>`;
+  if(p.type==="chat"||p.type==="clubdocs")return `<div class="app-pcard"><h3 style="font-size:15px">${esc(p.title)}</h3><p style="color:var(--muted);font-size:12.5px;margin-top:6px">Volledig beschikbaar in de app.</p></div>`;
+  return "";}
+function appStats(stats){return `<div class="app-stat-grid">${stats.map(s=>`<div class="app-stat"><div class="num">${esc(s.num||s.n)}</div><div class="lab">${esc(s.lab||s.l)}</div></div>`).join("")}</div>`;}
+function appHome(){const H=S.hero,pr=S.problems,pil=S.pillars,sv=S.services,lo=S.lower;
+  return `<div class="app-hero"><span class="eyebrow">Arbitrage Partners</span><h1>${esc(H.title)}<span class="ac">${esc(H.titleAccent)}</span></h1><p>${esc(H.body)}</p>
+    <div class="btns"><a class="app-btn lime" data-atab="diensten">${esc(H.btn1)}</a><a class="app-btn ghost" data-atab="contact">${esc(H.btn2)}</a></div></div>
+   <div class="app-sec"><span class="eyebrow">Herkenbaar?</span><h2>${esc(pr.title)}</h2><div class="app-hscroll">${pr.items.map(p=>`<div class="app-prob"><div class="ic">${esc(p.ic)}</div><p>${esc(p.t)}</p></div>`).join("")}</div></div>
+   <div class="app-sec" style="background:#fff"><span class="eyebrow">Onze aanpak</span><h2>${esc(pil.title)}${esc(pil.titleAccent)}</h2><div style="margin-top:8px">${pil.items.map((p,i)=>`<div class="app-pillar"><div class="n">0${i+1}</div><div><h4>${esc(p.h)}</h4><p>${esc(p.p)}</p></div></div>`).join("")}</div></div>
+   <div class="app-sec"><span class="eyebrow">Onze diensten</span><h2>${esc(sv.title)}</h2><div class="app-hscroll">${sv.items.slice(0,4).map((s,i)=>`<div class="app-card app-feat" data-aservice="${i}"><div class="ic">${esc(s.ic)}</div><h3>${esc(s.h)}</h3><p>${esc(s.p)}</p>${s.price?`<div class="price">${esc(s.price)}</div>`:""}<span class="more">Meer info â†’</span></div>`).join("")}</div><a class="app-btn outline" style="margin-top:12px" data-atab="diensten">Bekijk alle diensten â†’</a></div>
+   <div class="app-sec"><div class="app-cta-dark"><span class="eyebrow">${esc(lo.eyebrow)}</span><h3>${esc(lo.title)}</h3><p>${esc(lo.body)}</p><a class="app-btn lime" data-atab="contact">${esc(lo.btn)}</a></div></div>`;}
+function appDiensten(){const sv=S.services;
+  return `<div class="app-sec"><span class="eyebrow">${esc(sv.pageEyebrow)}</span><h2>${esc(sv.pageTitle)}</h2><p class="sub">${esc(sv.pageIntro)}</p>
+     <h3 class="app-sub">${esc(sv.tabEenmalig)}</h3>${sv.items.map((s,i)=>`<div class="app-card" data-aservice="${i}"><div class="ic">${esc(s.ic)}</div><h3>${esc(s.h)}</h3><p>${esc(s.p)}</p>${s.price?`<div class="price">${esc(s.price)}</div>`:""}<span class="more">Meer info â†’</span></div>`).join("")}
+     <h3 class="app-sub">${esc(S.subs.title)}</h3>${S.subs.tiers.map(t=>`<div class="app-tier ${t.featured?"feat":""}">${t.featured?`<div class="badge">${esc(S.subs.featuredLabel)}</div>`:""}<div class="th"><div class="nm">${esc(t.name)}</div><div class="pr">${esc(t.price)}<span> ${esc(t.per)}</span></div></div><div class="tag">${esc(t.tagline)}</div><ul>${t.features.map(f=>`<li><span class="ck">âœ“</span><span>${esc(f)}</span></li>`).join("")}</ul><a class="app-btn ${t.featured?"lime":"outline"}" data-atab="contact">${esc(t.cta)}</a></div>`).join("")}
+     <div class="app-cta-dark" style="margin-top:4px"><span class="eyebrow">${esc(S.lower.eyebrow)}</span><h3>${esc(S.lower.title)}</h3><p>${esc(S.lower.body)}</p><a class="app-btn lime" data-atab="contact">${esc(S.lower.btn)}</a></div></div>`;}
+function appServiceDetail(){const s=S.services.items[appService];
+  return `<div class="app-detail-top"><button data-aback>â€¹</button><div class="t">${esc(s.h)}</div></div>
+   <div class="app-hero" style="padding:22px 18px"><span class="eyebrow">Dienst</span><h1 style="font-size:22px">${esc(s.h)}</h1><p>${esc(s.p)}</p>${s.price?`<div style="margin-top:12px;font-family:var(--disp);font-weight:800;font-size:20px;color:var(--lime)">${esc(s.price)}</div>`:""}${s.duration?`<div style="font-family:var(--mono);font-size:11px;color:#c2cede;margin-top:2px">${esc(s.duration)}</div>`:""}</div>
+   <div class="app-sec" style="background:#fff"><h3 class="app-sub" style="margin-top:0">Over deze dienst</h3>
+     <p style="color:var(--muted);font-size:13.5px;line-height:1.6">${esc(s.long||s.p)}</p>${s.long2?`<p style="color:var(--muted);font-size:13.5px;line-height:1.6;margin-top:10px">${esc(s.long2)}</p>`:""}
+     ${s.points?`<h3 class="app-sub">Wat je krijgt</h3><ul class="app-points">${s.points.map(p=>`<li><span class="ck">âœ“</span><span>${esc(p)}</span></li>`).join("")}</ul>`:""}
+     ${s.forWho?`<h3 class="app-sub">Voor wie</h3><p style="color:var(--muted);font-size:13.5px;line-height:1.6">${esc(s.forWho)}</p>`:""}
+     ${s.steps?`<h3 class="app-sub">Hoe het werkt</h3>${s.steps.map((st,j)=>`<div class="app-step"><div class="n">0${j+1}</div><div><h4>${esc(st.h)}</h4><p>${esc(st.p)}</p></div></div>`).join("")}`:""}
+     ${s.result?`<div class="app-result"><h3 style="font-size:15px;font-weight:800;font-family:var(--disp)">Het resultaat</h3><p>${esc(s.result)}</p></div>`:""}
+     ${s.faq?`<h3 class="app-sub">Veelgestelde vragen</h3>${s.faq.map(f=>`<div class="app-faq"><div class="q">${esc(f.q)}</div><div class="a">${esc(f.a)}</div></div>`).join("")}`:""}
+     <a class="app-btn lime" style="margin-top:8px" data-atab="contact">Plan een kennismaking</a></div>`;}
+function appAanpak(){const ab=S.about;
+  return `<div class="app-sec"><span class="eyebrow">Onze aanpak</span><h2>${esc(ab.processTitle)}</h2><p class="sub">${esc(ab.processSub)}</p><div style="margin-top:10px">${ab.process.map(p=>`<div class="app-step"><div class="n">${esc(p.n)}</div><div><h4>${esc(p.h)}</h4><p>${esc(p.p)}</p></div></div>`).join("")}</div></div>
+   <div class="app-sec" style="background:#fff"><h2>${esc(ab.valuesTitle)}</h2><p class="sub">${esc(ab.valuesSub)}</p><div style="margin-top:12px">${ab.values.map(v=>`<div class="app-card"><div class="ic">${esc(v.ic)}</div><h3>${esc(v.h)}</h3><p>${esc(v.p)}</p></div>`).join("")}</div></div>
+   <div class="app-sec"><h2>${esc(ab.benefitsTitle)}</h2><p class="sub">${esc(ab.benefitsSub)}</p><ul class="app-points" style="margin-top:12px;gap:11px">${ab.benefits.map(b=>`<li style="font-weight:600"><span class="ck">âœ“</span><span>${esc(b)}</span></li>`).join("")}</ul><a class="app-btn lime" style="margin-top:16px" data-atab="contact">Plan een kennismaking</a></div>`;}
+function appOver(){const ab=S.about;
+  return `<div class="app-hero"><span class="eyebrow">Over ons</span><h1 style="font-size:22px">${esc(ab.heroTitle)}</h1><p>${esc(ab.heroSub)}</p></div>
+   <div class="app-sec" style="background:#fff"><h2>${esc(ab.storyTitle)}</h2><p class="sub">${esc(ab.body1)}</p><p class="sub">${esc(ab.body2)}</p>${ab.body3?`<p class="sub">${esc(ab.body3)}</p>`:""}</div>
+   <div class="app-sec"><h2>In cijfers</h2><div class="app-stat-grid" style="margin-top:12px">${ab.stats.map(s=>`<div class="app-stat"><div class="num" style="color:var(--lime-dark)">${esc(s.n)}</div><div class="lab">${esc(s.l)}</div></div>`).join("")}</div><a class="app-btn lime" style="margin-top:16px" data-atab="contact">Plan een kennismaking</a></div>`;}
+function appContact(){const c=S.contact;
+  return `<div class="app-sec"><span class="eyebrow">${esc(c.eyebrow)}</span><h2>${esc(c.title)}</h2><p class="sub">${esc(c.body)}</p><ul class="app-clist">${c.items.map(it=>`<li><span class="ic">${esc(it.ic)}</span><span><span class="k">${esc(it.k)}</span><br><span class="v">${esc(it.v)}</span></span></li>`).join("")}</ul></div>
+   <div class="app-sec" style="background:#fff"><h2>Plan een kennismaking</h2>
+     <div class="app-field" style="margin-top:12px"><label>${esc(S.plan.fName)}</label><input type="text" placeholder="Voor- en achternaam"></div>
+     <div class="app-field"><label>${esc(S.plan.fEmail)}</label><input type="email" placeholder="naam@vereniging.nl"></div>
+     <div class="app-field"><label>${esc(S.plan.fMsg)}</label><textarea rows="3"></textarea></div>
+     <button class="app-btn lime" data-asend>${esc(S.plan.submit)}</button>
+     <div id="appSent" style="display:none;margin-top:12px;background:color-mix(in srgb,var(--lime),transparent 84%);border:1px solid color-mix(in srgb,var(--lime),transparent 55%);color:var(--lime-dark);font-size:12.5px;padding:11px 13px;border-radius:10px">${esc(S.plan.successBody)}</div></div>`;}
+function appChooser(){
+  return `<div class="app-hero"><span class="eyebrow">Portaal</span><h1 style="font-size:22px">${esc(S.chooser.title)}</h1><p>${esc(S.chooser.subtitle)}</p></div>
+   <div class="app-sec">${S.chooser.cards.map(cd=>`<div class="app-pcard"><span class="eyebrow">${esc(cd.tag)}</span><h3>${esc(cd.h)}</h3><p>${esc(cd.p)}</p><a class="app-btn dark" data-aportal="${cd.portal}">${esc(cd.btn)}</a></div>`).join("")}
+     <button class="app-btn outline" data-aportal="beheer">Naar beheerderspagina â†’</button></div>`;}
+function appLogin(){const L=S.portals[appLoginPortal].login;
+  return `<div class="app-hero"><span class="eyebrow">${esc(L.eyebrow)}</span><h1 style="font-size:22px">${esc(L.sideTitle)}</h1><p>${esc(L.sideBody)}</p></div>
+   <div class="app-sec" style="background:#fff"><h2>Inloggen</h2><p class="sub">${esc(S.login.formDesc)}</p>
+     <div class="app-field" style="margin-top:12px"><label>${esc(S.login.l1)}</label><input type="text" value="HV De Valken"></div>
+     <div class="app-field"><label>${esc(S.login.l2)}</label><input type="email" value="demo@hvdevalken.nl"></div>
+     <div class="app-field"><label>${esc(S.login.l3)}</label><input type="password" value="demodemo"></div>
+     <button class="app-btn lime" data-alogin>${esc(S.login.btn)}</button>
+     <button class="app-btn outline" style="margin-top:9px" data-aportal-back>â† Andere rol kiezen</button></div>`;}
+function appPortalItems(){const P=S.portals[appPortal];return Array.isArray(P.sections)?P.sections.flatMap(s=>s.items):P.nav;}
+function appPortalPage(){const items=appPortalItems();const overview=items[0];return appDashPage&&items.includes(appDashPage)?appDashPage:overview;}
+function appDashboard(){const P=S.portals[appPortal],items=appPortalItems(),overview=items[0],page=appPortalPage();
+  let content;
+  if(page===overview)content=appStats(P.stats)+P.panels.map(appPanel).join("");
+  else{const pg=(P.pages||{})[page];content=pg?((pg.stats?appStats(pg.stats):"")+(pg.panels||[]).map(appPanel).join("")):`<div class="app-pcard"><p style="color:var(--muted);font-size:13px">Deze pagina wordt binnenkort ingericht.</p></div>`;}
+  return `<div class="app-sec" style="background:#fff;padding-bottom:14px"><h2 style="font-size:18px">${esc(page===overview?P.title:page)}</h2>${page===overview&&P.subtitle?`<p class="sub">${esc(P.subtitle)}</p>`:""}</div>
+   <div class="app-sec">${content}</div>`;}
+function appBodyHTML(){
+  if(appService!=null)return appServiceDetail();
+  if(appTab==="portaal"){if(appPortal)return appDashboard();if(appLoginPortal)return appLogin();return appChooser();}
+  if(appTab==="diensten")return appDiensten();
+  if(appTab==="aanpak")return appAanpak();
+  if(appTab==="over")return appOver();
+  if(appTab==="contact")return appContact();
+  return appHome();}
+function appHTML(){const inDetail=appService!=null;
+  const logo=`<div class="lg" data-ahome>${esc(S.logo.line1)}<small>${esc(S.logo.line2)}</small></div>`;
+  const inPortal=appTab==="portaal"&&appPortal;
+  let top,menu="",nav;
+  if(inPortal){
+    top=`<div class="app-top">${logo}<div class="tr"><button class="webmini" data-atab="home">â† Website</button><button class="mini" data-alogout>Uitloggen</button></div></div>`;
+    const items=appPortalItems(),page=appPortalPage();
+    const tab=n=>`<button data-adash="${escAttr(n)}" class="${n===page?"on":""}"><span class="ic">${SIDE_ICONS[n]||"â€¢"}</span><span>${esc(n)}</span></button>`;
+    let btns,sheet="",scrim="";
+    if(items.length<=5)btns=items.map(tab).join("");
+    else{const main=items.slice(0,4),over=items.slice(4);
+      btns=main.map(tab).join("")+`<button data-amore class="${over.includes(page)?"on":""}"><span class="ic">â‹¯</span><span>Meer</span></button>`;
+      if(appMoreOpen){scrim=`<div class="app-scrim" data-amore></div>`;
+        sheet=`<div class="app-sheet"><div class="h">Meer</div>${over.map(n=>`<button data-adash="${escAttr(n)}" class="${n===page?"on":""}"><span class="ic">${SIDE_ICONS[n]||"â€¢"}</span>${esc(n)}</button>`).join("")}</div>`;}
+    }
+    nav=`${scrim}${sheet}<div class="app-nav portal">${btns}</div>`;
+  } else {
+    top=`<div class="app-top">${logo}<div class="tr"><button class="mini" data-atab="portaal">Inloggen</button><button class="burger" data-aburger>â˜°</button></div></div>`;
+    menu=appMenu?`<div class="app-menu"><a data-atab="home">Home</a><a data-atab="diensten">Diensten</a><a data-atab="aanpak">Aanpak</a><a data-atab="over">Over ons</a><a data-atab="contact">Contact</a><div class="div"></div><a data-atab="contact">Plan een kennismaking</a><a data-atab="portaal">Inloggen</a></div>`:"";
+    const tabs=[["home","Home","âŒ‚"],["diensten","Diensten","â–¤"],["aanpak","Aanpak","â—”"],["contact","Contact","âœ‰"],["portaal","Portaal","â—‰"]];
+    nav=inDetail?"":`<div class="app-nav">${tabs.map(t=>`<button data-atab="${t[0]}" class="${appTab===t[0]?"on":""}"><span class="ic">${t[2]}</span><span>${t[1]}</span></button>`).join("")}</div>`;
+  }
+  const body=`<div class="app-body">${appBodyHTML()}</div>`;
+  return top+menu+body+nav;}
+function renderApp(){document.getElementById("appScreen").innerHTML=appHTML();}
+(function(){const root=document.getElementById("appScreen");
+  root.addEventListener("click",e=>{
+    const t=e.target.closest("[data-atab]");if(t){appTab=t.dataset.atab;appService=null;appMenu=false;renderApp();return;}
+    if(e.target.closest("[data-aburger]")){appMenu=!appMenu;renderApp();return;}
+    if(e.target.closest("[data-ahome]")){appTab="home";appService=null;appMenu=false;renderApp();return;}
+    const sv=e.target.closest("[data-aservice]");if(sv){appService=+sv.dataset.aservice;renderApp();return;}
+    if(e.target.closest("[data-aback]")){appService=null;renderApp();return;}
+    const pt=e.target.closest("[data-aportal]");if(pt){appLoginPortal=pt.dataset.aportal;appPortal=null;renderApp();return;}
+    if(e.target.closest("[data-aportal-back]")){appLoginPortal=null;renderApp();return;}
+    if(e.target.closest("[data-alogin]")){appPortal=appLoginPortal;appDashPage=null;renderApp();return;}
+    if(e.target.closest("[data-alogout]")){appPortal=null;appLoginPortal=null;renderApp();return;}
+    if(e.target.closest("[data-amore]")){appMoreOpen=!appMoreOpen;renderApp();return;}
+    const d=e.target.closest("[data-adash]");if(d){appDashPage=d.dataset.adash;appMoreOpen=false;renderApp();return;}
+    if(e.target.closest("[data-asend]")){const s=root.querySelector("#appSent");if(s)s.style.display="block";}
+  });
+})();
+
+// frame-modus: verberg de demo-balk als de app in de telefoon-preview draait
+if(new URLSearchParams(location.search).get("frame")==="1"){const tb=document.getElementById("toolbar");if(tb)tb.hidden=true;document.body.classList.add("framed");}
+
+renderAll();
+</script>
+
+</body>
+</html>
