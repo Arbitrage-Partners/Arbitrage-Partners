@@ -1786,7 +1786,7 @@ function panelHTML(p,b){
 function chatPanelHTML(p,b){
   return `<div class="panel"><div class="chatwrap2" id="chatWrap">
     <div class="chat-list">
-      <div class="chat-search"><input id="chatSearch" placeholder="Zoeken…" autocomplete="off"></div>
+      <div class="chat-search"><input id="chatSearch" placeholder="Zoek op naam of e-mail…" autocomplete="off"></div>
       <div class="chat-items" id="chatItems"><div style="padding:16px;color:var(--muted);font-size:13px">Laden…</div></div>
     </div>
     <div class="chat-conv">
@@ -1860,36 +1860,36 @@ function chatBubble(m){const me=m.afzender_id===chatMe;const tick=me?` <span cla
   return `<div class="msg ${me?"me":"them"}" data-mid="${esc(m.id)}">${esc(m.tekst)}<span class="tm">${chatTime(m.aangemaakt_op)}${tick}</span></div>`;}
 function chatRenderBubbles(list){if(!list.length)return `<div style="margin:auto;color:var(--muted);font-size:13px;text-align:center">Nog geen berichten.<br>Stuur het eerste bericht hieronder.</div>`;
   let out="",day="";list.forEach(m=>{const d=chatDay(m.aangemaakt_op);if(d!==day){out+=`<div class="chat-daysep">${d}</div>`;day=d;}out+=chatBubble(m);});return out;}
-function renderChatItems(){const box=document.getElementById("chatItems");if(!box)return;const q=chatSearchQ.toLowerCase();
-  const list=chatItems.filter(it=>!q||(it.naam||"").toLowerCase().includes(q));
+function renderChatItems(){const box=document.getElementById("chatItems");if(!box)return;const q=chatSearchQ.toLowerCase().trim();
+  const list=chatItems.filter(it=>!q||(it.naam||"").toLowerCase().includes(q)||(it.email||"").toLowerCase().includes(q));
   if(!list.length){box.innerHTML=`<div style="padding:16px;color:var(--muted);font-size:13px">Geen contacten gevonden.</div>`;return;}
   box.innerHTML=list.map(it=>`<div class="chat-item ${it.gid&&it.gid===chatActiveGid?"active":""}" data-chatitem="${esc(it.key)}">${chatAv(it)}
     <div class="chat-it-main"><div class="chat-it-top"><span class="chat-it-nm">${esc(it.naam||"—")}</span>${it.tm?`<span class="chat-it-tm">${chatShort(it.tm)}</span>`:""}</div>
     <div class="chat-it-top"><span class="chat-it-pv">${it.preview?esc(it.preview):`<span class="chat-it-rol">${esc(rolLabel(it.rol))}</span>`}</span>${it.unread>0?`<span class="chat-badge">${it.unread}</span>`:""}</div></div></div>`).join("");}
 async function loadContacts(){const out=[];try{
   if(currentRole==="beheerder"){const {data:vs}=await sb.from("verenigingen").select("id,naam");const nm={};(vs||[]).forEach(v=>nm[v.id]=v.naam);
-    const {data:ps}=await sb.from("profiles").select("id,vereniging_id").eq("rol","vereniging");
-    (ps||[]).forEach(p=>out.push({uid:p.id,naam:nm[p.vereniging_id]||"Vereniging",rol:"vereniging",avatar:null}));}
-  else if(currentVerenigingId){const {data:cn}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();const club=(cn&&cn.naam)||"Vereniging";
-    if(currentRole==="vereniging"){const {data:ps}=await sb.from("profiles").select("id,volledige_naam,avatar_url,rol").eq("vereniging_id",currentVerenigingId).in("rol",["official","begeleider"]);
-      (ps||[]).forEach(p=>out.push({uid:p.id,naam:p.volledige_naam||"Onbekend",rol:p.rol,avatar:p.avatar_url}));
-      out.push({isAP:true,naam:"Arbitrage Partners",rol:"beheerder",uid:null});}
+    const {data:ps}=await sb.from("profiles").select("id,vereniging_id,email").eq("rol","vereniging");
+    (ps||[]).forEach(p=>out.push({uid:p.id,naam:nm[p.vereniging_id]||"Vereniging",rol:"vereniging",avatar:null,email:p.email||""}));}
+  else if(currentVerenigingId){const {data:cn}=await sb.from("verenigingen").select("naam,contact_email").eq("id",currentVerenigingId).single();const club=(cn&&cn.naam)||"Vereniging";const clubMail=(cn&&cn.contact_email)||"";
+    if(currentRole==="vereniging"){const {data:ps}=await sb.from("profiles").select("id,volledige_naam,avatar_url,rol,email").eq("vereniging_id",currentVerenigingId).in("rol",["official","begeleider"]);
+      (ps||[]).forEach(p=>out.push({uid:p.id,naam:p.volledige_naam||"Onbekend",rol:p.rol,avatar:p.avatar_url,email:p.email||""}));
+      out.push({isAP:true,naam:"Arbitrage Partners",rol:"beheerder",uid:null,email:""});}
     else if(currentRole==="begeleider"||currentRole==="official"){
-      const {data:vp}=await sb.from("profiles").select("id").eq("vereniging_id",currentVerenigingId).eq("rol","vereniging").limit(1);
-      if(vp&&vp[0])out.push({uid:vp[0].id,naam:club,rol:"vereniging",avatar:null});
-      let qq=sb.from("profiles").select("id,volledige_naam,avatar_url").eq("vereniging_id",currentVerenigingId).eq("rol","official");
+      const {data:vp}=await sb.from("profiles").select("id,email").eq("vereniging_id",currentVerenigingId).eq("rol","vereniging").limit(1);
+      if(vp&&vp[0])out.push({uid:vp[0].id,naam:club,rol:"vereniging",avatar:null,email:vp[0].email||clubMail});
+      let qq=sb.from("profiles").select("id,volledige_naam,avatar_url,email").eq("vereniging_id",currentVerenigingId).eq("rol","official");
       if(currentRole==="official")qq=qq.neq("id",chatMe);
-      const {data:ps}=await qq;(ps||[]).forEach(p=>out.push({uid:p.id,naam:p.volledige_naam||"Onbekend",rol:"official",avatar:p.avatar_url}));}
+      const {data:ps}=await qq;(ps||[]).forEach(p=>out.push({uid:p.id,naam:p.volledige_naam||"Onbekend",rol:"official",avatar:p.avatar_url,email:p.email||""}));}
   }}catch(e){}return out;}
 async function loadChatList(){if(!sb||!chatMe)return;chatItems=[];chatMyGids=new Set();
   const {data:gs}=await sb.from("gesprekken").select("*").or(`a.eq.${chatMe},b.eq.${chatMe}`).order("laatste_op",{ascending:false});
   const byUid={};let hasAP=false;
   (gs||[]).forEach(g=>{const c=g.a===chatMe?{uid:g.b,naam:g.b_naam,rol:g.b_rol,avatar:g.b_avatar}:{uid:g.a,naam:g.a_naam,rol:g.a_rol,avatar:g.a_avatar};
-    const it={key:g.id,gid:g.id,uid:c.uid,isAP:c.rol==="beheerder",naam:c.naam||"—",rol:c.rol,avatar:c.avatar||null,preview:g.laatste_tekst||"",tm:g.laatste_op,unread:0};
+    const it={key:g.id,gid:g.id,uid:c.uid,isAP:c.rol==="beheerder",naam:c.naam||"—",rol:c.rol,avatar:c.avatar||null,email:"",preview:g.laatste_tekst||"",tm:g.laatste_op,unread:0};
     chatItems.push(it);chatMyGids.add(g.id);if(c.uid)byUid[c.uid]=it;if(it.isAP)hasAP=true;});
   const contacts=await loadContacts();
-  contacts.forEach(c=>{if(c.uid&&byUid[c.uid])return;if(c.isAP&&hasAP)return;
-    chatItems.push({key:c.uid?("u:"+c.uid):"AP",gid:null,uid:c.uid||null,isAP:!!c.isAP,naam:c.naam,rol:c.rol,avatar:c.avatar||null,preview:"",tm:null,unread:0});});
+  contacts.forEach(c=>{if(c.uid&&byUid[c.uid]){byUid[c.uid].email=c.email||"";return;}if(c.isAP&&hasAP)return;
+    chatItems.push({key:c.uid?("u:"+c.uid):"AP",gid:null,uid:c.uid||null,isAP:!!c.isAP,naam:c.naam,rol:c.rol,avatar:c.avatar||null,email:c.email||"",preview:"",tm:null,unread:0});});
   if(chatMyGids.size){try{const ids=[...chatMyGids];const {data:un}=await sb.from("chatberichten").select("gesprek_id").is("gelezen_op",null).neq("afzender_id",chatMe).in("gesprek_id",ids);
     const cnt={};(un||[]).forEach(r=>{cnt[r.gesprek_id]=(cnt[r.gesprek_id]||0)+1;});chatItems.forEach(it=>{if(it.gid)it.unread=cnt[it.gid]||0;});
     unreadTotal=(un||[]).length;updateNavBadge();}catch(e){}}
