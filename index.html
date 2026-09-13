@@ -1082,9 +1082,12 @@ const SB_URL="https://keyuipkupfxowrwsfmpk.supabase.co";
 const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtleXVpcGt1cGZ4b3dyd3NmbXBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDQ1MDEsImV4cCI6MjEwNDg4MDUwMX0.taZt8658Saldr5IOVb4L9qleXyn3ZnPubcrwGtes4b4";
 const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_ANON):null;
 const ROLE_TO_PORTAL={vereniging:"vereniging",official:"official",begeleider:"begeleider",beheerder:"beheer"};
-let loggedIn=false,currentUser=null,authMode="login",currentRole="vereniging",currentVerenigingId=null,currentVerenigingName=null,wwIngesteld=true;
-async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url,wachtwoord_ingesteld").eq("id",currentUser.id).single();
-  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
+let loggedIn=false,currentUser=null,authMode="login",currentRole="vereniging",currentVerenigingId=null,currentVerenigingName=null,wwIngesteld=true,currentRechten="beheerder";
+const RECHTEN={beheerder:{lab:"Beheerder",st:"ok"},bewerker:{lab:"Bewerker",st:"info"},lezer:{lab:"Alleen-lezen",st:"idle"}};
+function canManageTeam(){return currentRole==="beheerder"&&currentRechten==="beheerder";}
+function canEdit(){return currentRechten!=="lezer";}
+async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;currentRechten="beheerder";try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url,wachtwoord_ingesteld,rechten,functie").eq("id",currentUser.id).single();
+  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;currentRechten=prof.rechten||"beheerder";if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
     if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}}}catch(e){}}
 function needsOnboarding(){return !!(currentUser&&wwIngesteld===false);}
 function noClub(){return currentRole!=="beheerder"&&!currentVerenigingId;}
@@ -1778,13 +1781,23 @@ async function fillLive(){if(!sb)return;
       const {data,error}=await sb.from("profiles").select("id,volledige_naam,email").eq("vereniging_id",currentVerenigingId).eq("rol","begeleider");
       if(error)return;if(!data||!data.length){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">Nog geen begeleiders. Voeg er een toe via de knop hierboven.</td></tr>`;return;}
       tb.innerHTML=data.map(o=>`<tr><td><div class="nm">${esc(o.volledige_naam||o.email)}</div><div class="sub">${esc(o.email||"")}</div></td><td>—</td><td>—</td><td><div class="cell-end"><span class="pill ok">Actief</span>${delBtn("begeleider",o.id)}</div></td></tr>`).join("");}
+    if(kind==="team"){const manage=canManageTeam();const cs=tbl.querySelectorAll("thead th").length;
+      const {data,error}=await sb.from("profiles").select("id,volledige_naam,email,functie,rechten").eq("rol","beheerder").order("volledige_naam");
+      if(error){tb.innerHTML=`<tr><td colspan="${cs}" style="color:var(--muted)">Kon het team niet laden.</td></tr>`;return;}
+      if(!data||!data.length){tb.innerHTML=`<tr><td colspan="${cs}" style="color:var(--muted)">Nog geen teamleden.</td></tr>`;return;}
+      const rechtenOpts=r=>["beheerder","bewerker","lezer"].map(v=>`<option value="${v}" ${r===v?"selected":""}>${RECHTEN[v].lab}</option>`).join("");
+      tb.innerHTML=data.map(u=>{const self=currentUser&&u.id===currentUser.id;const rc=u.rechten||"beheerder";const rp=RECHTEN[rc]||RECHTEN.beheerder;
+        const naam=esc(u.volledige_naam||u.email||"—")+(self?" (Jij)":"");
+        const rechtenCell=(manage&&!self)?`<select data-rechten="${esc(u.id)}" style="padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:13px">${rechtenOpts(rc)}</select>`:`<span class="pill ${rp.st}">${rp.lab}</span>`;
+        const del=(manage&&!self)?`<button class="del-btn" data-del="gebruiker" data-id="${esc(u.id)}" title="Verwijderen">✕</button>`:"";
+        return `<tr><td><div class="nm">${naam}</div><div class="sub">${esc(u.email||"")}</div></td><td>${esc(u.functie||"—")}</td><td>${rechtenCell}</td><td><div class="cell-end">${del}</div></td></tr>`;}).join("");}
     if(kind==="aanvragen"||kind==="support"){const cat=kind==="support"?"support":"aanvraag";
       const {data,error}=await sb.from("aanvragen").select("*").eq("categorie",cat).order("aangemaakt_op",{ascending:false});
       if(error){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">Kon aanvragen niet laden.</td></tr>`;return;}
       if(!data||!data.length){tb.innerHTML=`<tr><td colspan="4" style="color:var(--muted)">Nog geen ${cat==="support"?"berichten":"aanvragen"} binnengekomen.</td></tr>`;return;}
       data.forEach(r=>{aanvraagCache[r.id]=r;});
       tb.innerHTML=data.map(r=>{const s=aanvraagStatus(r.status),onderw=r.onderwerp||aanvraagTypeLabel(r.type)||"—";
-        return `<tr data-aanvraag="${esc(r.id)}" style="cursor:pointer"><td><div class="nm">${esc(r.naam||"Onbekend")}</div><div class="sub">${esc(r.email||"")}</div></td><td>${esc(onderw)}</td><td>${esc(aanvraagDatum(r.aangemaakt_op))}</td><td><div class="cell-end"><span class="pill ${s.st}">${s.lab}</span></div></td></tr>`;}).join("");}
+        return `<tr data-aanvraag="${esc(r.id)}" style="cursor:pointer"><td><div class="nm">${esc(r.naam||"Onbekend")}</div><div class="sub">${esc(r.email||"")}</div></td><td>${esc(onderw)}</td><td>${esc(aanvraagDatum(r.aangemaakt_op))}</td><td><span class="pill ${s.st}">${s.lab}</span></td></tr>`;}).join("");}
   });}
 let aanvraagCache={};
 function aanvraagStatus(st){return ({nieuw:{lab:"Nieuw",st:"warn"},in_behandeling:{lab:"In behandeling",st:"info"},afgerond:{lab:"Afgerond",st:"ok"}})[st]||{lab:"Nieuw",st:"warn"};}
@@ -1795,6 +1808,7 @@ function dashMainHTML(key,P,b,overview){
   const clubTag=(currentVerenigingName&&key!=="beheer")?`<span class="club-tag">${esc(currentVerenigingName)}</span>`:"";
   if(activePage==="__profile")return profileHTML(key,logout);
   if(key==="beheer"&&activePage==="Website aanpassen")return contentEditorHTML(logout);
+  if(key==="beheer"&&activePage==="Gebruikers")return gebruikersHTML(logout);
   if(activePage===overview){
     if(key==="beheer")return beheerOverviewHTML(P,b,logout);
     return `<div class="hd"><div><h1><span data-edit="${b}.title">${esc(P.title)}</span>${clubTag}</h1><p data-edit="${b}.subtitle">${esc(P.subtitle)}</p></div>
@@ -1847,6 +1861,21 @@ function contentEditorHTML(logout){
       <h3 style="margin-bottom:6px">Zo werkt publiceren</h3>
       <p style="color:var(--muted);font-size:14px;line-height:1.6;max-width:640px">Wijzigingen die je maakt zie je meteen. Ze worden pas voor <b>alle bezoekers</b> zichtbaar nadat je op <b>Publiceren</b> klikt (in de balk onderin). Tot die tijd blijven ze alleen op dit apparaat staan.</p>
     </div></div>`;}
+function gebruikersHTML(logout){
+  const manage=canManageTeam();
+  const cta=manage?`<a class="btn btn-outline" data-invite-open="gebruiker" href="#">＋ Gebruiker toevoegen</a>`:"";
+  const legenda=`<div class="panel"><div style="padding:16px 22px;display:flex;gap:22px;flex-wrap:wrap;font-size:13px;color:var(--muted)">
+    <span><span class="pill ok">Beheerder</span> volledige toegang, mag team beheren</span>
+    <span><span class="pill info">Bewerker</span> mag gegevens toevoegen en wijzigen</span>
+    <span><span class="pill idle">Alleen-lezen</span> mag alles bekijken, niets wijzigen</span></div></div>`;
+  const cols=`<th>Naam</th><th>Functie</th><th>Rechten</th><th></th>`;
+  return `<div class="hd"><div><h1>Gebruikers</h1><p>Beheer je team: nodig collega's uit en bepaal per persoon de rechten.</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">${cta}${logout}</div></div>
+    ${manage?"":`<div class="panel"><div style="padding:16px 22px;color:var(--muted);font-size:13.5px">Je kunt het team bekijken. Alleen een gebruiker met <b>Beheerder</b>-rechten kan collega's toevoegen of rechten wijzigen.</div></div>`}
+    ${legenda}
+    <div class="panel"><div class="phd"><h3>Team</h3>${cta?`<a class="link" data-invite-open="gebruiker" href="#">Gebruiker toevoegen</a>`:""}</div>
+      <div class="tbl-scroll"><table class="tbl" data-live="team"><thead><tr>${cols}</tr></thead><tbody>
+        <tr><td colspan="4" style="color:var(--muted)">Laden…</td></tr></tbody></table></div></div>`;}
 let dashCustomOpen=false;
 function beheerOverviewHTML(P,b,logout){
   const hidden=P.dashHidden||[];
@@ -1908,6 +1937,7 @@ async function loadRemoteContent(){if(!sb)return;
     else{const ps=document.getElementById("pubStatus");if(ps)ps.textContent=fmtPub();}
   }catch(e){}}
 async function publishContent(){const btn=document.getElementById("ebPublish"),msg=document.getElementById("ebMsg");
+  if(!canEdit()){if(msg)msg.textContent="Je hebt alleen-lezen rechten.";return;}
   if(!sb){if(msg)msg.textContent="Publiceren werkt alleen op de live site.";return;}
   if(btn){btn.disabled=true;btn.textContent="Bezig…";}
   let payload;try{payload=structuredClone(S);}catch(e){payload=JSON.parse(JSON.stringify(S));}
@@ -2022,7 +2052,9 @@ document.addEventListener("click",async e=>{
     if(err)err.hidden=true;if(msg)msg.hidden=true;
     if(!sb){if(err){err.textContent="Werkt alleen op de live website.";err.hidden=false;}return;}
     if(!em||!nm){if(err){err.textContent="Vul minimaal een naam en e-mailadres in.";err.hidden=false;}return;}
-    let rol=inviteType==="vereniging"?"vereniging":inviteType,verId=currentVerenigingId,skipInvite=false;
+    if(inviteType==="gebruiker"&&!canManageTeam()){if(err){err.textContent="Alleen een beheerder mag gebruikers toevoegen.";err.hidden=false;}return;}
+    let rol=inviteType==="vereniging"?"vereniging":(inviteType==="gebruiker"?"beheerder":inviteType),verId=currentVerenigingId,skipInvite=false;
+    const functie=inviteType==="gebruiker"?(g("invFunctie")||null):null,rechten=inviteType==="gebruiker"?(g("invRechten")||"bewerker"):null;
     btn.disabled=true;btn.textContent="Versturen…";
     if(inviteType==="vereniging"){
       const club=g("invClub");if(!club){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Vul een verenigingsnaam in.";err.hidden=false;}return;}
@@ -2031,14 +2063,19 @@ document.addEventListener("click",async e=>{
       verId=vrow.id;
       const {data:ex}=await sb.from("profiles").select("id").eq("email",em).maybeSingle();
       if(ex&&ex.id){await sb.from("profiles").update({vereniging_id:verId,rol:"vereniging"}).eq("id",ex.id);skipInvite=true;}
+    } else if(inviteType==="gebruiker"){verId=null;
+      const {data:ex}=await sb.from("profiles").select("id").eq("email",em).maybeSingle();
+      if(ex&&ex.id){await sb.from("profiles").update({rol:"beheerder",functie:functie,rechten:rechten,vereniging_id:null}).eq("id",ex.id);skipInvite=true;}
     } else if(!verId){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Je account is nog niet aan een vereniging gekoppeld.";err.hidden=false;}return;}
-    if(!skipInvite){const {error:e1}=await sb.from("uitnodigingen").insert({email:em,rol,vereniging_id:verId,volledige_naam:nm});
+    if(!skipInvite){const inv={email:em,rol,vereniging_id:verId,volledige_naam:nm};if(inviteType==="gebruiker"){inv.functie=functie;inv.rechten=rechten;}
+      const {error:e1}=await sb.from("uitnodigingen").insert(inv);
       if(e1){btn.disabled=false;btn.textContent="Uitnodiging versturen";if(err){err.textContent="Uitnodiging aanmaken mislukt: "+e1.message;err.hidden=false;}return;}}
     const {error:e2}=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});
     btn.disabled=false;btn.textContent="Uitnodiging versturen";
     if(e2){if(err){err.textContent="E-mail versturen mislukt: "+e2.message;err.hidden=false;}return;}
     if(msg){msg.textContent=(inviteType==="vereniging"?"Vereniging aangemaakt en uitnodiging verstuurd naar ":"Uitnodiging verstuurd naar ")+em+". Zodra de link is bevestigd, kan er een wachtwoord ingesteld worden.";msg.hidden=false;}
-    ["invName","invEmail","invClub","invPlace","invAbo","invPhone"].forEach(id=>{const x=document.getElementById(id);if(x)x.value="";});
+    ["invName","invEmail","invClub","invPlace","invAbo","invPhone","invFunctie"].forEach(id=>{const x=document.getElementById(id);if(x)x.value="";});
+    if(inviteType==="gebruiker"&&currentPortal==="beheer"&&activePage==="Gebruikers")fillLive();
     return;}
 });
 // dashboard-paginarouter
@@ -2047,6 +2084,12 @@ document.addEventListener("click",e=>{const p=e.target.closest("[data-page]");if
 document.addEventListener("click",e=>{if(e.target.closest("[data-dashcustom]")&&!editing){e.preventDefault();dashCustomOpen=!dashCustomOpen;renderDashboard();}});
 document.addEventListener("change",e=>{const w=e.target.closest("[data-widget]");if(!w)return;const P=S.portals.beheer;P.dashHidden=P.dashHidden||[];const k=w.dataset.widget;
   if(P.dashHidden.includes(k))P.dashHidden=P.dashHidden.filter(x=>x!==k);else P.dashHidden.push(k);save();renderDashboard();});
+// rechten van een teamlid wijzigen
+document.addEventListener("change",async e=>{const r=e.target.closest("[data-rechten]");if(!r)return;
+  if(!canManageTeam()){alert("Alleen een beheerder mag rechten wijzigen.");return;}
+  const id=r.getAttribute("data-rechten"),val=r.value;if(!sb)return;
+  const {error}=await sb.from("profiles").update({rechten:val}).eq("id",id);
+  if(error){alert("Wijzigen mislukt: "+error.message);fillLive();}});
 // documenten: vereniging selecteren
 document.addEventListener("click",e=>{const c=e.target.closest("[data-club]");if(!c||editing)return;e.preventDefault();selectedClub=c.dataset.club;renderDashboard();});
 // profiel openen
@@ -2058,7 +2101,10 @@ document.addEventListener("keydown",e=>{if(e.key!=="Enter"||e.shiftKey)return;co
 // verenigingen/scheidsrechters verwijderen
 document.addEventListener("click",async e=>{const d=e.target.closest("[data-del]");if(!d||editing)return;e.preventDefault();
   const type=d.dataset.del,id=d.dataset.id;
-  if(!confirm(type==="vereniging"?"Deze vereniging definitief verwijderen?":"Deze persoon verwijderen uit je club?"))return;
+  if(type==="gebruiker"&&!canManageTeam()){alert("Alleen een beheerder mag teamleden verwijderen.");return;}
+  if(!canEdit()){alert("Je hebt alleen-lezen rechten.");return;}
+  const vraag=type==="vereniging"?"Deze vereniging definitief verwijderen?":(type==="gebruiker"?"Dit teamlid verwijderen? Hun toegang tot het beheerdersportaal vervalt.":"Deze persoon verwijderen uit je club?");
+  if(!confirm(vraag))return;
   if(!sb)return;d.disabled=true;
   const {error}=type==="vereniging"?await sb.from("verenigingen").delete().eq("id",id):await sb.from("profiles").delete().eq("id",id);
   if(error){d.disabled=false;alert("Verwijderen mislukt: "+error.message);return;}
@@ -2066,9 +2112,14 @@ document.addEventListener("click",async e=>{const d=e.target.closest("[data-del]
 // uitnodigen pop-up (official of vereniging)
 let inviteType="official";
 function renderInviteModal(){const el=document.getElementById("inviteBody");const rolWoord=inviteType==="begeleider"?"begeleider":"scheidsrechter";
-  document.getElementById("inviteTitle").textContent=inviteType==="vereniging"?"Vereniging uitnodigen":(inviteType==="begeleider"?"Begeleider toevoegen":"Scheidsrechter toevoegen");
+  document.getElementById("inviteTitle").textContent=inviteType==="vereniging"?"Vereniging uitnodigen":(inviteType==="begeleider"?"Begeleider toevoegen":(inviteType==="gebruiker"?"Gebruiker toevoegen":"Scheidsrechter toevoegen"));
   const foot=`<div class="form-status err" id="invErr" hidden></div><div class="form-status" id="invMsg" hidden></div><button class="btn btn-lime" id="invSend" style="width:100%;justify-content:center;margin-top:6px">Uitnodiging versturen</button>`;
-  if(inviteType==="vereniging"){
+  if(inviteType==="gebruiker"){
+    el.innerHTML=`<p class="modal-intro">Nodig een collega uit voor het beheerdersportaal. Die krijgt een e-mail om zelf een wachtwoord in te stellen. Een nieuw teamlid start met <b>Alleen-lezen</b>; zodra hij/zij in de lijst staat, zet je het juiste niveau met één klik. Heeft de collega al een account, dan geldt onderstaande keuze meteen.</p>
+      <div class="field"><label>Naam</label><input id="invName" type="text" placeholder="Voor- en achternaam"></div>
+      <div class="mrow"><div class="field"><label>E-mailadres</label><input id="invEmail" type="email" placeholder="naam@arbitragepartners.nl"></div><div class="field"><label>Functie (optioneel)</label><input id="invFunctie" type="text" placeholder="Bijv. Adviseur"></div></div>
+      <div class="field"><label>Rechten</label><select id="invRechten" style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;width:100%"><option value="beheerder">Beheerder — volledige toegang</option><option value="bewerker" selected>Bewerker — toevoegen &amp; wijzigen</option><option value="lezer">Alleen-lezen — alleen bekijken</option></select></div>${foot}`;
+  } else if(inviteType==="vereniging"){
     el.innerHTML=`<p class="modal-intro">Vul de gegevens van de vereniging in. Bij versturen wordt de vereniging automatisch aangemaakt en krijgt de contactpersoon een e-mail om een wachtwoord in te stellen en toegang te krijgen tot het verenigingsportaal.</p>
       <div class="field"><label>Verenigingsnaam</label><input id="invClub" type="text" placeholder="Bijv. HV De Valken"></div>
       <div class="mrow"><div class="field"><label>Plaats</label><input id="invPlace" type="text" placeholder="Plaats"></div><div class="field"><label>Abonnement (optioneel)</label><input id="invAbo" type="text" placeholder="Bijv. Grow"></div></div>
@@ -2111,9 +2162,9 @@ function openDetail(id){const r=aanvraagCache[id];if(!r)return;renderDetail(r);
 document.addEventListener("click",async e=>{
   const row=e.target.closest("[data-aanvraag]");if(row&&!editing){e.preventDefault();openDetail(row.getAttribute("data-aanvraag"));return;}
   if(e.target.closest("[data-detail-close]")){closeDetail();return;}
-  const ss=e.target.closest("[data-setstatus]");if(ss){const id=ss.getAttribute("data-aid"),val=ss.getAttribute("data-setstatus");
+  const ss=e.target.closest("[data-setstatus]");if(ss){if(!canEdit()){alert("Je hebt alleen-lezen rechten.");return;}const id=ss.getAttribute("data-aid"),val=ss.getAttribute("data-setstatus");
     if(sb){const {error}=await sb.from("aanvragen").update({status:val}).eq("id",id);if(!error&&aanvraagCache[id]){aanvraagCache[id].status=val;renderDetail(aanvraagCache[id]);fillLive();}}return;}
-  const da=e.target.closest("[data-delaanvraag]");if(da){const id=da.getAttribute("data-delaanvraag");
+  const da=e.target.closest("[data-delaanvraag]");if(da){if(!canEdit()){alert("Je hebt alleen-lezen rechten.");return;}const id=da.getAttribute("data-delaanvraag");
     if(!confirm("Deze aanvraag definitief verwijderen?"))return;
     if(sb){const {error}=await sb.from("aanvragen").delete().eq("id",id);if(!error){delete aanvraagCache[id];closeDetail();fillLive();}else alert("Verwijderen mislukt: "+error.message);}return;}});
 // dienst-detail
