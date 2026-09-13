@@ -450,6 +450,7 @@ body.framed .auth,body.framed .dash,body.framed .scan{min-height:100vh}
 .contact-form .btn-lime{width:100%;justify-content:center;margin-top:6px}
 .form-status{margin-top:14px;background:color-mix(in srgb,var(--lime),transparent 84%);border:1px solid color-mix(in srgb,var(--lime),transparent 55%);color:var(--lime-dark);font-size:13.5px;padding:12px 14px;border-radius:10px}
 .form-status.err{background:#f7e4df;border-color:#e6b9ad;color:#a8402c}
+.hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
 
 /* CHOOSER */
 .chooser-hero{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;text-align:center;padding:64px 24px 120px}
@@ -740,6 +741,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
       <form class="contact-form" id="contactForm" novalidate>
         <input type="hidden" name="_subject" value="Nieuw bericht via de website">
         <input type="hidden" name="formulier" value="Contactformulier">
+        <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="field"><label data-edit="contact.fName">Naam</label><input name="naam" required></div>
         <div class="field"><label data-edit="contact.fEmail">E-mailadres</label><input type="email" name="email" required></div>
         <div class="field"><label data-edit="contact.fMsg">Bericht</label><textarea name="bericht" rows="4" required></textarea></div>
@@ -1930,6 +1932,7 @@ function renderPlan(){const P=S.plan,root=document.getElementById("planBody");le
       <form class="contact-form plan-form" id="planForm" novalidate>
         <input type="hidden" name="_subject" value="Nieuwe kennismaking-aanvraag">
         <input type="hidden" name="formulier" value="Kennismaking">
+        <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
         ${interests.length?`<div class="int-chips-wrap"><div class="plan-note">Geselecteerde interesses</div><div class="int-chips">${interests.map(x=>`<span class="int-chip">${esc(x)}<button type="button" data-remove-interest="${escAttr(x)}">✕</button></span>`).join("")}</div></div>`:""}
         <h3 style="font-size:17px;margin-bottom:16px" data-edit="plan.formTitle">${esc(P.formTitle)}</h3>
         <div class="field"><label data-edit="plan.fName">${esc(P.fName)}</label><input type="text" name="naam" required></div>
@@ -2011,6 +2014,7 @@ function appContact(){const c=S.contact;
      <div class="app-field" style="margin-top:12px"><label>${esc(S.plan.fName)}</label><input id="appcName" type="text" placeholder="Voor- en achternaam"></div>
      <div class="app-field"><label>${esc(S.plan.fEmail)}</label><input id="appcEmail" type="email" placeholder="naam@vereniging.nl"></div>
      <div class="app-field"><label>${esc(S.plan.fMsg)}</label><textarea id="appcMsg" rows="3"></textarea></div>
+     <input class="hp" id="appcHp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
      <button class="app-btn lime" data-asend>${esc(S.plan.submit)}</button>
      <div id="appSent" style="display:none;margin-top:12px;background:color-mix(in srgb,var(--lime),transparent 84%);border:1px solid color-mix(in srgb,var(--lime),transparent 55%);color:var(--lime-dark);font-size:12.5px;padding:11px 13px;border-radius:10px">${esc(S.plan.successBody)}</div></div>`;}
 function appChooser(){
@@ -2081,7 +2085,7 @@ function renderApp(){document.getElementById("appScreen").innerHTML=appHTML();}
     const d=e.target.closest("[data-adash]");if(d){appDashPage=d.dataset.adash;appMoreOpen=false;renderApp();return;}
     const sb=e.target.closest("[data-asend]");if(sb){sb.disabled=true;sb.style.opacity=".6";
       const g=id=>{const el=root.querySelector("#"+id);return el?el.value:"";};
-      submitForm(null,{_subject:"Nieuw bericht via de app",formulier:"App-contact",naam:g("appcName"),email:g("appcEmail"),bericht:g("appcMsg")},ok=>{const s=root.querySelector("#appSent");if(s){s.textContent=ok?S.plan.successBody:"Er ging iets mis. Mail anders naar info@arbitragepartners.nl.";s.style.display="block";}sb.disabled=false;sb.style.opacity="";});return;}
+      submitForm(null,{_subject:"Nieuw bericht via de app",formulier:"App-contact",_gotcha:g("appcHp"),naam:g("appcName"),email:g("appcEmail"),bericht:g("appcMsg")},ok=>{const s=root.querySelector("#appSent");if(s){s.textContent=ok?S.plan.successBody:"Er ging iets mis. Mail anders naar info@arbitragepartners.nl.";s.style.display="block";}sb.disabled=false;sb.style.opacity="";});return;}
   });
 })();
 
