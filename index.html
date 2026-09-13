@@ -653,6 +653,7 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
 .chat-input input{flex:1;padding:11px 14px;border:1px solid var(--line);border-radius:999px;font-family:inherit;font-size:14px;background:#fbfcfb}
 .chat-input input:focus{outline:2px solid var(--lime);border-color:var(--lime)}
 .nav-badge{background:var(--lime);color:var(--navy);font-size:10.5px;font-weight:800;min-width:17px;height:17px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;margin-left:auto}
+.nav-badge[hidden]{display:none!important}
 @media(max-width:820px){.chatwrap2{grid-template-columns:1fr}.chatwrap2.show-conv .chat-list{display:none}.chatwrap2:not(.show-conv) .chat-conv{display:none}.chat-back{display:inline-block}}
 
 /* drawer */
@@ -1816,7 +1817,11 @@ function renderDashboard(){const key=currentPortal,P=S.portals[key];if(!P)return
   if(activePage!=="__profile"&&!allItems.includes(activePage))activePage=overview;
   const pr=S.profile,avStyle=pr.avatar?`style="background-image:url(${pr.avatar})"`:"",avInit=pr.avatar?"":esc((pr.name||"?").charAt(0).toUpperCase());
   const profileBlock=`<div class="side-profile" data-profile><div class="av" ${avStyle}>${avInit}</div><div class="pi"><div class="nm" data-edit="profile.name">${esc(pr.name)}</div><div class="st">Ingelogd</div></div><button class="lg" data-logout title="Uitloggen">⏻</button></div>`;
-  const navBadge=n=>(n==="Berichten"||n==="Chat")?`<span class="nav-badge" id="navUnread" ${unreadTotal>0?"":"hidden"}>${unreadTotal}</span>`:"";
+  const navBadge=n=>{let c=-1,id="";
+    if(n==="Berichten"||n==="Chat"){c=unreadTotal;id="navUnread";}
+    else if(n==="Aanvragen"){c=openAanvragen;id="navAanvragen";}
+    else if(n==="Support"){c=openSupport;id="navSupport";}
+    if(c<0)return "";return `<span class="nav-badge" id="${id}" ${c>0?"":"hidden"}>${c>0?c:""}</span>`;};
   let sideNav;
   if(useSec)sideNav=P.sections.map((sec,si)=>{
     const its=sec.items.map((n,ii)=>({n,ii})).filter(x=>okItem(x.n));
@@ -1843,11 +1848,18 @@ async function fillStats(){if(!sb)return;
     if(!oe&&typeof oc==="number")set("officials_all",String(oc));
   }catch(e){}
   let oa=null;
-  try{const r1=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","aanvraag").neq("status","afgerond");if(typeof r1.count==="number"){oa=r1.count;set("open_aanvragen",String(r1.count));}
-    const r2=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","support").neq("status","afgerond");if(typeof r2.count==="number")set("open_support",String(r2.count));}catch(e){}
+  try{const r1=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","aanvraag").neq("status","afgerond");if(typeof r1.count==="number"){oa=r1.count;openAanvragen=r1.count;set("open_aanvragen",String(r1.count));}
+    const r2=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","support").neq("status","afgerond");if(typeof r2.count==="number"){openSupport=r2.count;set("open_support",String(r2.count));}
+    updateOpenBadges();}catch(e){}
   set("aanvragen",oa!=null?String(oa):"—");set("tevredenheid","—");}
 /* ---- berichten / chat (1-op-1 gesprekken) ---- */
 let chatMe=null,chatItems=[],chatActiveGid=null,chatActive=null,chatSeen=new Set(),chatSub=null,chatSearchQ="",unreadTotal=0,chatMyGids=new Set();
+let openAanvragen=0,openSupport=0;
+function updateOpenBadges(){const set=(id,c)=>{const el=document.getElementById(id);if(el){el.textContent=c>0?c:"";el.hidden=c<=0;}};set("navAanvragen",openAanvragen);set("navSupport",openSupport);}
+async function refreshOpenCounts(){if(!sb||currentRole!=="beheerder")return;try{
+  const r1=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","aanvraag").neq("status","afgerond");
+  const r2=await sb.from("aanvragen").select("id",{count:"exact",head:true}).eq("categorie","support").neq("status","afgerond");
+  if(typeof r1.count==="number")openAanvragen=r1.count;if(typeof r2.count==="number")openSupport=r2.count;updateOpenBadges();}catch(e){}}
 function chatTime(ts){try{return new Date(ts).toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"});}catch(e){return "";}}
 function chatDay(ts){try{const d=new Date(ts),n=new Date();const a=new Date(n.getFullYear(),n.getMonth(),n.getDate()),bb=new Date(d.getFullYear(),d.getMonth(),d.getDate());const diff=(a-bb)/86400000;if(diff===0)return "Vandaag";if(diff===1)return "Gisteren";return d.toLocaleDateString("nl-NL",{day:"numeric",month:"long"});}catch(e){return "";}}
 function chatShort(ts){try{const d=new Date(ts),n=new Date();if(d.toDateString()===n.toDateString())return chatTime(ts);return d.toLocaleDateString("nl-NL",{day:"numeric",month:"short"});}catch(e){return "";}}
@@ -2457,10 +2469,10 @@ document.addEventListener("click",async e=>{
   const row=e.target.closest("[data-aanvraag]");if(row&&!editing){e.preventDefault();openDetail(row.getAttribute("data-aanvraag"));return;}
   if(e.target.closest("[data-detail-close]")){closeDetail();return;}
   const ss=e.target.closest("[data-setstatus]");if(ss){if(!canEdit()){alert("Je hebt alleen-lezen rechten.");return;}const id=ss.getAttribute("data-aid"),val=ss.getAttribute("data-setstatus");
-    if(sb){const {error}=await sb.from("aanvragen").update({status:val}).eq("id",id);if(!error&&aanvraagCache[id]){aanvraagCache[id].status=val;renderDetail(aanvraagCache[id]);fillLive();}}return;}
+    if(sb){const {error}=await sb.from("aanvragen").update({status:val}).eq("id",id);if(!error&&aanvraagCache[id]){aanvraagCache[id].status=val;renderDetail(aanvraagCache[id]);fillLive();refreshOpenCounts();}}return;}
   const da=e.target.closest("[data-delaanvraag]");if(da){if(!canEdit()){alert("Je hebt alleen-lezen rechten.");return;}const id=da.getAttribute("data-delaanvraag");
     if(!confirm("Deze aanvraag definitief verwijderen?"))return;
-    if(sb){const {error}=await sb.from("aanvragen").delete().eq("id",id);if(!error){delete aanvraagCache[id];closeDetail();fillLive();}else alert("Verwijderen mislukt: "+error.message);}return;}});
+    if(sb){const {error}=await sb.from("aanvragen").delete().eq("id",id);if(!error){delete aanvraagCache[id];closeDetail();fillLive();refreshOpenCounts();}else alert("Verwijderen mislukt: "+error.message);}return;}});
 // dienst-detail
 document.addEventListener("click",e=>{const s=e.target.closest("[data-service]");if(!s||editing)return;e.preventDefault();selectedService=+s.dataset.service;go("service");});
 function renderService(){const items=S.services.items;if(selectedService<0||selectedService>=items.length)selectedService=0;
