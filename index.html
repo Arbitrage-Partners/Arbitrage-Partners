@@ -1116,10 +1116,14 @@ function isSupport(){return currentRechten==="support";}
 function canManageTeam(){return currentRole==="beheerder"&&fullAccess();}
 function canEdit(){return true;}
 function normRechten(r){if(r==="lezer")return "applicatiebeheerder";return RECHTEN[r]?r:"support";}
-async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;currentRechten="beheerder";try{const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url,wachtwoord_ingesteld,rechten,functie").eq("id",currentUser.id).single();
-  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;currentRechten=normRechten(prof.rechten||"beheerder");if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
+async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;currentRechten="beheerder";try{
+  // kernvelden (bestaan altijd) — apart, zodat inloggen nooit breekt op een ontbrekende kolom
+  const {data:prof}=await sb.from("profiles").select("rol,volledige_naam,vereniging_id,avatar_url,wachtwoord_ingesteld").eq("id",currentUser.id).single();
+  if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
+    // optionele velden (rechten/functie) — breekt de login niet als de kolommen ontbreken
+    try{const {data:ext}=await sb.from("profiles").select("rechten,functie").eq("id",currentUser.id).single();if(ext)currentRechten=normRechten(ext.rechten||"beheerder");}catch(x){}
     if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}
-    if(currentRole==="beheerder"){try{const {data:st}=await sb.from("instellingen").select("data").eq("id",1).maybeSingle();settings=(st&&st.data)||{};}catch(x){settings={};}}}}catch(e){}}
+    if(currentRole==="beheerder"){try{const {data:st}=await sb.from("instellingen").select("data").eq("id",1).maybeSingle();settings=(st&&st.data)||{};}catch(x){}}}}catch(e){}}
 function needsOnboarding(){return !!(currentUser&&wwIngesteld===false);}
 function noClub(){return currentRole!=="beheerder"&&!currentVerenigingId;}
 async function routeAfterAuth(){if(needsOnboarding()){authMode="onboard";go("login");renderLogin();}
