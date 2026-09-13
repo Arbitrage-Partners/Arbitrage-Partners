@@ -449,6 +449,7 @@ body.framed .auth,body.framed .dash,body.framed .scan{min-height:100vh}
 .contact-form textarea:focus{outline:2px solid var(--lime);border-color:var(--lime)}
 .contact-form .btn-lime{width:100%;justify-content:center;margin-top:6px}
 .form-status{margin-top:14px;background:color-mix(in srgb,var(--lime),transparent 84%);border:1px solid color-mix(in srgb,var(--lime),transparent 55%);color:var(--lime-dark);font-size:13.5px;padding:12px 14px;border-radius:10px}
+.form-status.err{background:#f7e4df;border-color:#e6b9ad;color:#a8402c}
 
 /* CHOOSER */
 .chooser-hero{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;text-align:center;padding:64px 24px 120px}
@@ -737,9 +738,11 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
         <ul class="contact-list" id="contactList"></ul>
       </div>
       <form class="contact-form" id="contactForm" novalidate>
-        <div class="field"><label data-edit="contact.fName">Naam</label><input required></div>
-        <div class="field"><label data-edit="contact.fEmail">E-mailadres</label><input type="email" required></div>
-        <div class="field"><label data-edit="contact.fMsg">Bericht</label><textarea rows="4" required></textarea></div>
+        <input type="hidden" name="_subject" value="Nieuw bericht via de website">
+        <input type="hidden" name="formulier" value="Contactformulier">
+        <div class="field"><label data-edit="contact.fName">Naam</label><input name="naam" required></div>
+        <div class="field"><label data-edit="contact.fEmail">E-mailadres</label><input type="email" name="email" required></div>
+        <div class="field"><label data-edit="contact.fMsg">Bericht</label><textarea name="bericht" rows="4" required></textarea></div>
         <button class="btn btn-lime" type="submit" data-edit="contact.fBtn">Verstuur bericht</button>
         <div class="form-status" id="contactStatus" hidden></div>
       </form>
@@ -1020,6 +1023,9 @@ table.tbl .sub{color:var(--muted);font-size:12.5px;font-weight:600}
 
 <script>
 const ADMIN_CODE="AP-BEHEER";
+const FORM_ENDPOINT="https://formspree.io/f/mrpgwqvy";
+function submitForm(formEl,extra,done){const fd=formEl?new FormData(formEl):new FormData();if(extra)for(const k in extra)fd.append(k,extra[k]);
+  fetch(FORM_ENDPOINT,{method:"POST",body:fd,headers:{Accept:"application/json"}}).then(r=>done(r.ok)).catch(()=>done(false));}
 const DEFAULTS = {
   theme:{navy:"#0B1E33",lime:"#A6CE4E",ground:"#F3F5F1",ink:"#0B1E33"},
   logo:{line1:"ARBITRAGE",line2:"PARTNERS",img:""},
@@ -1732,7 +1738,12 @@ document.addEventListener("click",e=>{const a=e.target.closest("[data-anchor]");
   const scroll=()=>{const t=document.getElementById(a.dataset.anchor);if(t)t.scrollIntoView({behavior:"smooth",block:"start"});};
   if(!document.getElementById("view-site").classList.contains("on")){go("site");setTimeout(scroll,60);}else scroll();});
 // contact form (demo)
-document.getElementById("contactForm").addEventListener("submit",e=>{e.preventDefault();if(editing)return;const s=document.getElementById("contactStatus");s.textContent=S.contact.formSuccess;s.hidden=false;e.target.reset();});
+document.getElementById("contactForm").addEventListener("submit",e=>{e.preventDefault();if(editing)return;
+  const form=e.target,s=document.getElementById("contactStatus"),btn=form.querySelector("button[type=submit]");
+  btn.disabled=true;btn.style.opacity=".6";
+  submitForm(form,null,ok=>{btn.disabled=false;btn.style.opacity="";s.hidden=false;
+    if(ok){s.classList.remove("err");s.textContent=S.contact.formSuccess;form.reset();}
+    else{s.classList.add("err");s.textContent="Er ging iets mis met versturen. Probeer het later opnieuw of mail rechtstreeks naar info@arbitragepartners.nl.";}});});
 
 /* login submit */
 document.getElementById("loginSubmit").addEventListener("click",()=>{if(editing)return;
@@ -1908,21 +1919,23 @@ function renderPlan(){const P=S.plan,root=document.getElementById("planBody");le
         <ul class="contact-list">${items}</ul>
       </div>
       <form class="contact-form plan-form" id="planForm" novalidate>
+        <input type="hidden" name="_subject" value="Nieuwe kennismaking-aanvraag">
+        <input type="hidden" name="formulier" value="Kennismaking">
         ${interests.length?`<div class="int-chips-wrap"><div class="plan-note">Geselecteerde interesses</div><div class="int-chips">${interests.map(x=>`<span class="int-chip">${esc(x)}<button type="button" data-remove-interest="${escAttr(x)}">✕</button></span>`).join("")}</div></div>`:""}
         <h3 style="font-size:17px;margin-bottom:16px" data-edit="plan.formTitle">${esc(P.formTitle)}</h3>
-        <div class="field"><label data-edit="plan.fName">${esc(P.fName)}</label><input type="text" required></div>
+        <div class="field"><label data-edit="plan.fName">${esc(P.fName)}</label><input type="text" name="naam" required></div>
         <div class="row2">
-          <div class="field"><label data-edit="plan.fClub">${esc(P.fClub)}</label><input type="text"></div>
-          <div class="field"><label data-edit="plan.fRole">${esc(P.fRole)}</label><input type="text"></div>
+          <div class="field"><label data-edit="plan.fClub">${esc(P.fClub)}</label><input type="text" name="vereniging"></div>
+          <div class="field"><label data-edit="plan.fRole">${esc(P.fRole)}</label><input type="text" name="functie"></div>
         </div>
         <div class="row2">
-          <div class="field"><label data-edit="plan.fEmail">${esc(P.fEmail)}</label><input type="email" required></div>
-          <div class="field"><label data-edit="plan.fPhone">${esc(P.fPhone)}</label><input type="tel"></div>
+          <div class="field"><label data-edit="plan.fEmail">${esc(P.fEmail)}</label><input type="email" name="email" required></div>
+          <div class="field"><label data-edit="plan.fPhone">${esc(P.fPhone)}</label><input type="tel" name="telefoon"></div>
         </div>
-        <div class="field"><label data-edit="plan.fDate">${esc(P.fDate)}</label><input type="date"></div>
+        <div class="field"><label data-edit="plan.fDate">${esc(P.fDate)}</label><input type="date" name="voorkeursdatum"></div>
         <div class="field"><label data-edit="plan.fSlot">${esc(P.fSlot)}</label><div class="chips">${slots}</div></div>
         <div class="field"><label data-edit="plan.fWay">${esc(P.fWay)}</label><div class="chips">${ways}</div></div>
-        <div class="field"><label data-edit="plan.fMsg">${esc(P.fMsg)}</label><textarea rows="3"></textarea></div>
+        <div class="field"><label data-edit="plan.fMsg">${esc(P.fMsg)}</label><textarea name="bericht" rows="3"></textarea></div>
         <button class="btn btn-lime" type="submit" style="width:100%;justify-content:center" data-edit="plan.submit">${esc(P.submit)}</button>
       </form>
     </div></div>`;
@@ -1931,7 +1944,11 @@ function renderPlan(){const P=S.plan,root=document.getElementById("planBody");le
 (function(){const root=document.getElementById("planBody");
   root.addEventListener("click",e=>{if(editing)return;const c=e.target.closest("[data-planchip]");if(!c)return;
     planState[c.dataset.planchip]=+c.dataset.i;renderPlan();});
-  root.addEventListener("submit",e=>{e.preventDefault();if(editing)return;planState.submitted=true;interests=[];renderPlan();});
+  root.addEventListener("submit",e=>{e.preventDefault();if(editing)return;const form=e.target,btn=form.querySelector("button[type=submit]");
+    if(btn){btn.disabled=true;btn.style.opacity=".6";}
+    const extra={voorkeursmoment:S.plan.slots[planState.slot]||"—",contactwijze:S.plan.ways[planState.way]||"—",interesses:interests.length?interests.join(", "):"—"};
+    submitForm(form,extra,ok=>{if(ok){planState.submitted=true;interests=[];renderPlan();}
+      else{if(btn){btn.disabled=false;btn.style.opacity="";}alert("Er ging iets mis met versturen. Probeer het later opnieuw of mail naar info@arbitragepartners.nl.");}});});
 })();
 
 /* ---------- native app-weergave ---------- */
@@ -1982,9 +1999,9 @@ function appOver(){const ab=S.about;
 function appContact(){const c=S.contact;
   return `<div class="app-sec"><span class="eyebrow">${esc(c.eyebrow)}</span><h2>${esc(c.title)}</h2><p class="sub">${esc(c.body)}</p><ul class="app-clist">${c.items.map(it=>`<li><span class="ic">${esc(it.ic)}</span><span><span class="k">${esc(it.k)}</span><br><span class="v">${esc(it.v)}</span></span></li>`).join("")}</ul></div>
    <div class="app-sec" style="background:#fff"><h2>Plan een kennismaking</h2>
-     <div class="app-field" style="margin-top:12px"><label>${esc(S.plan.fName)}</label><input type="text" placeholder="Voor- en achternaam"></div>
-     <div class="app-field"><label>${esc(S.plan.fEmail)}</label><input type="email" placeholder="naam@vereniging.nl"></div>
-     <div class="app-field"><label>${esc(S.plan.fMsg)}</label><textarea rows="3"></textarea></div>
+     <div class="app-field" style="margin-top:12px"><label>${esc(S.plan.fName)}</label><input id="appcName" type="text" placeholder="Voor- en achternaam"></div>
+     <div class="app-field"><label>${esc(S.plan.fEmail)}</label><input id="appcEmail" type="email" placeholder="naam@vereniging.nl"></div>
+     <div class="app-field"><label>${esc(S.plan.fMsg)}</label><textarea id="appcMsg" rows="3"></textarea></div>
      <button class="app-btn lime" data-asend>${esc(S.plan.submit)}</button>
      <div id="appSent" style="display:none;margin-top:12px;background:color-mix(in srgb,var(--lime),transparent 84%);border:1px solid color-mix(in srgb,var(--lime),transparent 55%);color:var(--lime-dark);font-size:12.5px;padding:11px 13px;border-radius:10px">${esc(S.plan.successBody)}</div></div>`;}
 function appChooser(){
@@ -2053,7 +2070,9 @@ function renderApp(){document.getElementById("appScreen").innerHTML=appHTML();}
     if(e.target.closest("[data-alogout]")){appPortal=null;appLoginPortal=null;renderApp();return;}
     if(e.target.closest("[data-amore]")){appMoreOpen=!appMoreOpen;renderApp();return;}
     const d=e.target.closest("[data-adash]");if(d){appDashPage=d.dataset.adash;appMoreOpen=false;renderApp();return;}
-    if(e.target.closest("[data-asend]")){const s=root.querySelector("#appSent");if(s)s.style.display="block";}
+    const sb=e.target.closest("[data-asend]");if(sb){sb.disabled=true;sb.style.opacity=".6";
+      const g=id=>{const el=root.querySelector("#"+id);return el?el.value:"";};
+      submitForm(null,{_subject:"Nieuw bericht via de app",formulier:"App-contact",naam:g("appcName"),email:g("appcEmail"),bericht:g("appcMsg")},ok=>{const s=root.querySelector("#appSent");if(s){s.textContent=ok?S.plan.successBody:"Er ging iets mis. Mail anders naar info@arbitragepartners.nl.";s.style.display="block";}sb.disabled=false;sb.style.opacity="";});return;}
   });
 })();
 
