@@ -1122,6 +1122,10 @@ async function loadProfile(){currentVerenigingName=null;wwIngesteld=true;current
   if(prof){currentRole=prof.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=prof.vereniging_id||null;wwIngesteld=prof.wachtwoord_ingesteld;if(prof.volledige_naam)S.profile.name=prof.volledige_naam;if(prof.avatar_url)S.profile.avatar=prof.avatar_url;
     // optionele velden (rechten/functie) — breekt de login niet als de kolommen ontbreken
     try{const {data:ext}=await sb.from("profiles").select("rechten,functie").eq("id",currentUser.id).single();if(ext)currentRechten=normRechten(ext.rechten||"beheerder");}catch(x){}
+    // zelfherstel: geen koppeling? koppel automatisch aan de club met dit e-mailadres als contact
+    if(!currentVerenigingId&&currentRole!=="beheerder"){try{const {data:vid}=await sb.rpc("koppel_eigen_vereniging");
+      if(vid){const {data:p2}=await sb.from("profiles").select("rol,vereniging_id").eq("id",currentUser.id).single();
+        if(p2){currentRole=p2.rol||"vereniging";currentPortal=ROLE_TO_PORTAL[currentRole]||"vereniging";currentVerenigingId=p2.vereniging_id||null;}}}catch(x){}}
     if(currentVerenigingId){const {data:v}=await sb.from("verenigingen").select("naam").eq("id",currentVerenigingId).single();if(v&&v.naam)currentVerenigingName=v.naam;}
     if(currentRole==="beheerder"){try{const {data:st}=await sb.from("instellingen").select("data").eq("id",1).maybeSingle();settings=(st&&st.data)||{};}catch(x){}}}}catch(e){}}
 function needsOnboarding(){return !!(currentUser&&wwIngesteld===false);}
